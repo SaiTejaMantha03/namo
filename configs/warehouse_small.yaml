@@ -1,0 +1,18 @@
+# NAMO Warehouse Small Aisle Config (10x10)
+meta:
+  name: "warehouse_small_10x10"
+world:
+  grid_size: 10
+  cell_size: 1.0
+  sim_steps: 500
+corridor:
+  aisle_width: 1
+robots:
+  - id: 3
+    start: [1, 4]
+    goal: [8, 4]
+  - id: 4
+    start: [8, 4]
+    goal: [1, 4]
+obstacles:
+  - pos: [4, 4]

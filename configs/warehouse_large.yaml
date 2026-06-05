@@ -1,0 +1,19 @@
+# NAMO Warehouse Large Layout Config (20x20)
+meta:
+  name: "warehouse_large_20x20"
+world:
+  grid_size: 20
+  cell_size: 1.0
+  sim_steps: 1000
+corridor:
+  aisle_width: 2
+robots:
+  - id: 3
+    start: [3, 2]
+    goal: [3, 17]
+  - id: 4
+    start: [3, 17]
+    goal: [3, 2]
+obstacles:
+  - pos: [3, 10]
+  - pos: [3, 6]

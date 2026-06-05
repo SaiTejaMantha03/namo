@@ -133,7 +133,7 @@ class NAMO3DSimulator:
         
         # Call UNet Decision Pipeline to generate and save the visual heatmap plot
         project_dir = Path(__file__).resolve().parent.parent
-        weights_path = str(project_dir / "namo_unet.pth")
+        weights_path = str(project_dir / "models" / "namo_unet.pth")
         pipeline = UNetDecisionPipeline(weights_path)
         
         plot_filename = f"sim_{self.size}x{self.size}_decision.png"
@@ -192,7 +192,7 @@ class NAMO3DSimulator:
 
 def simulate_env(env_name, gui=False):
     project_dir = Path(__file__).resolve().parent.parent
-    weights_path = str(project_dir / "namo_unet.pth")
+    weights_path = str(project_dir / "models" / "namo_unet.pth")
     pipeline = UNetDecisionPipeline(weights_path)
     
     if env_name == "3x3":

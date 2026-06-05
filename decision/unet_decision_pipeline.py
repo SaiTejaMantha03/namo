@@ -135,7 +135,7 @@ class UNetDecisionPipeline:
 
 def run_all_evaluations():
     project_dir = Path(__file__).resolve().parent.parent
-    weights_path = str(project_dir / "namo_unet.pth")
+    weights_path = str(project_dir / "models" / "namo_unet.pth")
     pipeline = UNetDecisionPipeline(weights_path)
     
     # Define test setups: (grid, start, goal, obstacle, size, title, filename)
