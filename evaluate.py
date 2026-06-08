@@ -8,6 +8,7 @@ sys.path.append(str(Path(__file__).resolve().parent))
 
 from decision.unet_decision_pipeline import UNetDecisionPipeline
 from maps.namo_environments import WarehouseEnvironment
+from decision.namo_visualizer import Visualizer
 
 def run_evaluation():
     project_dir = Path(__file__).resolve().parent
@@ -87,6 +88,26 @@ def run_evaluation():
         row = f"| {s['name']} | {s['size']}x{s['size']} | {decision} | {c_by_str} | {c_re_str} | {pushes} | {success_rate} |"
         table_lines.append(row)
         print(f"Evaluated: {s['name']:28s} | Decision: {decision:6s} | Success: {success_rate}")
+        
+        # Plot dynamic visualization of the decision
+        vis_path = project_dir / "results" / "visualizations" / f"eval_{s['name'].replace(' ', '_').replace('(', '').replace(')', '').replace(',', '')}_{decision}.png"
+        vis = Visualizer(s["size"])
+        path_to_plot = []
+        grid_for_plot = grid.copy()
+        
+        if decision == "BYPASS":
+            # treat obstacle as 2 (wall)
+            if s["obstacle"]:
+                grid_for_plot[s["obstacle"][1], s["obstacle"][0]] = 2
+            path_to_plot = vis.a_star(grid_for_plot, s["start"], s["goal"])
+        else: # REMOVE
+            # Need path to obstacle, then path to goal
+            path_to_obs = vis.a_star(grid_for_plot, s["start"], s["obstacle"])
+            path_from_obs = vis.a_star(grid, s["obstacle"], s["goal"])
+            if path_to_obs and path_from_obs:
+                path_to_plot = path_to_obs + path_from_obs[1:]
+                
+        vis.plot_scenario(grid_for_plot, s["start"], s["goal"], s["obstacle"], path_to_plot, f"{s['name']} - {decision}", str(vis_path))
         
     print("="*80)
     

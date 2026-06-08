@@ -74,3 +74,21 @@ Expected behavior:
 `A ---> corridor <--- B`
 
 The robots enter from opposite sides, contest the same passage, interact with the movable box, and get stuck.
+
+## Results Section
+
+This section demonstrates the capabilities of our NAMO (Navigation Among Movable Obstacles) evaluation pipeline.
+
+### 1. Heatmap Figures
+These figures highlight the cost distribution across different environments:
+*   ![Warehouse Heatmap](file:///Users/saitejamantha/Documents/New%20project/results/heatmaps/warehouse_heatmap.png)
+
+### 2. Decision Outputs
+The trained UNet predictor directly outputs decision heuristics (Bypass vs Removal) without the need to plan full paths to compare costs:
+*   ![3x3 Bypass Decision](file:///Users/saitejamantha/Documents/New%20project/results/visualizations/namo_3x3_bypass.png)
+*   ![3x3 Removal Decision](file:///Users/saitejamantha/Documents/New%20project/results/visualizations/namo_3x3_removal.png)
+*   ![5x5 Bypass Decision](file:///Users/saitejamantha/Documents/New%20project/results/visualizations/namo_5x5_bypass.png)
+*   ![5x5 Removal Decision](file:///Users/saitejamantha/Documents/New%20project/results/visualizations/namo_5x5_removal.png)
+
+### 3. Deadlock Examples
+When robots follow selfish paths in narrow corridors, they inevitably deadlock. We identify deadlock situations by predicting collisions and excessive push costs in constrained geometries, enabling proactive yielding or coordinated movable obstacle displacement.
