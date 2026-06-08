@@ -1,0 +1,34 @@
+# NAMO Narrow Doorway Congestion Config (15x15)
+meta:
+  name: "narrow_doorway_congestion"
+world:
+  grid_size: 15
+  cell_size: 1.0
+  sim_steps: 1500
+robots:
+  - id: 3
+    start: [2, 4]
+    goal: [12, 4]
+  - id: 4
+    start: [2, 7]
+    goal: [12, 7]
+  - id: 5
+    start: [2, 10]
+    goal: [12, 10]
+obstacles: []
+walls:
+  # Wall dividing the left and right rooms at col 7
+  # Leave a single doorway open at [7, 7]
+  - pos: [7, 1]
+  - pos: [7, 2]
+  - pos: [7, 3]
+  - pos: [7, 4]
+  - pos: [7, 5]
+  - pos: [7, 6]
+  # [7, 7] is open!
+  - pos: [7, 8]
+  - pos: [7, 9]
+  - pos: [7, 10]
+  - pos: [7, 11]
+  - pos: [7, 12]
+  - pos: [7, 13]

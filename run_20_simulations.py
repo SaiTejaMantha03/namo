@@ -1,0 +1,368 @@
+import sys
+import time
+import math
+import numpy as np
+import pybullet as p
+import pybullet_data
+import matplotlib.pyplot as plt
+import heapq
+import argparse
+from pathlib import Path
+
+# Add project root to path for imports
+sys.path.append(str(Path(__file__).resolve().parent))
+
+from decision.unet_decision_pipeline import UNetDecisionPipeline
+from maps.namo_environments import NAMOEnvironment
+
+GRID_DATA = np.array([
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+    [0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 2, 2, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+    [0, 0, 1, 0, 0, 0, 1, 0, 2, 0, 0, 2, 0, 0, 1, 0, 1, 0, 0, 0],
+    [0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 2, 0, 0, 1, 0, 1, 0, 0, 0],
+    [0, 1, 1, 2, 2, 0, 1, 0, 0, 0, 0, 0, 0, 2, 1, 0, 1, 0, 0, 0],
+    [2, 1, 1, 0, 0, 0, 1, 2, 2, 0, 0, 0, 1, 2, 0, 2, 1, 0, 0, 1],
+    [2, 1, 1, 0, 0, 1, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
+    [0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
+    [0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 1],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 2, 1],
+    [0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+    [0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 2, 0, 1],
+    [2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1],
+    [2, 1, 1, 2, 2, 0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 2, 1, 0, 0, 1],
+    [0, 1, 1, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 1],
+    [0, 0, 1, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 1],
+    [0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1],
+    [0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1],
+    [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+])
+
+def cell_center(cell_x, cell_y, cell_size=1.0):
+    return (cell_x + 0.5) * cell_size, (cell_y + 0.5) * cell_size
+
+def world_to_cell(position_xy, cell_size=1.0):
+    return int(position_xy[0] // cell_size), int(position_xy[1] // cell_size)
+
+def create_box(position, half_extents, color):
+    collision = p.createCollisionShape(p.GEOM_BOX, halfExtents=half_extents)
+    visual = p.createVisualShape(p.GEOM_BOX, halfExtents=half_extents, rgbaColor=color)
+    return p.createMultiBody(
+        baseMass=1.5,
+        baseCollisionShapeIndex=collision,
+        baseVisualShapeIndex=visual,
+        basePosition=position,
+    )
+
+def create_static_wall(position, half_extents):
+    collision = p.createCollisionShape(p.GEOM_BOX, halfExtents=half_extents)
+    visual = p.createVisualShape(p.GEOM_BOX, halfExtents=half_extents, rgbaColor=[0.3, 0.3, 0.3, 1.0])
+    return p.createMultiBody(
+        baseMass=0.0,
+        baseCollisionShapeIndex=collision,
+        baseVisualShapeIndex=visual,
+        basePosition=position,
+    )
+
+def create_robot(position, color):
+    collision = p.createCollisionShape(p.GEOM_CYLINDER, radius=0.25, height=0.3)
+    visual = p.createVisualShape(p.GEOM_CYLINDER, radius=0.25, length=0.3, rgbaColor=color)
+    body_id = p.createMultiBody(
+        baseMass=2.0,
+        baseCollisionShapeIndex=collision,
+        baseVisualShapeIndex=visual,
+        basePosition=position,
+    )
+    p.changeDynamics(body_id, -1, lateralFriction=1.0, linearDamping=0.2, angularDamping=0.9)
+    return body_id
+
+def drive_robot(robot_id, target_xy, speed=1.2):
+    position, _ = p.getBasePositionAndOrientation(robot_id)
+    dx = target_xy[0] - position[0]
+    dy = target_xy[1] - position[1]
+    distance = math.hypot(dx, dy)
+
+    if distance < 0.22:
+        p.resetBaseVelocity(robot_id, linearVelocity=[0, 0, 0], angularVelocity=[0, 0, 0])
+        return distance
+
+    scale = min(speed, distance * 2.0) / max(distance, 1e-6)
+    vx = dx * scale
+    vy = dy * scale
+    yaw = math.atan2(dy, dx)
+    orientation = p.getQuaternionFromEuler([0, 0, yaw])
+    p.resetBasePositionAndOrientation(robot_id, [position[0], position[1], position[2]], orientation)
+    p.resetBaseVelocity(robot_id, linearVelocity=[vx, vy, 0], angularVelocity=[0, 0, 0])
+    return distance
+
+def a_star_internal(start, goal, other_robots, boxes, grid_size=20):
+    h = lambda p: abs(p[0] - goal[0]) + abs(p[1] - goal[1])
+    open_set = []
+    heapq.heappush(open_set, (0.0, start))
+    came_from = {}
+    g_score = {start: 0.0}
+    robot_set = set(other_robots)
+    box_set = set(boxes)
+    while open_set:
+        _, current = heapq.heappop(open_set)
+        if current == goal:
+            path = []
+            while current in came_from:
+                path.append(current)
+                current = came_from[current]
+            path.append(start)
+            return path[::-1]
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            neighbor = (current[0] + dx, current[1] + dy)
+            if 0 <= neighbor[0] < grid_size and 0 <= neighbor[1] < grid_size:
+                if GRID_DATA[neighbor[1], neighbor[0]] == 1:
+                    continue
+                if neighbor in robot_set and neighbor != goal:
+                    continue
+                cost = 1.0
+                if neighbor in box_set:
+                    cost += 4.0
+                tentative_g = g_score[current] + cost
+                if tentative_g < g_score.get(neighbor, float('inf')):
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g
+                    heapq.heappush(open_set, (tentative_g + h(neighbor), neighbor))
+    return []
+
+def find_clearing_direction_multi(box_cell, other_robots, boxes, grid_size=20):
+    bx, by = box_cell
+    directions = [
+        ((bx, by + 1), (bx, by - 1)),
+        ((bx, by - 1), (bx, by + 1)),
+        ((bx + 1, by), (bx - 1, by)),
+        ((bx - 1, by), (bx + 1, by))
+    ]
+    robot_set = set(other_robots)
+    box_set = set(boxes)
+    for clear_cell, approach_cell in directions:
+        cx, cy = clear_cell
+        ax, ay = approach_cell
+        if 0 <= cx < grid_size and 0 <= cy < grid_size:
+            if 0 <= ax < grid_size and 0 <= ay < grid_size:
+                if GRID_DATA[cy, cx] != 1 and clear_cell not in robot_set and clear_cell not in box_set:
+                    if GRID_DATA[ay, ax] != 1 and approach_cell not in robot_set and approach_cell not in box_set:
+                        return clear_cell, approach_cell
+    return None
+
+def run_simulation(start, goal, pipeline, gui=False):
+    mode = p.GUI if gui else p.DIRECT
+    p.connect(mode)
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    p.setGravity(0, 0, -9.81)
+    p.setTimeStep(0.01)
+    p.loadURDF("plane.urdf")
+    
+    cell_size = 1.0
+    wall_height = 0.8
+    grid_size = 20
+    
+    if gui:
+        p.resetDebugVisualizerCamera(
+            cameraDistance=25.0,
+            cameraYaw=0,
+            cameraPitch=-75,
+            cameraTargetPosition=[10.0, 10.0, 0.0],
+        )
+        
+    box_ids = []
+    
+    # Spawn layout
+    for r in range(grid_size):
+        for c in range(grid_size):
+            x, y = cell_center(c, r, cell_size)
+            val = GRID_DATA[r, c]
+            if val == 1:
+                create_static_wall([x, y, wall_height*0.5], [0.5, 0.5, wall_height*0.5])
+            elif val == 2:
+                bid = create_box([x, y, 0.2], [0.35, 0.35, 0.2], [0.95, 0.6, 0.1, 1.0])
+                p.changeDynamics(bid, -1, lateralFriction=0.8)
+                box_ids.append(bid)
+                
+    # Spawn robot
+    s_x, s_y = cell_center(start[0], start[1])
+    robot_id = create_robot([s_x, s_y, 0.15], [0.2, 0.6, 0.9, 1.0])
+    
+    initial_box_pos = {}
+    for bid in box_ids:
+        pos, _ = p.getBasePositionAndOrientation(bid)
+        initial_box_pos[bid] = pos[:2]
+        
+    robot_state = {"state": "NAVIGATING", "waypoints": []}
+    success = False
+    collision_count = 0
+    sim_steps = 1500
+    
+    dummy_risk = np.zeros((grid_size, grid_size))
+    _, init_path = pipeline.risk_aware_a_star(GRID_DATA, dummy_risk, start, goal)
+    blocking_box = None
+    if init_path:
+        for cell in init_path:
+            if GRID_DATA[cell[1], cell[0]] == 2:
+                blocking_box = cell
+                break
+    if blocking_box is None:
+        blocking_box = (10, 10)
+    decision, _, _ = pipeline.evaluate_decision(GRID_DATA, start, goal, blocking_box, push_cost=4.0)
+    
+    for step in range(sim_steps):
+        pos, _ = p.getBasePositionAndOrientation(robot_id)
+        dist = math.hypot(pos[0] - (goal[0]+0.5)*cell_size, pos[1] - (goal[1]+0.5)*cell_size)
+        if dist <= 0.4:
+            success = True
+            break
+            
+        curr_cell = world_to_cell(pos[:2], cell_size)
+        
+        current_box_positions = {}
+        for bid in box_ids:
+            bpos, _ = p.getBasePositionAndOrientation(bid)
+            current_box_positions[bid] = world_to_cell(bpos[:2], cell_size)
+            
+        box_cells = list(current_box_positions.values())
+        
+        if robot_state["state"] == "CLEARING":
+            if robot_state["waypoints"]:
+                target_cell = robot_state["waypoints"][0]
+                target_xy = cell_center(target_cell[0], target_cell[1], cell_size)
+                dist_to_wp = drive_robot(robot_id, target_xy)
+                if dist_to_wp < 0.22:
+                    robot_state["waypoints"].pop(0)
+            else:
+                robot_state["state"] = "NAVIGATING"
+                
+        if robot_state["state"] == "NAVIGATING":
+            path = a_star_internal(curr_cell, goal, [], box_cells)
+            if len(path) > 1:
+                blocking = None
+                for cell in path:
+                    if cell in box_cells:
+                        blocking = cell
+                        break
+                if blocking:
+                    clearing_res = find_clearing_direction_multi(blocking, [], box_cells)
+                    if clearing_res:
+                        clear_cell, approach_cell = clearing_res
+                        path_to_approach = a_star_internal(curr_cell, approach_cell, [], box_cells)
+                        if path_to_approach and not any(c in box_cells for c in path_to_approach):
+                            robot_state["state"] = "CLEARING"
+                            robot_state["waypoints"] = path_to_approach[1:] + [blocking, clear_cell]
+                            target_xy = cell_center(robot_state["waypoints"][0][0], robot_state["waypoints"][0][1], cell_size)
+                            drive_robot(robot_id, target_xy)
+                        else:
+                            robot_state["state"] = "CLEARING"
+                            robot_state["waypoints"] = [approach_cell, blocking, clear_cell]
+                            target_xy = cell_center(approach_cell[0], approach_cell[1], cell_size)
+                            drive_robot(robot_id, target_xy)
+                    else:
+                        target_xy = cell_center(path[1][0], path[1][1], cell_size)
+                        drive_robot(robot_id, target_xy)
+                else:
+                    target_xy = cell_center(path[1][0], path[1][1], cell_size)
+                    drive_robot(robot_id, target_xy)
+            else:
+                drive_robot(robot_id, cell_center(goal[0], goal[1], cell_size), speed=0.5)
+                
+        p.stepSimulation()
+        if gui:
+            time.sleep(0.01)
+        
+        for bid in box_ids:
+            if len(p.getContactPoints(robot_id, bid)) > 0:
+                collision_count += 1
+                
+    push_count = 0
+    for bid in box_ids:
+        pos, _ = p.getBasePositionAndOrientation(bid)
+        init = initial_box_pos[bid]
+        dist_moved = math.hypot(pos[0] - init[0], pos[1] - init[1])
+        if dist_moved > 0.5:
+            push_count += 1
+            
+    p.disconnect()
+    return decision, success, step, push_count, collision_count
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gui", action="store_true", help="Launch in PyBullet 3D GUI mode")
+    parser.add_argument("--scenario", type=int, default=0, help="Run a specific scenario ID (1-20)")
+    args = parser.parse_args()
+    
+    project_dir = Path(__file__).resolve().parent
+    weights_path = str(project_dir / "models" / "namo_unet.pth")
+    pipeline = UNetDecisionPipeline(weights_path)
+    
+    scenarios = [
+        ((17, 0), (15, 2)),
+        ((17, 0), (18, 2)),
+        ((17, 0), (15, 3)),
+        ((17, 0), (17, 3)),
+        ((17, 0), (19, 3)),
+        ((18, 0), (15, 2)),
+        ((18, 0), (18, 2)),
+        ((18, 0), (15, 3)),
+        ((18, 0), (17, 3)),
+        ((18, 0), (19, 3)),
+        ((17, 0), (0, 1)),
+        ((17, 0), (1, 1)),
+        ((17, 0), (4, 1)),
+        ((17, 0), (5, 1)),
+        ((17, 0), (6, 1)),
+        ((18, 0), (0, 1)),
+        ((18, 0), (1, 1)),
+        ((18, 0), (4, 1)),
+        ((18, 0), (5, 1)),
+        ((18, 0), (6, 1)),
+    ]
+    
+    if args.scenario > 0:
+        if args.scenario <= len(scenarios):
+            start, goal = scenarios[args.scenario - 1]
+            print(f"Launching Scenario {args.scenario:02d} in GUI mode (Start={start}, Goal={goal})...")
+            decision, success, steps, pushes, collisions = run_simulation(start, goal, pipeline, gui=args.gui)
+            print(f"Result -> Success: {success} | Steps: {steps} | Pushes: {pushes} | Collisions: {collisions}")
+        else:
+            print(f"Invalid scenario ID {args.scenario}. Must be between 1 and {len(scenarios)}.")
+    else:
+        print("Running 20 simulations on the custom map...")
+        results = []
+        for idx, (start, goal) in enumerate(scenarios):
+            decision, success, steps, pushes, collisions = run_simulation(start, goal, pipeline, gui=args.gui)
+            results.append({
+                "id": idx + 1,
+                "start": start,
+                "goal": goal,
+                "decision": decision,
+                "success": success,
+                "steps": steps if success else 1500,
+                "pushes": pushes,
+                "collisions": collisions
+            })
+            print(f"Scenario {idx+1:02d}: Start={start} Goal={goal} | Decision={decision:7s} | Success={success} | Steps={steps} | Pushes={pushes} | Collisions={collisions}")
+            
+        sample_start = (17, 0)
+        sample_goal = (5, 1)
+        sample_obstacle = (16, 1)
+        plot_filename = "custom_map_unet_evaluation.png"
+        plot_save_path = "/Users/saitejamantha/.gemini/antigravity-ide/brain/c7343bea-36ca-449b-bf68-d2e5657f4c53/" + plot_filename
+        
+        pipeline.evaluate_decision(GRID_DATA, sample_start, sample_goal, sample_obstacle, push_cost=4.0, save_plot_path=plot_save_path)
+        
+        table_lines = [
+            "| Scenario | Start | Goal | Model Decision | Success | Steps | Pushes | Collisions |",
+            "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
+        ]
+        for r in results:
+            success_str = "✅ Yes" if r["success"] else "❌ No"
+            table_lines.append(f"| {r['id']} | {r['start']} | {r['goal']} | **{r['decision']}** | {success_str} | {r['steps']} | {r['pushes']} | {r['collisions']} |")
+            
+        results_dir = project_dir / "results" / "custom_simulations"
+        results_dir.mkdir(parents=True, exist_ok=True)
+        (results_dir / "custom_results_table.md").write_text("\n".join(table_lines))
+
+if __name__ == '__main__':
+    main()

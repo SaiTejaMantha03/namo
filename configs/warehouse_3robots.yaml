@@ -1,0 +1,23 @@
+# NAMO Warehouse 3 Robots Config (15x15)
+meta:
+  name: "warehouse_3robots_15x15"
+world:
+  grid_size: 15
+  cell_size: 1.0
+  sim_steps: 1500
+corridor:
+  aisle_width: 1
+robots:
+  - id: 3
+    start: [3, 2]
+    goal: [3, 12]
+  - id: 4
+    start: [7, 2]
+    goal: [7, 12]
+  - id: 5
+    start: [11, 2]
+    goal: [11, 12]
+obstacles:
+  - pos: [3, 7]
+  - pos: [7, 7]
+  - pos: [11, 7]

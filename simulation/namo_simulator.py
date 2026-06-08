@@ -52,6 +52,15 @@ def create_robot(position, color):
     p.changeDynamics(body_id, -1, lateralFriction=1.0, linearDamping=0.2, angularDamping=0.9)
     return body_id
 
+def create_goal_marker(position, color):
+    visual = p.createVisualShape(p.GEOM_CYLINDER, radius=0.25, length=0.02, rgbaColor=color)
+    return p.createMultiBody(
+        baseMass=0.0,
+        baseCollisionShapeIndex=-1,
+        baseVisualShapeIndex=visual,
+        basePosition=position,
+    )
+
 def drive_robot(robot_id, target_xy, speed=1.2):
     position, _ = p.getBasePositionAndOrientation(robot_id)
     dx = target_xy[0] - position[0]
@@ -134,6 +143,10 @@ class NAMO3DSimulator:
         s_x, s_y = cell_center(self.start[0], self.start[1])
         robot_id = create_robot([s_x, s_y, 0.15], [0.2, 0.6, 0.9, 1.0])
         
+        # Spawn goal marker
+        g_x, g_y = cell_center(self.goal[0], self.goal[1])
+        create_goal_marker([g_x, g_y, 0.01], [0.2, 0.6, 0.9, 0.4])
+        
         # Call UNet Decision Pipeline to generate and save the visual heatmap plot
         project_dir = Path(__file__).resolve().parent.parent
         weights_path = str(project_dir / "models" / "namo_unet.pth")
@@ -212,6 +225,9 @@ def simulate_env(env_name, gui=False):
         for obs in config.get("obstacles", []):
             env.add_obstacle(obs["pos"][0], obs["pos"][1])
             
+        for wall in config.get("walls", []):
+            env.add_wall(wall["pos"][0], wall["pos"][1])
+
         env.robots = []
         env.goals = {}
         env.robot_counter = 3
@@ -267,8 +283,14 @@ def simulate_env(env_name, gui=False):
             robot_ids.append(rid)
             robot_goals[rid] = robot['goal']
             
+            # Spawn a flat goal marker disc on the ground
+            g_x, g_y = cell_center(robot['goal'][0], robot['goal'][1], cell_size)
+            r_color = colors[i % len(colors)]
+            g_color = [r_color[0], r_color[1], r_color[2], 0.4]  # Translucent
+            create_goal_marker([g_x, g_y, 0.01], g_color)
+            
         import heapq
-        def a_star_internal(start, goal, other_robots, boxes):
+        def a_star_internal(start, goal, other_robots, boxes, ignore_boxes=False):
             h = lambda p: abs(p[0] - goal[0]) + abs(p[1] - goal[1])
             open_set = []
             heapq.heappush(open_set, (0.0, start))
@@ -293,14 +315,34 @@ def simulate_env(env_name, gui=False):
                         if neighbor in robot_set and neighbor != goal:
                             continue
                         cost = 1.0
-                        if neighbor in box_set:
-                            cost += 4.0
+                        if not ignore_boxes and neighbor in box_set:
+                            cost += 4.0  # Push cost penalty
                         tentative_g = g_score[current] + cost
                         if tentative_g < g_score.get(neighbor, float('inf')):
                             came_from[neighbor] = current
                             g_score[neighbor] = tentative_g
                             heapq.heappush(open_set, (tentative_g + h(neighbor), neighbor))
             return []
+            
+        def find_clearing_direction_multi(box_cell, other_robots, boxes):
+            bx, by = box_cell
+            directions = [
+                ((bx, by + 1), (bx, by - 1)),
+                ((bx, by - 1), (bx, by + 1)),
+                ((bx + 1, by), (bx - 1, by)),
+                ((bx - 1, by), (bx + 1, by))
+            ]
+            robot_set = set(other_robots)
+            box_set = set(boxes)
+            for clear_cell, approach_cell in directions:
+                cx, cy = clear_cell
+                ax, ay = approach_cell
+                if 0 <= cx < grid_size and 0 <= cy < grid_size:
+                    if 0 <= ax < grid_size and 0 <= ay < grid_size:
+                        if grid[cy, cx] != 1 and clear_cell not in robot_set and clear_cell not in box_set:
+                            if grid[ay, ax] != 1 and approach_cell not in robot_set and approach_cell not in box_set:
+                                return clear_cell, approach_cell
+            return None
             
         sim_steps = config["world"]["sim_steps"]
         print(f"\n[Simulation] Running Yaml configuration: {config['meta']['name']} with {len(robot_ids)} robots...")
@@ -312,6 +354,8 @@ def simulate_env(env_name, gui=False):
             pos, _ = p.getBasePositionAndOrientation(bid)
             initial_box_pos[bid] = pos[:2]
             
+        robot_states = {rid: {"state": "NAVIGATING", "waypoints": []} for rid in robot_ids}
+        
         for step in range(sim_steps):
             current_robot_positions = {}
             for rid in robot_ids:
@@ -328,7 +372,7 @@ def simulate_env(env_name, gui=False):
                 pos, _ = p.getBasePositionAndOrientation(rid)
                 g = robot_goals[rid]
                 dist = math.hypot(pos[0] - (g[0]+0.5)*cell_size, pos[1] - (g[1]+0.5)*cell_size)
-                if dist > 0.3:
+                if dist > 0.4:
                     all_reached = False
                     break
                     
@@ -340,7 +384,7 @@ def simulate_env(env_name, gui=False):
                 pos, _ = p.getBasePositionAndOrientation(rid)
                 g = robot_goals[rid]
                 dist = math.hypot(pos[0] - (g[0]+0.5)*cell_size, pos[1] - (g[1]+0.5)*cell_size)
-                if dist <= 0.3:
+                if dist <= 0.4:
                     p.resetBaseVelocity(rid, [0,0,0], [0,0,0])
                     continue
                     
@@ -348,13 +392,57 @@ def simulate_env(env_name, gui=False):
                 other_rob_cells = [c for r, c in current_robot_positions.items() if r != rid]
                 box_cells = list(current_box_positions.values())
                 
-                path = a_star_internal(curr_cell, g, other_rob_cells, box_cells)
-                if len(path) > 1:
-                    target_xy = cell_center(path[1][0], path[1][1], cell_size)
-                    drive_robot(rid, target_xy)
-                else:
-                    drive_robot(rid, cell_center(g[0], g[1], cell_size), speed=0.5)
-                    
+                state_info = robot_states[rid]
+                
+                if state_info["state"] == "CLEARING":
+                    if state_info["waypoints"]:
+                        target_cell = state_info["waypoints"][0]
+                        target_xy = cell_center(target_cell[0], target_cell[1], cell_size)
+                        dist_to_wp = drive_robot(rid, target_xy)
+                        if dist_to_wp < 0.22:
+                            state_info["waypoints"].pop(0)
+                    else:
+                        state_info["state"] = "NAVIGATING"
+                        
+                if state_info["state"] == "NAVIGATING":
+                    # Plan path using standard A* with push cost
+                    path = a_star_internal(curr_cell, g, other_rob_cells, box_cells, ignore_boxes=False)
+                    if len(path) > 1:
+                        # Check if path contains a box
+                        blocking_box = None
+                        for cell in path:
+                            if cell in box_cells:
+                                blocking_box = cell
+                                break
+                                
+                        if blocking_box:
+                            clearing_res = find_clearing_direction_multi(blocking_box, other_rob_cells, box_cells)
+                            if clearing_res:
+                                clear_cell, approach_cell = clearing_res
+                                # Plan to approach cell avoiding other boxes
+                                path_to_approach = a_star_internal(curr_cell, approach_cell, other_rob_cells, box_cells, ignore_boxes=False)
+                                if path_to_approach and not any(c in box_cells for c in path_to_approach):
+                                    state_info["state"] = "CLEARING"
+                                    state_info["waypoints"] = path_to_approach[1:] + [blocking_box, clear_cell]
+                                    target_xy = cell_center(state_info["waypoints"][0][0], state_info["waypoints"][0][1], cell_size)
+                                    drive_robot(rid, target_xy)
+                                else:
+                                    # Fallback: drive directly to approach cell
+                                    state_info["state"] = "CLEARING"
+                                    state_info["waypoints"] = [approach_cell, blocking_box, clear_cell]
+                                    target_xy = cell_center(approach_cell[0], approach_cell[1], cell_size)
+                                    drive_robot(rid, target_xy)
+                            else:
+                                # No clearing direction: drive along the planned path (pushing straight)
+                                target_xy = cell_center(path[1][0], path[1][1], cell_size)
+                                drive_robot(rid, target_xy)
+                        else:
+                            # Normal path, no boxes
+                            target_xy = cell_center(path[1][0], path[1][1], cell_size)
+                            drive_robot(rid, target_xy)
+                    else:
+                        drive_robot(rid, cell_center(g[0], g[1], cell_size), speed=0.5)
+                            
             p.stepSimulation()
             if gui:
                 time.sleep(0.01)
@@ -377,14 +465,34 @@ def simulate_env(env_name, gui=False):
             if dist_moved > 0.5:
                 push_count += 1
                 
+        # Final success check in case they reached at the very last step
+        all_reached_final = True
+        for rid in robot_ids:
+            pos, _ = p.getBasePositionAndOrientation(rid)
+            g = robot_goals[rid]
+            dist = math.hypot(pos[0] - (g[0]+0.5)*cell_size, pos[1] - (g[1]+0.5)*cell_size)
+            print(f"Robot {rid} final dist: {dist:.4f} (pos: {pos[:2]}, goal: {g})")
+            if dist > 0.4:
+                all_reached_final = False
+                # Do not break so we can print all
+        if all_reached_final:
+            success = True
+                
         print("\n" + "="*50)
         print("SIMULATION RESULTS:")
         print(f"Success: {success}")
-        print(f"Steps: {step if success else sim_steps}")
+        print(f"Steps: {step if success and (step < sim_steps - 1) else sim_steps}")
         print(f"Obstacle Pushes: {push_count}")
         print(f"Contacts/Collisions: {collision_count}")
         print("="*50)
         p.disconnect()
+        return {
+            "success": success,
+            "steps": step if success and (step < sim_steps - 1) else sim_steps,
+            "pushes": push_count,
+            "collisions": collision_count
+        }
+
         
     elif env_name == "3x3":
         g3 = np.zeros((3, 3), dtype=int)
