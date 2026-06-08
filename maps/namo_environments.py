@@ -1,5 +1,7 @@
+from torch import _weights_only_unpickler
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 class NAMOEnvironment:
     def __init__(self, grid_size=15, name="NAMO Environment"):
@@ -183,13 +185,18 @@ class IntersectionEnvironment(NAMOEnvironment):
 def generate_demos():
     # 1. Warehouse Deadlock Demo
     wh = WarehouseEnvironment(grid_size=15)
+    # Replace both save paths in generate_demos() with:
+    project_dir = Path(__file__).resolve().parent.parent
+    results_dir = project_dir / "results" / "visualizations"
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    wh_img = str(results_dir / "namo_warehouse.png")
+    inter_img = str(results_dir / "namo_intersection.png")
     # Add multiple robots crossing in the narrow aisles
     wh.add_robot(start_pos=(3, 2), goal_pos=(3, 12))  # Robot 1 goes South down aisle 3
     wh.add_robot(start_pos=(3, 12), goal_pos=(3, 2))  # Robot 2 goes North up aisle 3 (causing deadlock!)
     # Add a movable box blocking a cross-aisle exit
     wh.add_obstacle(3, 7) # Box directly in the middle intersection of aisle 3
-    
-    wh_img = "/Users/saitejamantha/.gemini/antigravity/brain/89fa2c6d-0c06-4ff1-b436-ff754208e534/namo_warehouse.png"
     wh.visualize(wh_img)
 
     # 2. Intersection Crossing Deadlock Demo
@@ -203,8 +210,6 @@ def generate_demos():
     inter.add_obstacle(7, 6)
     inter.add_obstacle(6, 7)
     inter.add_obstacle(8, 7)
-
-    inter_img = "/Users/saitejamantha/.gemini/antigravity/brain/89fa2c6d-0c06-4ff1-b436-ff754208e534/namo_intersection.png"
     inter.visualize(inter_img)
 
 if __name__ == "__main__":

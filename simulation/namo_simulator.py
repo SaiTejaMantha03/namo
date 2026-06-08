@@ -154,13 +154,15 @@ class NAMO3DSimulator:
         pipeline = UNetDecisionPipeline(weights_path)
         
         plot_filename = f"sim_{self.size}x{self.size}_decision.png"
-        plot_save_path = str(project_dir / "decision" / plot_filename)
+        results_dir = project_dir / "results" / "visualizations"
+        results_dir.mkdir(parents=True, exist_ok=True)
+        plot_save_path = str(results_dir / plot_filename)
         
         pipeline.evaluate_decision(
             self.grid, self.start, self.goal, self.obstacle, 
             push_cost=4.0, save_plot_path=plot_save_path
         )
-        print(f" -> Automatically generated and saved plot to: decision/{plot_filename}")
+        print(f" -> Automatically generated and saved plot to: results/visualizations/{plot_filename}")
 
         print(f"\n[Simulation] Executing NAMO {self.decision} on {self.size}x{self.size} grid...")
 

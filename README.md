@@ -30,7 +30,7 @@ In this runtime, Torch reports `is_built=True` and `is_available=False`, so Meta
 
 ## Configurable Scenario
 
-The scene is now driven by [scenario_config.json](</Users/saitejamantha/Documents/New project/namo_project/scenario_config.json>).
+The scene is now driven by [scenario_config.json](./simulation/scenario_config.json).
 
 You can change:
 
