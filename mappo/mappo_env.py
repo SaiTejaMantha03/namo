@@ -52,6 +52,26 @@ def a_star_internal(start, goal, other_robots, boxes, grid, grid_size, ignore_bo
                     heapq.heappush(open_set, (tentative_g + h(neighbor), neighbor))
     return []
 
+def find_clearing_direction_multi(box_cell, other_robots, boxes, grid, grid_size, locked_zones=set()):
+    bx, by = box_cell
+    directions = [
+        ((bx, by + 1), (bx, by - 1)),
+        ((bx, by - 1), (bx, by + 1)),
+        ((bx + 1, by), (bx - 1, by)),
+        ((bx - 1, by), (bx + 1, by))
+    ]
+    robot_set = set(other_robots)
+    box_set = set(boxes)
+    for clear_cell, approach_cell in directions:
+        cx, cy = clear_cell
+        ax, ay = approach_cell
+        if 0 <= cx < grid_size and 0 <= cy < grid_size:
+            if 0 <= ax < grid_size and 0 <= ay < grid_size:
+                if grid[cy, cx] != 1 and clear_cell not in robot_set and clear_cell not in box_set and clear_cell not in locked_zones:
+                    if grid[ay, ax] != 1 and approach_cell not in robot_set and approach_cell not in box_set and approach_cell not in locked_zones:
+                        return clear_cell, approach_cell
+    return None
+
 class NAMOmappoEnv:
     def __init__(self, config_path, gui=False, max_steps=100, control_interval=15):
         self.config_path = config_path
@@ -154,71 +174,24 @@ class NAMOmappoEnv:
         self.active_clearings = {}
         self.current_step = 0
         self.sim_step_count = 0
-        
         return self._get_observations()
         
     def _get_unet_heatmap(self, agent_rid):
         """Generates 20x20 risk heatmap from current layout for a specific agent."""
-        # Dynamic occupancy grid calculation
         grid = np.zeros((self.grid_size, self.grid_size), dtype=int)
-        
-        # Fill walls and boxes from current physics state
         for r in range(self.grid_size):
             for c in range(self.grid_size):
                 if self.grid[r, c] == 1:
                     grid[r, c] = 1
-                    
         for bid in self.box_ids:
             pos, _ = p.getBasePositionAndOrientation(bid)
             bx, by = world_to_cell(pos[:2], self.cell_size)
             if 0 <= bx < self.grid_size and 0 <= by < self.grid_size:
                 grid[by, bx] = 2
-                
-        # Agent current and goal
         pos, _ = p.getBasePositionAndOrientation(agent_rid)
         ax, ay = world_to_cell(pos[:2], self.cell_size)
         g = self.robot_goals[agent_rid]
-        
-        # Obstacle position (closest box)
-        obs_pos = (self.grid_size // 2, self.grid_size // 2)
-        min_dist = float('inf')
-        for bid in self.box_ids:
-            bpos, _ = p.getBasePositionAndOrientation(bid)
-            bx, by = world_to_cell(bpos[:2], self.cell_size)
-            d = abs(ax - bx) + abs(ay - by)
-            if d < min_dist:
-                min_dist = d
-                obs_pos = (bx, by)
-                
-        # Use evaluate_decision to pad to 20x20 and get heatmap
-        # Set save_plot_path=None to skip drawing matplotlib
-        _, _, _ = self.unet_pipeline.evaluate_decision(
-            grid, (ax, ay), g, obs_pos, save_plot_path=None
-        )
-        
-        # Fetch the padded/cropped risk map from the pipeline
-        # We can extract the 20x20 heatmap directly by repeating the padding forward pass
-        target_size = 20
-        offset_x = max(0, (target_size - self.grid_size) // 2)
-        offset_y = max(0, (target_size - self.grid_size) // 2)
-        
-        padded_grid = np.ones((target_size, target_size), dtype=int)
-        padded_grid[offset_y:offset_y+self.grid_size, offset_x:offset_x+self.grid_size] = grid
-        
-        p_start = (ax + offset_x, ay + offset_y)
-        p_goal = (g[0] + offset_x, g[1] + offset_y)
-        
-        occ = np.zeros((4, target_size, target_size), dtype=float)
-        occ[0] = (padded_grid == 1).astype(float)
-        occ[1] = (padded_grid == 2).astype(float)
-        occ[2, p_start[1], p_start[0]] = 1.0
-        occ[3, p_goal[1], p_goal[0]] = 1.0
-        
-        input_tensor = torch.tensor(occ, dtype=torch.float32).unsqueeze(0).to(self.unet_pipeline.device)
-        with torch.no_grad():
-            risk_map_20 = self.unet_pipeline.model(input_tensor).squeeze().cpu().numpy()
-            
-        return risk_map_20 # Shape (20, 20)
+        return self.unet_pipeline.get_risk_map(grid, (ax, ay), g)
 
     def _get_observations(self):
         obs = {}
@@ -288,6 +261,13 @@ class NAMOmappoEnv:
         """
         self.current_step += 1
         
+        # Get starting goal distances for reward shaping
+        starting_dists = {}
+        for rid in self.robot_ids:
+            pos, _ = p.getBasePositionAndOrientation(rid)
+            g = self.robot_goals[rid]
+            starting_dists[rid] = math.hypot(pos[0] - (g[0]+0.5)*self.cell_size, pos[1] - (g[1]+0.5)*self.cell_size)
+            
         # Apply strategic actions
         for rid, act in actions.items():
             state_info = self.robot_states[rid]
@@ -387,11 +367,19 @@ class NAMOmappoEnv:
                 if state_info["state"] == "CLEARING":
                     # If waypoints are empty, plan them
                     if not state_info["waypoints"] and state_info["target_box"]:
-                        # Setup approach and push sequence
-                        bx, by = state_info["target_box"]
-                        # Target approach cell (arbitrary adjacent cell)
-                        approach_cell = (bx - 1, by)
-                        state_info["waypoints"] = [approach_cell, state_info["target_box"], (bx + 1, by)]
+                        # Setup approach and push sequence dynamically avoiding walls/robots
+                        clearing_res = find_clearing_direction_multi(state_info["target_box"], other_rob_cells, box_cells, self.grid, self.grid_size)
+                        if clearing_res:
+                            clear_cell, approach_cell = clearing_res
+                            path_to_approach = a_star_internal(curr_cell, approach_cell, other_rob_cells, box_cells, self.grid, self.grid_size)
+                            if path_to_approach:
+                                state_info["waypoints"] = path_to_approach[1:] + [state_info["target_box"], clear_cell]
+                            else:
+                                state_info["waypoints"] = [approach_cell, state_info["target_box"], clear_cell]
+                        else:
+                            bx, by = state_info["target_box"]
+                            approach_cell = (bx - 1, by)
+                            state_info["waypoints"] = [approach_cell, state_info["target_box"], (bx + 1, by)]
                         
                     if state_info["waypoints"]:
                         target_cell = state_info["waypoints"][0]
@@ -463,8 +451,11 @@ class NAMOmappoEnv:
             g = self.robot_goals[rid]
             dist = math.hypot(pos[0] - (g[0]+0.5)*self.cell_size, pos[1] - (g[1]+0.5)*self.cell_size)
             
-            # Step penalty
-            r = -0.05
+            # Progress shaping: positive reward for moving closer, negative for moving further
+            progress = starting_dists[rid] - dist
+            
+            # Step penalty + progress reward
+            r = -0.05 + (1.0 * progress)
             
             # Collision penalty
             r -= 0.5 * collisions_this_step

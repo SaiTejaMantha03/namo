@@ -53,6 +53,30 @@ class UNetDecisionPipeline:
                         
         return float('inf'), []
 
+    def get_risk_map(self, grid, start, goal):
+        grid_size = grid.shape[0]
+        target_size = 20
+        offset_x = max(0, (target_size - grid_size) // 2)
+        offset_y = max(0, (target_size - grid_size) // 2)
+        
+        padded_grid = np.ones((target_size, target_size), dtype=int)
+        padded_grid[offset_y:offset_y+grid_size, offset_x:offset_x+grid_size] = grid
+        
+        p_start = (start[0] + offset_x, start[1] + offset_y)
+        p_goal = (goal[0] + offset_x, goal[1] + offset_y)
+        
+        occ = np.zeros((4, target_size, target_size), dtype=float)
+        occ[0] = (padded_grid == 1).astype(float)
+        occ[1] = (padded_grid == 2).astype(float)
+        occ[2, p_start[1], p_start[0]] = 1.0
+        occ[3, p_goal[1], p_goal[0]] = 1.0
+        
+        input_tensor = torch.tensor(occ, dtype=torch.float32).unsqueeze(0).to(self.device)
+        with torch.no_grad():
+            risk_map_20 = self.model(input_tensor).squeeze().cpu().numpy()
+            
+        return risk_map_20
+
     def evaluate_decision(self, grid, start, goal, obstacle_pos, push_cost=3.0, save_plot_path=None):
         """
         Generic decision pipeline supporting any size grid:
