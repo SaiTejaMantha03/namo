@@ -61,7 +61,7 @@ def create_goal_marker(position, color):
         basePosition=position,
     )
 
-def drive_robot(robot_id, target_xy, speed=2.2):
+def drive_robot(robot_id, target_xy, speed=5.0):
 
     position, _ = p.getBasePositionAndOrientation(robot_id)
     dx = target_xy[0] - position[0]
@@ -72,7 +72,7 @@ def drive_robot(robot_id, target_xy, speed=2.2):
         p.resetBaseVelocity(robot_id, linearVelocity=[0, 0, 0], angularVelocity=[0, 0, 0])
         return distance
 
-    scale = min(speed, distance * 2.0) / max(distance, 1e-6)
+    scale = speed / max(distance, 1e-6)
     vx = dx * scale
     vy = dy * scale
     yaw = math.atan2(dy, dx)
@@ -313,7 +313,9 @@ def simulate_env(env_name, gui=False):
         create_goal_marker([g_x, g_y, 0.01], g_color)
         
     import heapq
-    def a_star_internal(start, goal, other_robots, boxes, ignore_boxes=False, locked_boxes=set()):
+    def a_star_internal(start, goal, other_robots, boxes, ignore_boxes=False, locked_boxes=set(), impassable_boxes=None):
+        if impassable_boxes is None:
+            impassable_boxes = set()
         h = lambda p: abs(p[0] - goal[0]) + abs(p[1] - goal[1])
         open_set = []
         heapq.heappush(open_set, (0.0, start))
@@ -333,7 +335,7 @@ def simulate_env(env_name, gui=False):
             for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 neighbor = (current[0] + dx, current[1] + dy)
                 if 0 <= neighbor[0] < grid_size and 0 <= neighbor[1] < grid_size:
-                    if grid[neighbor[1], neighbor[0]] == 1 or neighbor in locked_boxes:
+                    if grid[neighbor[1], neighbor[0]] == 1 or neighbor in locked_boxes or neighbor in impassable_boxes:
                         continue
                     if neighbor in robot_set:
                         continue
@@ -347,7 +349,9 @@ def simulate_env(env_name, gui=False):
                         heapq.heappush(open_set, (tentative_g + h(neighbor), neighbor))
         return []
         
-    def find_clearing_direction_multi(box_cell, other_robots, boxes, locked_zones=set()):
+    def find_clearing_direction_multi(box_cell, other_robots, boxes, locked_zones=set(), impassable_boxes=None):
+        if impassable_boxes is None:
+            impassable_boxes = set()
         bx, by = box_cell
         directions = [
             ((bx, by + 1), (bx, by - 1)),
@@ -362,8 +366,8 @@ def simulate_env(env_name, gui=False):
             ax, ay = approach_cell
             if 0 <= cx < grid_size and 0 <= cy < grid_size:
                 if 0 <= ax < grid_size and 0 <= ay < grid_size:
-                    if grid[cy, cx] != 1 and clear_cell not in robot_set and clear_cell not in box_set and clear_cell not in locked_zones:
-                        if grid[ay, ax] != 1 and approach_cell not in robot_set and approach_cell not in box_set and approach_cell not in locked_zones:
+                    if grid[cy, cx] != 1 and clear_cell not in robot_set and clear_cell not in locked_zones and clear_cell not in impassable_boxes:
+                        if grid[ay, ax] != 1 and approach_cell not in robot_set and approach_cell not in box_set and approach_cell not in locked_zones and approach_cell not in impassable_boxes:
                             return clear_cell, approach_cell
         return None
         

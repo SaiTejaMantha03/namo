@@ -78,7 +78,7 @@ def create_robot(position, color):
     p.changeDynamics(body_id, -1, lateralFriction=1.0, linearDamping=0.2, angularDamping=0.9)
     return body_id
 
-def drive_robot(robot_id, target_xy, speed=2.2):
+def drive_robot(robot_id, target_xy, speed=5.0):
 
     position, _ = p.getBasePositionAndOrientation(robot_id)
     dx = target_xy[0] - position[0]
@@ -89,7 +89,7 @@ def drive_robot(robot_id, target_xy, speed=2.2):
         p.resetBaseVelocity(robot_id, linearVelocity=[0, 0, 0], angularVelocity=[0, 0, 0])
         return distance
 
-    scale = min(speed, distance * 2.0) / max(distance, 1e-6)
+    scale = speed / max(distance, 1e-6)
     vx = dx * scale
     vy = dy * scale
     yaw = math.atan2(dy, dx)
@@ -98,7 +98,9 @@ def drive_robot(robot_id, target_xy, speed=2.2):
     p.resetBaseVelocity(robot_id, linearVelocity=[vx, vy, 0], angularVelocity=[0, 0, 0])
     return distance
 
-def a_star_internal(start, goal, other_robots, boxes, grid_size=20):
+def a_star_internal(start, goal, other_robots, boxes, grid_size=20, impassable_boxes=None):
+    if impassable_boxes is None:
+        impassable_boxes = set()
     h = lambda p: abs(p[0] - goal[0]) + abs(p[1] - goal[1])
     open_set = []
     heapq.heappush(open_set, (0.0, start))
@@ -118,7 +120,7 @@ def a_star_internal(start, goal, other_robots, boxes, grid_size=20):
         for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             neighbor = (current[0] + dx, current[1] + dy)
             if 0 <= neighbor[0] < grid_size and 0 <= neighbor[1] < grid_size:
-                if GRID_DATA[neighbor[1], neighbor[0]] == 1:
+                if GRID_DATA[neighbor[1], neighbor[0]] == 1 or neighbor in impassable_boxes:
                     continue
                 if neighbor in robot_set and neighbor != goal:
                     continue
@@ -132,7 +134,9 @@ def a_star_internal(start, goal, other_robots, boxes, grid_size=20):
                     heapq.heappush(open_set, (tentative_g + h(neighbor), neighbor))
     return []
 
-def find_clearing_direction_multi(box_cell, other_robots, boxes, grid_size=20):
+def find_clearing_direction_multi(box_cell, other_robots, boxes, grid_size=20, impassable_boxes=None):
+    if impassable_boxes is None:
+        impassable_boxes = set()
     bx, by = box_cell
     directions = [
         ((bx, by + 1), (bx, by - 1)),
@@ -147,8 +151,8 @@ def find_clearing_direction_multi(box_cell, other_robots, boxes, grid_size=20):
         ax, ay = approach_cell
         if 0 <= cx < grid_size and 0 <= cy < grid_size:
             if 0 <= ax < grid_size and 0 <= ay < grid_size:
-                if GRID_DATA[cy, cx] != 1 and clear_cell not in robot_set and clear_cell not in box_set:
-                    if GRID_DATA[ay, ax] != 1 and approach_cell not in robot_set and approach_cell not in box_set:
+                if GRID_DATA[cy, cx] != 1 and clear_cell not in robot_set and clear_cell not in impassable_boxes:
+                    if GRID_DATA[ay, ax] != 1 and approach_cell not in robot_set and approach_cell not in box_set and approach_cell not in impassable_boxes:
                         return clear_cell, approach_cell
     return None
 
@@ -195,7 +199,9 @@ def run_simulation(start, goal, pipeline, gui=False):
         pos, _ = p.getBasePositionAndOrientation(bid)
         initial_box_pos[bid] = pos[:2]
         
-    robot_state = {"state": "NAVIGATING", "waypoints": []}
+    robot_state = {"state": "NAVIGATING", "waypoints": [], "target_box": None}
+    impassable_boxes = set()
+    pos_history = []
     success = False
     collision_count = 0
     sim_steps = 1500
@@ -214,6 +220,8 @@ def run_simulation(start, goal, pipeline, gui=False):
     
     for step in range(sim_steps):
         pos, _ = p.getBasePositionAndOrientation(robot_id)
+        if step % 50 == 0:
+            print(f"step={step:03d} pos=({pos[0]:.2f},{pos[1]:.2f}) state={robot_state['state']} wps={robot_state['waypoints']} impassable={impassable_boxes}")
         dist = math.hypot(pos[0] - (goal[0]+0.5)*cell_size, pos[1] - (goal[1]+0.5)*cell_size)
         if dist <= 0.4:
             success = True
@@ -228,42 +236,80 @@ def run_simulation(start, goal, pipeline, gui=False):
             
         box_cells = list(current_box_positions.values())
         
+        # Track position history for stuck detection during CLEARING state
+        pos_history.append(pos[:2])
+        if len(pos_history) > 25:
+            pos_history.pop(0)
+            
         if robot_state["state"] == "CLEARING":
-            if robot_state["waypoints"]:
-                target_cell = robot_state["waypoints"][0]
-                target_xy = cell_center(target_cell[0], target_cell[1], cell_size)
-                dist_to_wp = drive_robot(robot_id, target_xy)
-                if dist_to_wp < 0.22:
-                    robot_state["waypoints"].pop(0)
-            else:
-                robot_state["state"] = "NAVIGATING"
+            # Check if robot is stuck (barely moving)
+            if len(pos_history) == 25:
+                p_first = pos_history[0]
+                p_last = pos_history[-1]
+                movement = math.hypot(p_last[0] - p_first[0], p_last[1] - p_first[1])
+                if movement < 0.05:
+                    t_box = robot_state.get("target_box")
+                    if t_box:
+                        impassable_boxes.add(t_box)
+                    print(f" -> [Stuck Detected] Aborting CLEARING of box {t_box} at step {step}. Adding to impassable_boxes.")
+                    robot_state["state"] = "NAVIGATING"
+                    robot_state["waypoints"] = []
+                    robot_state["target_box"] = None
+                    pos_history.clear()
+            
+            if robot_state["state"] == "CLEARING":
+                if robot_state["waypoints"]:
+                    target_cell = robot_state["waypoints"][0]
+                    target_xy = cell_center(target_cell[0], target_cell[1], cell_size)
+                    dist_to_wp = drive_robot(robot_id, target_xy)
+                    if dist_to_wp < 0.22:
+                        robot_state["waypoints"].pop(0)
+                else:
+                    robot_state["state"] = "NAVIGATING"
+                    robot_state["target_box"] = None
                 
         if robot_state["state"] == "NAVIGATING":
-            path = a_star_internal(curr_cell, goal, [], box_cells)
+            path = a_star_internal(curr_cell, goal, [], box_cells, impassable_boxes=impassable_boxes)
             if len(path) > 1:
                 blocking = None
-                for cell in path:
+                for cell in path[1:]:  # Skip start cell
                     if cell in box_cells:
                         blocking = cell
                         break
                 if blocking:
-                    clearing_res = find_clearing_direction_multi(blocking, [], box_cells)
-                    if clearing_res:
+                    # Find a clearing direction where the approach path is NOT blocked by box cells
+                    clearing_res = None
+                    path_to_approach = None
+                    
+                    bx, by = blocking
+                    directions = [
+                        ((bx, by + 1), (bx, by - 1)),
+                        ((bx, by - 1), (bx, by + 1)),
+                        ((bx + 1, by), (bx - 1, by)),
+                        ((bx - 1, by), (bx + 1, by))
+                    ]
+                    for clear_cell, approach_cell in directions:
+                        if 0 <= clear_cell[0] < grid_size and 0 <= clear_cell[1] < grid_size:
+                            if 0 <= approach_cell[0] < grid_size and 0 <= approach_cell[1] < grid_size:
+                                if GRID_DATA[clear_cell[1], clear_cell[0]] != 1 and clear_cell not in impassable_boxes:
+                                    if GRID_DATA[approach_cell[1], approach_cell[0]] != 1 and approach_cell not in box_cells and approach_cell not in impassable_boxes:
+                                        path_cand = a_star_internal(curr_cell, approach_cell, [], box_cells, impassable_boxes=impassable_boxes)
+                                        if path_cand and not any(c in box_cells for c in path_cand[1:]):
+                                            clearing_res = (clear_cell, approach_cell)
+                                            path_to_approach = path_cand
+                                            break
+                                            
+                    if clearing_res and path_to_approach:
                         clear_cell, approach_cell = clearing_res
-                        path_to_approach = a_star_internal(curr_cell, approach_cell, [], box_cells)
-                        if path_to_approach and not any(c in box_cells for c in path_to_approach):
-                            robot_state["state"] = "CLEARING"
-                            robot_state["waypoints"] = path_to_approach[1:] + [blocking, clear_cell]
-                            target_xy = cell_center(robot_state["waypoints"][0][0], robot_state["waypoints"][0][1], cell_size)
-                            drive_robot(robot_id, target_xy)
-                        else:
-                            robot_state["state"] = "CLEARING"
-                            robot_state["waypoints"] = [approach_cell, blocking, clear_cell]
-                            target_xy = cell_center(approach_cell[0], approach_cell[1], cell_size)
-                            drive_robot(robot_id, target_xy)
-                    else:
-                        target_xy = cell_center(path[1][0], path[1][1], cell_size)
+                        robot_state["state"] = "CLEARING"
+                        robot_state["waypoints"] = path_to_approach[1:] + [blocking, clear_cell]
+                        robot_state["target_box"] = blocking
+                        pos_history.clear()
+                        target_xy = cell_center(robot_state["waypoints"][0][0], robot_state["waypoints"][0][1], cell_size)
                         drive_robot(robot_id, target_xy)
+                    else:
+                        impassable_boxes.add(blocking)
+                        print(f" -> Cannot clear box {blocking} (approach path blocked or no clearing direction). Adding to impassable_boxes.")
                 else:
                     target_xy = cell_center(path[1][0], path[1][1], cell_size)
                     drive_robot(robot_id, target_xy)
