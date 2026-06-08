@@ -15,28 +15,30 @@ sys.path.append(str(Path(__file__).resolve().parent))
 from decision.unet_decision_pipeline import UNetDecisionPipeline
 from maps.namo_environments import NAMOEnvironment
 
-GRID_DATA = np.array([
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
-    [0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 2, 2, 0, 1],
-    [0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-    [0, 0, 1, 0, 0, 0, 1, 0, 2, 0, 0, 2, 0, 0, 1, 0, 1, 0, 0, 0],
-    [0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 2, 0, 0, 1, 0, 1, 0, 0, 0],
-    [0, 1, 1, 2, 2, 0, 1, 0, 0, 0, 0, 0, 0, 2, 1, 0, 1, 0, 0, 0],
-    [2, 1, 1, 0, 0, 0, 1, 2, 2, 0, 0, 0, 1, 2, 0, 2, 1, 0, 0, 1],
-    [2, 1, 1, 0, 0, 1, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
-    [0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
-    [0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 1],
-    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 2, 1],
-    [0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-    [0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 2, 0, 1],
-    [2, 1, 1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1],
-    [2, 1, 1, 2, 2, 0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 2, 1, 0, 0, 1],
-    [0, 1, 1, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 1],
-    [0, 0, 1, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 1],
-    [0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1],
-    [0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1],
-    [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
-])
+import yaml
+
+def load_custom_map_yaml():
+    project_dir = Path(__file__).resolve().parent
+    yaml_path = project_dir / "configs" / "custom_reconstructed_map.yaml"
+    with open(yaml_path, "r") as f:
+        config = yaml.safe_load(f)
+        
+    grid_size = config["world"]["grid_size"]
+    grid = np.zeros((grid_size, grid_size), dtype=int)
+    
+    # Set custom walls
+    for w in config.get("walls", []):
+        grid[w["pos"][1], w["pos"][0]] = 1
+        
+    # Set obstacles
+    for obs in config.get("obstacles", []):
+        grid[obs["pos"][1], obs["pos"][0]] = 2
+        
+    return grid
+
+
+GRID_DATA = load_custom_map_yaml()
+
 
 def cell_center(cell_x, cell_y, cell_size=1.0):
     return (cell_x + 0.5) * cell_size, (cell_y + 0.5) * cell_size
@@ -76,7 +78,8 @@ def create_robot(position, color):
     p.changeDynamics(body_id, -1, lateralFriction=1.0, linearDamping=0.2, angularDamping=0.9)
     return body_id
 
-def drive_robot(robot_id, target_xy, speed=1.2):
+def drive_robot(robot_id, target_xy, speed=2.2):
+
     position, _ = p.getBasePositionAndOrientation(robot_id)
     dx = target_xy[0] - position[0]
     dy = target_xy[1] - position[1]
@@ -348,9 +351,12 @@ def main():
         sample_goal = (5, 1)
         sample_obstacle = (16, 1)
         plot_filename = "custom_map_unet_evaluation.png"
-        plot_save_path = "/Users/saitejamantha/.gemini/antigravity-ide/brain/c7343bea-36ca-449b-bf68-d2e5657f4c53/" + plot_filename
+        results_dir = project_dir / "results" / "custom_simulations"
+        results_dir.mkdir(parents=True, exist_ok=True)
+        plot_save_path = str(results_dir / plot_filename)
         
         pipeline.evaluate_decision(GRID_DATA, sample_start, sample_goal, sample_obstacle, push_cost=4.0, save_plot_path=plot_save_path)
+
         
         table_lines = [
             "| Scenario | Start | Goal | Model Decision | Success | Steps | Pushes | Collisions |",

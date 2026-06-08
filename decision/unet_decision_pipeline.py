@@ -161,11 +161,15 @@ def run_all_evaluations():
     print("\nRunning generic NAMO Decision Pipeline Evaluations...")
     print("="*65)
     
+    results_dir = project_dir / "results" / "visualizations"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    
     for grid, start, goal, obstacle, size, title, filename in scenarios:
-        save_path = f"/Users/saitejamantha/.gemini/antigravity/brain/89fa2c6d-0c06-4ff1-b436-ff754208e534/{filename}"
+        save_path = str(results_dir / filename)
         decision, c_by, c_re = pipeline.evaluate_decision(grid, start, goal, obstacle, push_cost=4.0, save_plot_path=save_path)
         print(f"{title:15s} | C_by: {c_by:.2f} | C_re: {c_re:.2f} | Decision: {decision:6s} | Saved: {filename}")
     print("="*65 + "\n")
+
 
 if __name__ == "__main__":
     run_all_evaluations()

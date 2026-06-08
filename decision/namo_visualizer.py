@@ -122,6 +122,11 @@ def generate_layout(size):
     return grid, None, None, None
 
 def run():
+    from pathlib import Path
+    project_dir = Path(__file__).resolve().parent.parent
+    results_dir = project_dir / "results" / "visualizations"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    
     for size in [1, 3, 5, 10]:
         grid, start, goal, obstacle = generate_layout(size)
         
@@ -134,7 +139,7 @@ def run():
         if start and goal:
             bypass_path = Visualizer(size).a_star(grid_bypass, start, goal)
             
-        bypass_img = f"/Users/saitejamantha/.gemini/antigravity/brain/89fa2c6d-0c06-4ff1-b436-ff754208e534/namo_{size}x{size}_bypass.png"
+        bypass_img = str(results_dir / f"namo_{size}x{size}_bypass.png")
         Visualizer(size).plot_scenario(grid_bypass, start, goal, obstacle, bypass_path, f"{size}x{size} Bypass Path", bypass_img)
         
         # 2. Removal Scenario
@@ -145,8 +150,9 @@ def run():
             if path_to_obs and path_from_obs:
                 removal_path = path_to_obs + path_from_obs[1:]
                 
-        removal_img = f"/Users/saitejamantha/.gemini/antigravity/brain/89fa2c6d-0c06-4ff1-b436-ff754208e534/namo_{size}x{size}_removal.png"
+        removal_img = str(results_dir / f"namo_{size}x{size}_removal.png")
         Visualizer(size).plot_scenario(grid_bypass, start, goal, obstacle, removal_path, f"{size}x{size} Removal Path", removal_img)
+
 
 if __name__ == "__main__":
     run()
