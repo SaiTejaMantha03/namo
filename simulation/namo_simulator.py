@@ -381,7 +381,15 @@ def simulate_env(env_name, gui=False):
         pos, _ = p.getBasePositionAndOrientation(bid)
         initial_box_pos[bid] = pos[:2]
         
-    robot_states = {rid: {"state": "NAVIGATING", "waypoints": []} for rid in robot_ids}
+    robot_states = {
+        rid: {
+            "state": "NAVIGATING",
+            "waypoints": [],
+            "target_box": None,
+            "pos_history": [],
+            "impassable_boxes": set()
+        } for rid in robot_ids
+    }
     active_clearings = {}  # box_cell -> rid (mutex reservation)
     
     for step in range(sim_steps):
@@ -429,6 +437,31 @@ def simulate_env(env_name, gui=False):
             
             state_info = robot_states[rid]
             
+            # Track position history for stuck detection during CLEARING state
+            state_info["pos_history"].append(pos[:2])
+            if len(state_info["pos_history"]) > 25:
+                state_info["pos_history"].pop(0)
+                
+            if state_info["state"] == "CLEARING":
+                # Check if stuck
+                if len(state_info["pos_history"]) == 25:
+                    p_first = state_info["pos_history"][0]
+                    p_last = state_info["pos_history"][-1]
+                    movement = math.hypot(p_last[0] - p_first[0], p_last[1] - p_first[1])
+                    if movement < 0.05:
+                        t_box = state_info.get("target_box")
+                        if t_box:
+                            state_info["impassable_boxes"].add(t_box)
+                        print(f" -> [Stuck Detected] Robot {rid} aborting CLEARING of box {t_box} at step {step}. Adding to impassable_boxes.")
+                        state_info["state"] = "NAVIGATING"
+                        state_info["waypoints"] = []
+                        state_info["target_box"] = None
+                        # release lock
+                        for box, locker_id in list(active_clearings.items()):
+                            if locker_id == rid:
+                                active_clearings.pop(box)
+                        state_info["pos_history"].clear()
+            
             if state_info["state"] == "CLEARING":
                 if state_info["waypoints"]:
                     target_cell = state_info["waypoints"][0]
@@ -439,6 +472,7 @@ def simulate_env(env_name, gui=False):
                 else:
                     # Finished clearing, release the lock on this box
                     state_info["state"] = "NAVIGATING"
+                    state_info["target_box"] = None
                     for box, locker_id in list(active_clearings.items()):
                         if locker_id == rid:
                             active_clearings.pop(box)
@@ -448,11 +482,11 @@ def simulate_env(env_name, gui=False):
                 other_next_cells = [cell for other_rid, cell in planned_destinations.items() if other_rid != rid]
                 locked_boxes = set(active_clearings.keys()) | set(other_next_cells)
                 
-                path = a_star_internal(curr_cell, g, other_rob_cells, box_cells, ignore_boxes=False, locked_boxes=locked_boxes)
+                path = a_star_internal(curr_cell, g, other_rob_cells, box_cells, ignore_boxes=False, locked_boxes=locked_boxes, impassable_boxes=state_info["impassable_boxes"])
                 if len(path) > 1:
                     # Check if path contains an unlocked box
                     blocking_box = None
-                    for cell in path:
+                    for cell in path[1:]:  # Skip start cell
                         if cell in box_cells:
                             blocking_box = cell
                             break
@@ -463,34 +497,44 @@ def simulate_env(env_name, gui=False):
                         if not is_locked:
                             # Also avoid locking coordinates being cleared by others
                             locked_zones = set()
-                            for r_states in robot_states.values():
-                                if r_states["state"] == "CLEARING" and r_states["waypoints"]:
+                            for other_rid, r_states in robot_states.items():
+                                if other_rid != rid and r_states["state"] == "CLEARING" and r_states["waypoints"]:
                                     locked_zones.update(r_states["waypoints"])
                                     
-                            clearing_res = find_clearing_direction_multi(blocking_box, other_rob_cells, box_cells, locked_zones=locked_zones)
-                            if clearing_res:
+                            clearing_res = None
+                            path_to_approach = None
+                            
+                            bx, by = blocking_box
+                            directions = [
+                                ((bx, by + 1), (bx, by - 1)),
+                                ((bx, by - 1), (bx, by + 1)),
+                                ((bx + 1, by), (bx - 1, by)),
+                                ((bx - 1, by), (bx + 1, by))
+                            ]
+                            for clear_cell, approach_cell in directions:
+                                if 0 <= clear_cell[0] < grid_size and 0 <= clear_cell[1] < grid_size:
+                                    if 0 <= approach_cell[0] < grid_size and 0 <= approach_cell[1] < grid_size:
+                                        if grid[clear_cell[1], clear_cell[0]] != 1 and clear_cell not in other_rob_cells and clear_cell not in locked_zones and clear_cell not in state_info["impassable_boxes"]:
+                                            if grid[approach_cell[1], approach_cell[0]] != 1 and approach_cell not in other_rob_cells and approach_cell not in box_cells and approach_cell not in locked_zones and approach_cell not in state_info["impassable_boxes"]:
+                                                path_cand = a_star_internal(curr_cell, approach_cell, other_rob_cells, box_cells, ignore_boxes=False, locked_boxes=set(active_clearings.keys()) | set(other_next_cells), impassable_boxes=state_info["impassable_boxes"])
+                                                if path_cand and not any(c in box_cells for c in path_cand[1:]):
+                                                    clearing_res = (clear_cell, approach_cell)
+                                                    path_to_approach = path_cand
+                                                    break
+                                                    
+                            if clearing_res and path_to_approach:
                                 active_clearings[blocking_box] = rid
                                 clear_cell, approach_cell = clearing_res
-                                # Plan to approach cell avoiding other boxes and locked boxes
-                                path_to_approach = a_star_internal(curr_cell, approach_cell, other_rob_cells, box_cells, ignore_boxes=False, locked_boxes=set(active_clearings.keys()) | set(other_next_cells))
-                                if path_to_approach and not any(c in box_cells for c in path_to_approach):
-                                    state_info["state"] = "CLEARING"
-                                    state_info["waypoints"] = path_to_approach[1:] + [blocking_box, clear_cell]
-                                    planned_destinations[rid] = state_info["waypoints"][0]
-                                    target_xy = cell_center(state_info["waypoints"][0][0], state_info["waypoints"][0][1], cell_size)
-                                    drive_robot(rid, target_xy)
-                                else:
-                                    # Fallback: drive directly to approach cell
-                                    state_info["state"] = "CLEARING"
-                                    state_info["waypoints"] = [approach_cell, blocking_box, clear_cell]
-                                    planned_destinations[rid] = approach_cell
-                                    target_xy = cell_center(approach_cell[0], approach_cell[1], cell_size)
-                                    drive_robot(rid, target_xy)
-                            else:
-                                # No clearing direction: drive along the planned path (pushing straight)
-                                planned_destinations[rid] = path[1]
-                                target_xy = cell_center(path[1][0], path[1][1], cell_size)
+                                state_info["state"] = "CLEARING"
+                                state_info["waypoints"] = path_to_approach[1:] + [blocking_box, clear_cell]
+                                state_info["target_box"] = blocking_box
+                                state_info["pos_history"].clear()
+                                planned_destinations[rid] = state_info["waypoints"][0]
+                                target_xy = cell_center(state_info["waypoints"][0][0], state_info["waypoints"][0][1], cell_size)
                                 drive_robot(rid, target_xy)
+                            else:
+                                state_info["impassable_boxes"].add(blocking_box)
+                                print(f" -> Robot {rid} cannot clear box {blocking_box} (approach path blocked or no clearing direction). Adding to impassable_boxes.")
                         else:
                             # Box is locked by another robot. Wait/replan.
                             p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
