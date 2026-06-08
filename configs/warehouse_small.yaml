@@ -16,3 +16,5 @@ robots:
     goal: [1, 4]
 obstacles:
   - pos: [4, 4]
+  - pos: [3, 4]
+  - pos: [5, 4]

@@ -12,10 +12,13 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from decision.unet_decision_pipeline import UNetDecisionPipeline
-from maps.namo_environments import WarehouseEnvironment
+from maps.namo_environments import WarehouseEnvironment, NAMOEnvironment
 
 def cell_center(cell_x, cell_y, cell_size=1.0):
     return (cell_x + 0.5) * cell_size, (cell_y + 0.5) * cell_size
+
+def world_to_cell(position_xy, cell_size=1.0):
+    return int(position_xy[0] // cell_size), int(position_xy[1] // cell_size)
 
 def create_box(position, half_extents, color):
     collision = p.createCollisionShape(p.GEOM_BOX, halfExtents=half_extents)
@@ -55,7 +58,7 @@ def drive_robot(robot_id, target_xy, speed=1.2):
     dy = target_xy[1] - position[1]
     distance = math.hypot(dx, dy)
 
-    if distance < 0.12:
+    if distance < 0.2:
         p.resetBaseVelocity(robot_id, linearVelocity=[0, 0, 0], angularVelocity=[0, 0, 0])
         return distance
 
@@ -195,7 +198,195 @@ def simulate_env(env_name, gui=False):
     weights_path = str(project_dir / "models" / "namo_unet.pth")
     pipeline = UNetDecisionPipeline(weights_path)
     
-    if env_name == "3x3":
+    if env_name.endswith(".yaml") or env_name.endswith(".yml"):
+        import yaml
+        with open(env_name, "r") as f:
+            config = yaml.safe_load(f)
+            
+        grid_size = config["world"]["grid_size"]
+        if "warehouse" in config["meta"]["name"]:
+            env = WarehouseEnvironment(grid_size=grid_size)
+        else:
+            env = NAMOEnvironment(grid_size=grid_size)
+            
+        for obs in config.get("obstacles", []):
+            env.add_obstacle(obs["pos"][0], obs["pos"][1])
+            
+        env.robots = []
+        env.goals = {}
+        env.robot_counter = 3
+        for rob in config.get("robots", []):
+            env.add_robot(tuple(rob["start"]), tuple(rob["goal"]))
+            
+        grid = env.generate_occupancy_grid()
+        
+        mode = p.GUI if gui else p.DIRECT
+        p.connect(mode)
+        p.setAdditionalSearchPath(pybullet_data.getDataPath())
+        p.setGravity(0, 0, -9.81)
+        p.setTimeStep(0.01)
+        p.loadURDF("plane.urdf")
+        
+        cell_size = config["world"]["cell_size"]
+        wall_height = 0.8
+        
+        if gui:
+            p.resetDebugVisualizerCamera(
+                cameraDistance=grid_size * 1.3,
+                cameraYaw=0,
+                cameraPitch=-75,
+                cameraTargetPosition=[grid_size * 0.5, grid_size * 0.5, 0.0],
+            )
+            
+        box_ids = []
+        box_positions = {}
+        for r in range(grid_size):
+            for c in range(grid_size):
+                x, y = cell_center(c, r, cell_size)
+                val = grid[r, c]
+                if val == 1:
+                    create_static_wall([x, y, wall_height*0.5], [0.5*cell_size, 0.5*cell_size, wall_height*0.5])
+                elif val == 2:
+                    bid = create_box([x, y, 0.2], [0.35*cell_size, 0.35*cell_size, 0.2], [0.95, 0.6, 0.1, 1.0])
+                    p.changeDynamics(bid, -1, lateralFriction=0.8)
+                    box_ids.append(bid)
+                    box_positions[bid] = (c, r)
+                    
+        robot_ids = []
+        robot_goals = {}
+        colors = [
+            [0.2, 0.6, 0.9, 1.0],
+            [0.9, 0.2, 0.2, 1.0],
+            [0.2, 0.8, 0.2, 1.0],
+            [0.8, 0.2, 0.8, 1.0],
+            [0.2, 0.8, 0.8, 1.0],
+        ]
+        for i, robot in enumerate(env.robots):
+            s_x, s_y = cell_center(robot['pos'][0], robot['pos'][1], cell_size)
+            rid = create_robot([s_x, s_y, 0.15], colors[i % len(colors)])
+            robot_ids.append(rid)
+            robot_goals[rid] = robot['goal']
+            
+        import heapq
+        def a_star_internal(start, goal, other_robots, boxes):
+            h = lambda p: abs(p[0] - goal[0]) + abs(p[1] - goal[1])
+            open_set = []
+            heapq.heappush(open_set, (0.0, start))
+            came_from = {}
+            g_score = {start: 0.0}
+            robot_set = set(other_robots)
+            box_set = set(boxes)
+            while open_set:
+                _, current = heapq.heappop(open_set)
+                if current == goal:
+                    path = []
+                    while current in came_from:
+                        path.append(current)
+                        current = came_from[current]
+                    path.append(start)
+                    return path[::-1]
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    neighbor = (current[0] + dx, current[1] + dy)
+                    if 0 <= neighbor[0] < grid_size and 0 <= neighbor[1] < grid_size:
+                        if grid[neighbor[1], neighbor[0]] == 1:
+                            continue
+                        if neighbor in robot_set and neighbor != goal:
+                            continue
+                        cost = 1.0
+                        if neighbor in box_set:
+                            cost += 4.0
+                        tentative_g = g_score[current] + cost
+                        if tentative_g < g_score.get(neighbor, float('inf')):
+                            came_from[neighbor] = current
+                            g_score[neighbor] = tentative_g
+                            heapq.heappush(open_set, (tentative_g + h(neighbor), neighbor))
+            return []
+            
+        sim_steps = config["world"]["sim_steps"]
+        print(f"\n[Simulation] Running Yaml configuration: {config['meta']['name']} with {len(robot_ids)} robots...")
+        
+        collision_count = 0
+        success = False
+        initial_box_pos = {}
+        for bid in box_ids:
+            pos, _ = p.getBasePositionAndOrientation(bid)
+            initial_box_pos[bid] = pos[:2]
+            
+        for step in range(sim_steps):
+            current_robot_positions = {}
+            for rid in robot_ids:
+                pos, _ = p.getBasePositionAndOrientation(rid)
+                current_robot_positions[rid] = world_to_cell(pos[:2], cell_size)
+                
+            current_box_positions = {}
+            for bid in box_ids:
+                pos, _ = p.getBasePositionAndOrientation(bid)
+                current_box_positions[bid] = world_to_cell(pos[:2], cell_size)
+                
+            all_reached = True
+            for rid in robot_ids:
+                pos, _ = p.getBasePositionAndOrientation(rid)
+                g = robot_goals[rid]
+                dist = math.hypot(pos[0] - (g[0]+0.5)*cell_size, pos[1] - (g[1]+0.5)*cell_size)
+                if dist > 0.3:
+                    all_reached = False
+                    break
+                    
+            if all_reached:
+                success = True
+                break
+                
+            for rid in robot_ids:
+                pos, _ = p.getBasePositionAndOrientation(rid)
+                g = robot_goals[rid]
+                dist = math.hypot(pos[0] - (g[0]+0.5)*cell_size, pos[1] - (g[1]+0.5)*cell_size)
+                if dist <= 0.3:
+                    p.resetBaseVelocity(rid, [0,0,0], [0,0,0])
+                    continue
+                    
+                curr_cell = current_robot_positions[rid]
+                other_rob_cells = [c for r, c in current_robot_positions.items() if r != rid]
+                box_cells = list(current_box_positions.values())
+                
+                path = a_star_internal(curr_cell, g, other_rob_cells, box_cells)
+                if len(path) > 1:
+                    target_xy = cell_center(path[1][0], path[1][1], cell_size)
+                    drive_robot(rid, target_xy)
+                else:
+                    drive_robot(rid, cell_center(g[0], g[1], cell_size), speed=0.5)
+                    
+            p.stepSimulation()
+            if gui:
+                time.sleep(0.01)
+                
+            for i in range(len(robot_ids)):
+                for j in range(i+1, len(robot_ids)):
+                    if len(p.getContactPoints(robot_ids[i], robot_ids[j])) > 0:
+                         collision_count += 1
+                         
+            for rid in robot_ids:
+                for bid in box_ids:
+                    if len(p.getContactPoints(rid, bid)) > 0:
+                         collision_count += 1
+                         
+        push_count = 0
+        for bid in box_ids:
+            pos, _ = p.getBasePositionAndOrientation(bid)
+            init = initial_box_pos[bid]
+            dist_moved = math.hypot(pos[0] - init[0], pos[1] - init[1])
+            if dist_moved > 0.5:
+                push_count += 1
+                
+        print("\n" + "="*50)
+        print("SIMULATION RESULTS:")
+        print(f"Success: {success}")
+        print(f"Steps: {step if success else sim_steps}")
+        print(f"Obstacle Pushes: {push_count}")
+        print(f"Contacts/Collisions: {collision_count}")
+        print("="*50)
+        p.disconnect()
+        
+    elif env_name == "3x3":
         g3 = np.zeros((3, 3), dtype=int)
         g3[0, :] = 1; g3[2, :] = 1; g3[1, 1] = 2
         decision_3, _, _ = pipeline.evaluate_decision(g3, (0, 1), (2, 1), (1, 1))
@@ -214,7 +405,7 @@ def simulate_env(env_name, gui=False):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env", default="all", choices=["3x3", "5x5", "all"])
+    parser.add_argument("--env", default="all")
     parser.add_argument("--gui", action="store_true")
     args = parser.parse_args()
     

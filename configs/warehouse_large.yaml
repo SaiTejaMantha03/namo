@@ -4,7 +4,7 @@ meta:
 world:
   grid_size: 20
   cell_size: 1.0
-  sim_steps: 1000
+  sim_steps: 2500
 corridor:
   aisle_width: 2
 robots:
