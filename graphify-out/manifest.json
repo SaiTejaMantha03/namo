@@ -1,0 +1,282 @@
+{
+  "decision/__init__.py": {
+    "mtime": 1780679094.4783688,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "decision/namo_decision_pipeline.py": {
+    "mtime": 1780677516.4484692,
+    "ast_hash": "1e21439808a68aa0bd683f158bbda4c4",
+    "semantic_hash": ""
+  },
+  "decision/namo_visualizer.py": {
+    "mtime": 1780914409.5685651,
+    "ast_hash": "5f02c5a465310d250139ff1fab2ac888",
+    "semantic_hash": ""
+  },
+  "decision/unet_decision_pipeline.py": {
+    "mtime": 1780931702.6965442,
+    "ast_hash": "4af92eb46fdbd97508dc511491949c16",
+    "semantic_hash": ""
+  },
+  "evaluate.py": {
+    "mtime": 1780935184.10585,
+    "ast_hash": "cb02c92cd5a79a4e1bbc7eb35c505e02",
+    "semantic_hash": ""
+  },
+  "mappo/__init__.py": {
+    "mtime": 1780931770.5482605,
+    "ast_hash": "3bb83905d2f78799f78c910f651a9a26",
+    "semantic_hash": ""
+  },
+  "mappo/mappo_agent.py": {
+    "mtime": 1780915720.5424354,
+    "ast_hash": "e9c4ab115b82a255bf8e1bcadfaff07c",
+    "semantic_hash": ""
+  },
+  "mappo/mappo_env.py": {
+    "mtime": 1780998699.1180742,
+    "ast_hash": "cac6dc8c14551534ee878a58ae24c1df",
+    "semantic_hash": ""
+  },
+  "mappo/train_mappo.py": {
+    "mtime": 1780931813.211289,
+    "ast_hash": "90720ac6a743ecd9eb32792458a2c97d",
+    "semantic_hash": ""
+  },
+  "maps/__init__.py": {
+    "mtime": 1780679094.477639,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "maps/namo_environments.py": {
+    "mtime": 1780998699.115349,
+    "ast_hash": "1a5e1dd4e208afec66ca1278c8487fde",
+    "semantic_hash": ""
+  },
+  "maps/occupancy_grid.py": {
+    "mtime": 1780677273.1289837,
+    "ast_hash": "02c50beb48a488e7561b220712f33f4a",
+    "semantic_hash": ""
+  },
+  "run_20_simulations.py": {
+    "mtime": 1780933704.533018,
+    "ast_hash": "317670ebac71042f5ef8b959bf550a41",
+    "semantic_hash": ""
+  },
+  "run_baselines.py": {
+    "mtime": 1780933812.0446,
+    "ast_hash": "e2cdeb5cac542f053da57dbc8f65b11b",
+    "semantic_hash": ""
+  },
+  "run_scenario_tests.py": {
+    "mtime": 1780899056.2595716,
+    "ast_hash": "2c46154632e3ffdf8146d1d15fe0646c",
+    "semantic_hash": ""
+  },
+  "simulation/__init__.py": {
+    "mtime": 1780679094.4781954,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "simulation/namo_simulator.py": {
+    "mtime": 1780933752.8536718,
+    "ast_hash": "df18ee998b7b0d0be352f4bd2dca2def",
+    "semantic_hash": ""
+  },
+  "simulation/scenario_config.json": {
+    "mtime": 1780665314.8357763,
+    "ast_hash": "cd7d945a05a96e7da36fe583759fbf15",
+    "semantic_hash": ""
+  },
+  "simulation/test_env.py": {
+    "mtime": 1780665314.7110674,
+    "ast_hash": "47ba651423b2c9ccef539328b6376d1d",
+    "semantic_hash": ""
+  },
+  "unet/__init__.py": {
+    "mtime": 1780679094.4779909,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "unet/dataset_generator.py": {
+    "mtime": 1780679094.48454,
+    "ast_hash": "462c74aeb86cd15d0d43cc00dc07b363",
+    "semantic_hash": ""
+  },
+  "unet/train_unet.py": {
+    "mtime": 1780679094.4844327,
+    "ast_hash": "1db63c46809945af28e2a8b0652ea827",
+    "semantic_hash": ""
+  },
+  "unet/unet.py": {
+    "mtime": 1780678388.322199,
+    "ast_hash": "256291dc02db94eba00570b937fab420",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1780935167.7467508,
+    "ast_hash": "7be49723861a19db83c6fa47b18125a4",
+    "semantic_hash": ""
+  },
+  "configs/cross_intersection_coordination.yaml": {
+    "mtime": 1780899083.6983006,
+    "ast_hash": "ae6eea4b6411da4941c3bc55f5279267",
+    "semantic_hash": ""
+  },
+  "configs/custom_reconstructed_map.yaml": {
+    "mtime": 1780914491.4308927,
+    "ast_hash": "2136406bd68dc99f12b99127c6281a71",
+    "semantic_hash": ""
+  },
+  "configs/movable_obstacle_choke_namo.yaml": {
+    "mtime": 1780899031.1143732,
+    "ast_hash": "9d93302723ff70b892fb7f49eeb0ac83",
+    "semantic_hash": ""
+  },
+  "configs/narrow_doorway_congestion.yaml": {
+    "mtime": 1780899037.123629,
+    "ast_hash": "e8fbabe3b60ea6e44aee28569c748790",
+    "semantic_hash": ""
+  },
+  "configs/single_corridor_yielding.yaml": {
+    "mtime": 1780899013.8355093,
+    "ast_hash": "37d94edbd6d90d28e08f0e160ee06995",
+    "semantic_hash": ""
+  },
+  "configs/symmetric_bottleneck_deadlock.yaml": {
+    "mtime": 1780899019.4985383,
+    "ast_hash": "1b5fb60f03ecd4d0b4dbdd95d75da0ea",
+    "semantic_hash": ""
+  },
+  "configs/warehouse_3robots.yaml": {
+    "mtime": 1780894555.581514,
+    "ast_hash": "4a12704f52f12398ff47cb615bbaaac6",
+    "semantic_hash": ""
+  },
+  "configs/warehouse_large.yaml": {
+    "mtime": 1780831374.5297108,
+    "ast_hash": "7ce02f13b240ee73fcd9ae5c136417d0",
+    "semantic_hash": ""
+  },
+  "configs/warehouse_small.yaml": {
+    "mtime": 1780832560.8252196,
+    "ast_hash": "a8875108e57b81eedf1c1b66802fd16b",
+    "semantic_hash": ""
+  },
+  "requirements.txt": {
+    "mtime": 1780641576.5917006,
+    "ast_hash": "4aa6fc00daf7dbab75c0115cc04c9e9a",
+    "semantic_hash": ""
+  },
+  "results/custom_simulations/custom_results_table.md": {
+    "mtime": 1780933721.8803492,
+    "ast_hash": "f3d7ebcfd25eea73ff95ff1fe92f8160",
+    "semantic_hash": ""
+  },
+  "results/evaluation_tables/ablation_baselines_table.md": {
+    "mtime": 1780933830.9254615,
+    "ast_hash": "837eff74a67bee87ff2f53c30e5324e0",
+    "semantic_hash": ""
+  },
+  "results/evaluation_tables/metrics_table.md": {
+    "mtime": 1780935194.5686736,
+    "ast_hash": "3beb720dd50cb01e5eb37e5225de20d9",
+    "semantic_hash": ""
+  },
+  "results/evaluation_tables/multi_robot_metrics.md": {
+    "mtime": 1780831126.9009428,
+    "ast_hash": "9d6c0705108912341a4050afeab341c9",
+    "semantic_hash": ""
+  },
+  "results/scenario_results_table.md": {
+    "mtime": 1780933762.1984584,
+    "ast_hash": "f63b0990ed295c2702162a997cf3007f",
+    "semantic_hash": ""
+  },
+  "results/custom_simulations/custom_map_unet_evaluation.png": {
+    "mtime": 1780933721.8798127,
+    "ast_hash": "c8c6b4ad1db1fad97c52c89fab953840",
+    "semantic_hash": ""
+  },
+  "results/heatmaps/warehouse_heatmap.png": {
+    "mtime": 1780681122.2041469,
+    "ast_hash": "02bccd926696d25fd4d021c73dbd8a19",
+    "semantic_hash": ""
+  },
+  "results/plots/sim_3x3_decision.png": {
+    "mtime": 1780681122.2043674,
+    "ast_hash": "8ebaf5ef42f578b3b0359badab4cca80",
+    "semantic_hash": ""
+  },
+  "results/plots/sim_5x5_decision.png": {
+    "mtime": 1780681122.2046204,
+    "ast_hash": "3d364f812ceb06a73373c76292f1daa1",
+    "semantic_hash": ""
+  },
+  "results/visualizations/eval_20x20_Warehouse_Aisle_layout_BYPASS.png": {
+    "mtime": 1780935194.5678434,
+    "ast_hash": "693ce1b4f31ca621a5c1410b8f81317c",
+    "semantic_hash": ""
+  },
+  "results/visualizations/eval_3x3_Corridor_Single_corridor_blocked_REMOVE.png": {
+    "mtime": 1780935194.4739943,
+    "ast_hash": "3d959f44fba5e192142284b1c0b4c2aa",
+    "semantic_hash": ""
+  },
+  "results/visualizations/eval_5x5_Divider_Long_detour_vs_push_REMOVE.png": {
+    "mtime": 1780935194.5122688,
+    "ast_hash": "dd3d7bce7b235262c455592b8d0b16af",
+    "semantic_hash": ""
+  },
+  "results/visualizations/namo_10x10_bypass.png": {
+    "mtime": 1780934966.7022629,
+    "ast_hash": "75d31e73d11d51dafa9cb88940aabc47",
+    "semantic_hash": ""
+  },
+  "results/visualizations/namo_10x10_removal.png": {
+    "mtime": 1780934966.7392602,
+    "ast_hash": "19d16f52498e9b10db0d720299318576",
+    "semantic_hash": ""
+  },
+  "results/visualizations/namo_1x1_bypass.png": {
+    "mtime": 1780934966.5229163,
+    "ast_hash": "54cad7e54c451280e34d5125ed5fa745",
+    "semantic_hash": ""
+  },
+  "results/visualizations/namo_1x1_removal.png": {
+    "mtime": 1780934966.5445712,
+    "ast_hash": "63a03e9dab4764936cac77b149463188",
+    "semantic_hash": ""
+  },
+  "results/visualizations/namo_3x3_bypass.png": {
+    "mtime": 1780934966.574396,
+    "ast_hash": "afb35c4e5f652d75e8fc5ebd62bfe7f8",
+    "semantic_hash": ""
+  },
+  "results/visualizations/namo_3x3_removal.png": {
+    "mtime": 1780934966.6031992,
+    "ast_hash": "7deaaedf40942c03efc1fdaa08eeb365",
+    "semantic_hash": ""
+  },
+  "results/visualizations/namo_5x5_bypass.png": {
+    "mtime": 1780934966.6333792,
+    "ast_hash": "6aed8472810e0c89d99d78a774099d1e",
+    "semantic_hash": ""
+  },
+  "results/visualizations/namo_5x5_removal.png": {
+    "mtime": 1780934966.664069,
+    "ast_hash": "0ed145064a1fd509d61df584eb39b047",
+    "semantic_hash": ""
+  },
+  "results/visualizations/sim_3x3_decision.png": {
+    "mtime": 1780915289.1869538,
+    "ast_hash": "45583662b0ca1b861b1303509f962880",
+    "semantic_hash": ""
+  },
+  "results/visualizations/sim_5x5_decision.png": {
+    "mtime": 1780915290.3534653,
+    "ast_hash": "3149eee91ba2785f35b6001ad841c742",
+    "semantic_hash": ""
+  }
+}

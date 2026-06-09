@@ -174,6 +174,7 @@ class NAMOmappoEnv:
         self.active_clearings = {}
         self.current_step = 0
         self.sim_step_count = 0
+        self.agent_done_flags = {}
         return self._get_observations()
         
     def _get_unet_heatmap(self, agent_rid):
@@ -377,9 +378,9 @@ class NAMOmappoEnv:
                             else:
                                 state_info["waypoints"] = [approach_cell, state_info["target_box"], clear_cell]
                         else:
-                            bx, by = state_info["target_box"]
-                            approach_cell = (bx - 1, by)
-                            state_info["waypoints"] = [approach_cell, state_info["target_box"], (bx + 1, by)]
+                            # Cannot find a safe clearing direction, abort push
+                            state_info["state"] = "NAVIGATING"
+                            state_info["target_box"] = None
                         
                     if state_info["waypoints"]:
                         target_cell = state_info["waypoints"][0]
@@ -455,22 +456,39 @@ class NAMOmappoEnv:
             progress = starting_dists[rid] - dist
             
             # Step penalty + progress reward
-            r = -0.05 + (1.0 * progress)
+            r = -0.1 + (1.5 * progress)
             
             # Collision penalty
-            r -= 0.5 * collisions_this_step
+            r -= 1.0 * collisions_this_step
             
-            # Goal reward
+            # Goal reward logic
             if dist <= 0.4:
-                r += 20.0
+                # If it wasn't done before, it just arrived
+                if getattr(self, "agent_done_flags", {}).get(rid, False) == False:
+                    r += 50.0
+                    if not hasattr(self, "agent_done_flags"):
+                        self.agent_done_flags = {}
+                    self.agent_done_flags[rid] = True
+                else:
+                    # Already at goal, no more progress or step penalties, no goal farming
+                    r = 0.0
                 dones[rid] = True
             else:
                 success = False
                 dones[rid] = False
+                if hasattr(self, "agent_done_flags"):
+                    self.agent_done_flags[rid] = False
                 
             rewards[rid] = r
             
-        dones["__all__"] = success or (self.current_step >= self.max_steps)
+        is_timeout = (self.current_step >= self.max_steps) and not success
+        dones["__all__"] = success or is_timeout
+        
+        # Apply timeout penalty to agents that didn't reach the goal
+        if is_timeout:
+            for rid in self.robot_ids:
+                if not dones[rid]:
+                    rewards[rid] -= 50.0
         
         info = {"success": success, "collisions": collisions_this_step}
         
