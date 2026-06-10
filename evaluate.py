@@ -75,15 +75,15 @@ def run_evaluation():
             grid = s["grid"]
             
         decision, c_by, c_re = pipeline.evaluate_decision(
-            grid, s["start"], s["goal"], s["obstacle"], push_cost=s["push_cost"]
+            grid, s["start"], s["goal"], s["obstacle"], base_push_cost=s["push_cost"]
         )
         
         # Calculate evaluation metrics
         pushes = 1 if decision == "REMOVE" else 0
-        success_rate = "100%" if c_re != float('inf') or c_by != float('inf') else "0%"
+        success_rate = "100%" if c_re[0] != float('inf') or c_by[0] != float('inf') else "0%"
         
-        c_by_str = f"{c_by:.2f}" if c_by != float('inf') else "inf"
-        c_re_str = f"{c_re:.2f}" if c_re != float('inf') else "inf"
+        c_by_str = f"[{c_by[0]:.1f}, {c_by[1]:.1f}]" if c_by[0] != float('inf') else "[inf, inf]"
+        c_re_str = f"[{c_re[0]:.1f}, {c_re[1]:.1f}]" if c_re[0] != float('inf') else "[inf, inf]"
         
         row = f"| {s['name']} | {s['size']}x{s['size']} | {decision} | {c_by_str} | {c_re_str} | {pushes} | {success_rate} |"
         table_lines.append(row)

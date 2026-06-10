@@ -1,0 +1,6 @@
+Config: configs/warehouse_3robots.yaml
+Strategy: repulsive
+Belief sharing: False
+Success rate: 100.0%
+Avg steps: 12.0
+Avg deadlocks: 0.0

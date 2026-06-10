@@ -1,7 +1,6 @@
 import sys
 import torch
 import numpy as np
-import heapq
 import matplotlib.pyplot as plt
 from pathlib import Path
 
@@ -10,6 +9,10 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from unet.unet import AttentionUNet
 from maps.namo_environments import WarehouseEnvironment, IntersectionEnvironment
+from core.planner import a_star
+from uncertainty.bypass_model import TrajectoryRegressionModel
+from uncertainty.interval_decision import choose_action
+from uncertainty.action_uncertainty import ManipulationBeliefModel
 
 class UNetDecisionPipeline:
     def __init__(self, weights_path):
@@ -19,39 +22,19 @@ class UNetDecisionPipeline:
         self.model.eval()
 
     def risk_aware_a_star(self, grid, risk_map, start, goal, risk_penalty_weight=10.0):
-        grid_size = grid.shape[0]
-        h = lambda p: abs(p[0] - goal[0]) + abs(p[1] - goal[1])
-        open_set = []
-        heapq.heappush(open_set, (0.0, start))
-        came_from = {}
-        g_score = {start: 0.0}
-        
-        while open_set:
-            _, current = heapq.heappop(open_set)
-            
-            if current == goal:
-                path = []
-                while current in came_from:
-                    path.append(current)
-                    current = came_from[current]
-                path.append(start)
-                return g_score[goal], path[::-1]
-                
-            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                neighbor = (current[0] + dx, current[1] + dy)
-                if 0 <= neighbor[0] < grid_size and 0 <= neighbor[1] < grid_size:
-                    if grid[neighbor[1], neighbor[0]] in [1, 2] and neighbor != goal:
-                        continue
-                        
-                    step_cost = 1.0 + (risk_penalty_weight * risk_map[neighbor[1], neighbor[0]])
-                    tentative_g = g_score[current] + step_cost
-                    
-                    if tentative_g < g_score.get(neighbor, float('inf')):
-                        came_from[neighbor] = current
-                        g_score[neighbor] = tentative_g
-                        heapq.heappush(open_set, (tentative_g + h(neighbor), neighbor))
-                        
-        return float('inf'), []
+        """Backward-compatible wrapper around core.planner.a_star."""
+        path = a_star(
+            start, goal, grid, grid.shape[0],
+            risk_map=risk_map, risk_weight=risk_penalty_weight,
+        )
+        if not path:
+            return float('inf'), []
+        # recompute g-score from path for cost reporting
+        cost = 0.0
+        for i in range(1, len(path)):
+            nb = path[i]
+            cost += 1.0 + risk_penalty_weight * float(risk_map[nb[1], nb[0]])
+        return cost, path
 
     def get_risk_map(self, grid, start, goal):
         grid_size = grid.shape[0]
@@ -77,11 +60,42 @@ class UNetDecisionPipeline:
             
         return risk_map_20
 
-    def evaluate_decision(self, grid, start, goal, obstacle_pos, push_cost=3.0, save_plot_path=None):
+    def predict_trajectory_cost_interval(self, base_cost, path):
+        """
+        Simulates a Gaussian Linear Regressor that predicts navigation cost
+        with uncertainty based on trajectory smoothness features.
+        Returns: [min_cost, max_cost]
+        """
+        if not path or base_cost == float('inf'):
+            return [float('inf'), float('inf')]
+            
+        length = len(path) - 1 # number of steps
+        num_turns = 0
+        for i in range(1, len(path) - 1):
+            prev_dir = (path[i][0] - path[i-1][0], path[i][1] - path[i-1][1])
+            next_dir = (path[i+1][0] - path[i][0], path[i+1][1] - path[i][1])
+            if prev_dir != next_dir:
+                num_turns += 1
+                
+        # The base_cost already includes length + risk penalty from UNet.
+        # We add the turn penalty to the mean and compute std dev (sigma).
+        w_turn_mu = 0.5
+        w_len_sigma = 0.05
+        w_turn_sigma = 0.2
+        
+        mu = base_cost + (num_turns * w_turn_mu)
+        sigma = (length * w_len_sigma) + (num_turns * w_turn_sigma)
+        
+        # Interval is mu +/- 1 standard deviation
+        return [max(0.0, mu - sigma), mu + sigma]
+
+    def evaluate_decision(self, grid, start, goal, obstacle_pos, base_push_cost=3.0, alpha=5.0, beta=1.0, save_plot_path=None):
         """
         Generic decision pipeline supporting any size grid:
         - Automatically pads small grids to 20x20 for UNet max pooling compatibility.
-        - Computes bypass vs removal costs.
+        - Computes bypass vs removal costs using Gaussian Linear Regressor intervals.
+        - Models pushing success rate using a Beta(alpha, beta) distribution.
+        - Makes decisions using U = (max + min) / 2 logic.
         - Optionally saves a contrast comparison heatmap.
         """
         grid_size = grid.shape[0]
@@ -114,19 +128,39 @@ class UNetDecisionPipeline:
             
         risk_map = risk_map_20[offset_y:offset_y+grid_size, offset_x:offset_x+grid_size]
         
-        # 3. Compute Bypass Cost (keeping obstacle in place)
+        # 3. Compute Bypass Cost Interval (keeping obstacle in place)
         grid_bypass = grid.copy()
         grid_bypass[obstacle_pos[1], obstacle_pos[0]] = 2
-        bypass_cost, bypass_path = self.risk_aware_a_star(grid_bypass, risk_map, start, goal)
+        bypass_base, bypass_path = self.risk_aware_a_star(grid_bypass, risk_map, start, goal)
+        bypass_cost_interval = self.predict_trajectory_cost_interval(bypass_base, bypass_path)
         
-        # 4. Compute Removal Cost (reaching obstacle + pushing + reaching goal)
-        reach_cost, _ = self.risk_aware_a_star(grid_bypass, risk_map, start, obstacle_pos)
+        # 4. Compute Removal Cost Interval (reaching obstacle + pushing + reaching goal)
+        reach_base, reach_path = self.risk_aware_a_star(grid_bypass, risk_map, start, obstacle_pos)
+        reach_interval = self.predict_trajectory_cost_interval(reach_base, reach_path)
+        
         grid_cleared = grid.copy()
         grid_cleared[obstacle_pos[1], obstacle_pos[0]] = 0
-        remain_cost, _ = self.risk_aware_a_star(grid_cleared, risk_map, obstacle_pos, goal)
+        remain_base, remain_path = self.risk_aware_a_star(grid_cleared, risk_map, obstacle_pos, goal)
+        remain_interval = self.predict_trajectory_cost_interval(remain_base, remain_path)
         
-        removal_cost = reach_cost + push_cost + remain_cost
-        decision = "REMOVE" if removal_cost < bypass_cost else "BYPASS"
+        # Calculate Success Rate interval from Beta distribution
+        S_mean = alpha / (alpha + beta)
+        S_var = (alpha * beta) / (((alpha + beta) ** 2) * (alpha + beta + 1))
+        S_std = np.sqrt(S_var)
+        S_min = max(0.05, S_mean - 2 * S_std) 
+        S_max = min(1.0, S_mean + 2 * S_std)
+        push_interval = [base_push_cost / S_max, base_push_cost / S_min]
+        
+        removal_cost_interval = [
+            reach_interval[0] + push_interval[0] + remain_interval[0],
+            reach_interval[1] + push_interval[1] + remain_interval[1]
+        ]
+        
+        # 5. Interval-Based Decision Making: U = (max + min)/2
+        U_bypass = (bypass_cost_interval[0] + bypass_cost_interval[1]) / 2.0
+        U_removal = (removal_cost_interval[0] + removal_cost_interval[1]) / 2.0
+        
+        decision = "REMOVE" if U_removal < U_bypass else "BYPASS"
         
         # 5. Optional Plotting using Custom Heatmap
         if save_plot_path:
@@ -155,7 +189,7 @@ class UNetDecisionPipeline:
             plt.savefig(save_plot_path, dpi=120)
             plt.close()
             
-        return decision, bypass_cost, removal_cost
+        return decision, bypass_cost_interval, removal_cost_interval
 
 def run_all_evaluations():
     project_dir = Path(__file__).resolve().parent.parent
@@ -190,8 +224,10 @@ def run_all_evaluations():
     
     for grid, start, goal, obstacle, size, title, filename in scenarios:
         save_path = str(results_dir / filename)
-        decision, c_by, c_re = pipeline.evaluate_decision(grid, start, goal, obstacle, push_cost=4.0, save_plot_path=save_path)
-        print(f"{title:15s} | C_by: {c_by:.2f} | C_re: {c_re:.2f} | Decision: {decision:6s} | Saved: {filename}")
+        decision, c_by, c_re = pipeline.evaluate_decision(grid, start, goal, obstacle, base_push_cost=4.0, save_plot_path=save_path)
+        by_str = f"[{c_by[0]:.1f}, {c_by[1]:.1f}]" if c_by[0] != float('inf') else "[inf, inf]"
+        re_str = f"[{c_re[0]:.1f}, {c_re[1]:.1f}]" if c_re[0] != float('inf') else "[inf, inf]"
+        print(f"{title:15s} | C_by: {by_str:13s} | C_re: {re_str:13s} | Decision: {decision:6s} | Saved: {filename}")
     print("="*65 + "\n")
 
 
