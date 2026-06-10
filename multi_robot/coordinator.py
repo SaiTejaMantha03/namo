@@ -185,14 +185,32 @@ class RobotCoordinator:
                             headon_pairs.add((min(r1,r2), max(r1,r2)))
 
         for r1, r2 in headon_pairs:
-            # Robot with higher id backs up along its OWN path
+            # Robot with higher id backs up to let the other pass
             backer = max(r1, r2)
             state  = states[backer]
-            # Back-up = reverse the last 3 steps of current plan
-            if len(state.plan) >= 3:
-                backtrack = list(reversed(state.plan[:4]))
-                state.plan = backtrack
-                state.status = "NAVIGATING"
+            # Back-up: move opposite to our current plan direction for a few steps
+            if len(state.plan) >= 2:
+                curr = state.cell
+                nxt = state.plan[1]
+                dx = curr[0] - nxt[0]
+                dy = curr[1] - nxt[1]
+                
+                # Generate a short backtrack path
+                backtrack = [curr]
+                c = curr
+                for _ in range(3):
+                    c = (c[0] + dx, c[1] + dy)
+                    if 0 <= c[0] < self.grid_size and 0 <= c[1] < self.grid_size and self.grid[c[1], c[0]] == 0:
+                        backtrack.append(c)
+                    else:
+                        break
+                
+                # Stay at the backed-up position for a few ticks to let the other pass
+                if len(backtrack) > 1:
+                    last = backtrack[-1]
+                    backtrack.extend([last] * 5)
+                    state.plan = backtrack
+                    state.status = "EVADING"
 
         # ---- 5. Resolve deadlocks ---------------------------------------
         resolved_rids: set[int] = set()
