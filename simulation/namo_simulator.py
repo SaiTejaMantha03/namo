@@ -558,12 +558,12 @@ def simulate_env(env_name, gui=False):
             
         for i in range(len(robot_ids)):
             for j in range(i+1, len(robot_ids)):
-                if len(p.getContactPoints(robot_ids[i], robot_ids[j])) > 0:
+                if len(p.getContactPoints(robot_ids[i], robot_ids[j]) or ()) > 0:
                      collision_count += 1
                      
         for rid in robot_ids:
             for bid in box_ids:
-                if len(p.getContactPoints(rid, bid)) > 0:
+                if len(p.getContactPoints(rid, bid) or ()) > 0:
                      collision_count += 1
                      
     push_count = 0
@@ -623,7 +623,10 @@ def main():
         if args.gui: cmd5.append("--gui")
         subprocess.run(cmd5)
     else:
-        simulate_env(args.env, args.gui)
+        try:
+            simulate_env(args.env, args.gui)
+        except p.error:
+            print("\n[Simulation] GUI window was closed. Terminating.")
 
 if __name__ == "__main__":
     main()

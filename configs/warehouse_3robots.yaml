@@ -9,14 +9,14 @@ corridor:
   aisle_width: 1
 robots:
   - id: 3
-    start: [3, 2]
-    goal: [3, 12]
+    start: [3, 12]
+    goal: [3, 2]
   - id: 4
-    start: [7, 2]
-    goal: [7, 12]
+    start: [7, 12]
+    goal: [7, 2]
   - id: 5
-    start: [11, 2]
-    goal: [11, 12]
+    start: [11, 12]
+    goal: [11, 2]
 obstacles:
   - pos: [3, 7]
   - pos: [7, 7]
