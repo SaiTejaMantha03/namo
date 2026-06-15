@@ -1,4 +1,8 @@
-# NAMO Symmetric Bottleneck Deadlock Config (15x15)
+# NAMO Symmetric Bottleneck Deadlock — 15x15
+# Two robots head-on in a corridor. Unlike single_corridor_yielding,
+# the only escape pocket is at the exact centre [7,8].
+# This tests the yielding logic: one robot must step into the pocket
+# while the other passes, then resume.
 meta:
   name: "symmetric_bottleneck_deadlock"
 world:
@@ -14,22 +18,21 @@ robots:
     goal: [2, 7]
 obstacles: []
 walls:
-  # Main corridor runs along row 7 with NO yielding pocket.
-  # Block rows 0 to 6
+  # Upper wall of corridor row 7 — no gap except [7,6] (upper pocket)
   - pos: [1, 6]
   - pos: [2, 6]
   - pos: [3, 6]
   - pos: [4, 6]
   - pos: [5, 6]
   - pos: [6, 6]
-  - pos: [7, 6]
+  # [7, 6] is open — upper yield pocket
   - pos: [8, 6]
   - pos: [9, 6]
   - pos: [10, 6]
   - pos: [11, 6]
   - pos: [12, 6]
   - pos: [13, 6]
-  # Block rows 8 to 13 completely
+  # Lower wall of corridor row 7 — full
   - pos: [1, 8]
   - pos: [2, 8]
   - pos: [3, 8]

@@ -1,20 +1,76 @@
-# NAMO Warehouse Small Aisle Config (10x10)
+# NAMO Warehouse Small — 10x10
+# Single-width aisle in col 3, rows 2-7.
+# Robot A (blue): (3,8) -> (3,1), box at (3,5) blocks its lane -> REMOVE.
+# Robot B (red):  (5,8) -> (5,1), travels freely in col 5 (no box).
+# Push pocket: (4,5) is open — box pushed east out of Robot A's lane.
+# Outer border walls fully enclose the arena.
 meta:
   name: "warehouse_small_10x10"
 world:
   grid_size: 10
   cell_size: 1.0
-  sim_steps: 500
-corridor:
-  aisle_width: 1
+  sim_steps: 1500
 robots:
   - id: 3
-    start: [1, 4]
-    goal: [8, 4]
+    start: [3, 8]
+    goal: [3, 1]
   - id: 4
-    start: [8, 4]
-    goal: [1, 4]
+    start: [5, 8]
+    goal: [5, 1]
 obstacles:
+  - pos: [3, 5]   # box blocks Robot A's lane at mid-aisle
+walls:
+  # Outer border — top row 9
+  - pos: [0, 9]
+  - pos: [1, 9]
+  - pos: [2, 9]
+  - pos: [3, 9]
+  - pos: [4, 9]
+  - pos: [5, 9]
+  - pos: [6, 9]
+  - pos: [7, 9]
+  - pos: [8, 9]
+  - pos: [9, 9]
+  # Outer border — bottom row 0
+  - pos: [0, 0]
+  - pos: [1, 0]
+  - pos: [2, 0]
+  - pos: [3, 0]
+  - pos: [4, 0]
+  - pos: [5, 0]
+  - pos: [6, 0]
+  - pos: [7, 0]
+  - pos: [8, 0]
+  - pos: [9, 0]
+  # Outer border — left col 0
+  - pos: [0, 1]
+  - pos: [0, 2]
+  - pos: [0, 3]
+  - pos: [0, 4]
+  - pos: [0, 5]
+  - pos: [0, 6]
+  - pos: [0, 7]
+  - pos: [0, 8]
+  # Outer border — right col 9
+  - pos: [9, 1]
+  - pos: [9, 2]
+  - pos: [9, 3]
+  - pos: [9, 4]
+  - pos: [9, 5]
+  - pos: [9, 6]
+  - pos: [9, 7]
+  - pos: [9, 8]
+  # Left wall of aisle at col 2, rows 2-7
+  - pos: [2, 2]
+  - pos: [2, 3]
+  - pos: [2, 4]
+  - pos: [2, 5]
+  - pos: [2, 6]
+  - pos: [2, 7]
+  # Right wall of aisle at col 4, rows 2-7 EXCEPT [4,5] (push pocket east)
+  - pos: [4, 2]
+  - pos: [4, 3]
   - pos: [4, 4]
-  - pos: [3, 4]
-  - pos: [5, 4]
+  # [4, 5] is open — east push pocket for box at (3,5)
+  - pos: [4, 6]
+  - pos: [4, 7]
