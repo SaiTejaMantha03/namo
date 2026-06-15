@@ -1,0 +1,6 @@
+Config: configs/narrow_doorway_congestion.yaml
+Strategy: repulsive
+Belief sharing: False
+Success rate: 100.0%
+Avg steps: 41.4
+Avg deadlocks: 11.2

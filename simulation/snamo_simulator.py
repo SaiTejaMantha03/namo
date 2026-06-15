@@ -366,14 +366,19 @@ def run_simulation(config_path: str, gui: bool = False,
                     for r in robot_ids if r != rid
                 )
                 if nxt_occupied:
-                    rid_idx  = robot_ids.index(rid)
                     occupier = next(
                         r for r in robot_ids
                         if r != rid and robot_cells[r] == nxt
                     )
+                    lo_rid, hi_rid = planners[rid].belief.success_rate_interval()
+                    width_rid = hi_rid - lo_rid
+                    lo_occ, hi_occ = planners[occupier].belief.success_rate_interval()
+                    width_occ = hi_occ - lo_occ
+                    rid_idx  = robot_ids.index(rid)
                     occ_idx = robot_ids.index(occupier)
-                    if rid_idx < occ_idx:
-                        # This robot has lower priority — wait and clear plan
+                    
+                    if width_rid > width_occ or (abs(width_rid - width_occ) < 1e-5 and rid_idx < occ_idx):
+                        # This robot has wider interval (more uncertain) or tie-breaks lower — wait and clear plan
                         p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
                         wp[rid] = []   # force replan next tick around the blocker
                         continue

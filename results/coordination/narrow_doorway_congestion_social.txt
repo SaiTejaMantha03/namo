@@ -1,0 +1,6 @@
+Config: configs/narrow_doorway_congestion.yaml
+Strategy: social
+Belief sharing: False
+Success rate: 100.0%
+Avg steps: 35.8
+Avg deadlocks: 7.4

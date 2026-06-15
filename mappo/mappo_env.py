@@ -16,6 +16,7 @@ from simulation.namo_simulator import (
 )
 from maps.namo_environments import WarehouseEnvironment, NAMOEnvironment
 from decision.unet_decision_pipeline import UNetDecisionPipeline
+from multi_robot.belief_broadcaster import BeliefBroadcaster
 
 def a_star_internal(start, goal, other_robots, boxes, grid, grid_size, ignore_boxes=False, locked_boxes=set()):
     import heapq
@@ -99,6 +100,8 @@ class NAMOmappoEnv:
         self.active_clearings = {}
         self.current_step = 0
         self.sim_step_count = 0
+        self.broadcaster = None
+        self.push_obs_pending = {}
         
     def reset(self):
         if self.physics_client is not None:
@@ -175,10 +178,15 @@ class NAMOmappoEnv:
         self.current_step = 0
         self.sim_step_count = 0
         self.agent_done_flags = {}
+        
+        # Initialize belief broadcaster and push pending tracking
+        self.broadcaster = BeliefBroadcaster(self.robot_ids)
+        self.push_obs_pending = {rid: False for rid in self.robot_ids}
+        
         return self._get_observations()
         
-    def _get_unet_heatmap(self, agent_rid):
-        """Generates 20x20 risk heatmap from current layout for a specific agent."""
+    def _get_unet_local_crop(self, agent_rid):
+        """Generates 5x5 local risk crop from the UNet risk map around the agent's current position."""
         grid = np.zeros((self.grid_size, self.grid_size), dtype=int)
         for r in range(self.grid_size):
             for c in range(self.grid_size):
@@ -192,7 +200,13 @@ class NAMOmappoEnv:
         pos, _ = p.getBasePositionAndOrientation(agent_rid)
         ax, ay = world_to_cell(pos[:2], self.cell_size)
         g = self.robot_goals[agent_rid]
-        return self.unet_pipeline.get_risk_map(grid, (ax, ay), g)
+        heatmap = self.unet_pipeline.get_risk_map(grid, (ax, ay), g)
+        padded = np.pad(heatmap, pad_width=2, mode='constant', constant_values=1.0)
+        crop = padded[ay : ay + 5, ax : ax + 5]
+        return crop
+
+    def _get_sr_width(self, rid):
+        return self.broadcaster.get_sr_interval_width(rid)
 
     def _get_observations(self):
         obs = {}
@@ -208,8 +222,8 @@ class NAMOmappoEnv:
             current_box_positions.append(pos[:2])
             
         for rid in self.robot_ids:
-            # 1. Heatmap
-            heatmap = self._get_unet_heatmap(rid).flatten()
+            # 1. Local 5x5 crop from UNet risk heatmap
+            crop = self._get_unet_local_crop(rid).flatten()
             
             # 2. Own relative goal info
             own_pos = current_robot_positions[rid]
@@ -237,6 +251,13 @@ class NAMOmappoEnv:
                 nearby_boxes.append([0.0, 0.0])
             nearby_boxes = np.array(nearby_boxes).flatten()
             
+            # 5. Uncertainty features
+            sr_mean = self.broadcaster.belief_models[rid].mean()
+            sr_width = self.broadcaster.get_sr_interval_width(rid)
+            sr_obs = float(self.broadcaster.belief_models[rid]._n_obs)
+            norm_sr_obs = min(1.0, sr_obs / 20.0)
+            uncertainty_feats = np.array([sr_mean, sr_width, norm_sr_obs], dtype=np.float32)
+            
             # Construct observation vector
             norm_own = np.array(own_pos) / (self.grid_size * self.cell_size)
             norm_goal = goal_pos / (self.grid_size * self.cell_size)
@@ -245,12 +266,13 @@ class NAMOmappoEnv:
             norm_boxes = nearby_boxes / (self.grid_size * self.cell_size)
             
             obs_vec = np.concatenate([
-                heatmap,      # 400
-                norm_own,     # 2
-                norm_goal,    # 2
-                norm_dir,     # 2
-                norm_others,  # 6
-                norm_boxes,   # 6
+                crop,             # 25
+                norm_own,         # 2
+                norm_goal,        # 2
+                norm_dir,         # 2
+                norm_others,      # 6
+                norm_boxes,       # 6
+                uncertainty_feats,# 3
             ])
             obs[rid] = obs_vec
             
@@ -384,10 +406,34 @@ class NAMOmappoEnv:
                         
                     if state_info["waypoints"]:
                         target_cell = state_info["waypoints"][0]
+                        
+                        # SR-width yielding: check if target_cell is occupied by another robot
+                        nxt_occupied = any(
+                            current_robot_positions[r] == target_cell
+                            for r in self.robot_ids if r != rid
+                        )
+                        if nxt_occupied:
+                            occupier = next(
+                                r for r in self.robot_ids
+                                if r != rid and current_robot_positions[r] == target_cell
+                            )
+                            width_rid = self._get_sr_width(rid)
+                            width_occ = self._get_sr_width(occupier)
+                            if width_rid > width_occ or (abs(width_rid - width_occ) < 1e-5 and rid < occupier):
+                                p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
+                                continue
+                        
                         target_xy = cell_center(target_cell[0], target_cell[1], self.cell_size)
                         dist_to_wp = drive_robot(rid, target_xy)
                         if dist_to_wp < 0.22:
-                            state_info["waypoints"].pop(0)
+                            popped = state_info["waypoints"].pop(0)
+                            if popped == state_info["target_box"]:
+                                self.push_obs_pending[rid] = True
+                            elif self.push_obs_pending[rid] and (len(state_info["waypoints"]) == 0):
+                                self.broadcaster.broadcast_outcome(rid, success=True)
+                                self.push_obs_pending[rid] = False
+                                state_info["state"] = "NAVIGATING"
+                                state_info["target_box"] = None
                             
                 elif state_info["state"] == "YIELDING":
                     if state_info["waypoints"]:
@@ -414,8 +460,26 @@ class NAMOmappoEnv:
                     )
                     
                     if len(path) > 1:
-                        planned_destinations[rid] = path[1]
-                        target_xy = cell_center(path[1][0], path[1][1], self.cell_size)
+                        target_cell = path[1]
+                        
+                        # Check if target_cell is occupied by another robot
+                        nxt_occupied = any(
+                            current_robot_positions[r] == target_cell
+                            for r in self.robot_ids if r != rid
+                        )
+                        if nxt_occupied:
+                            occupier = next(
+                                r for r in self.robot_ids
+                                if r != rid and current_robot_positions[r] == target_cell
+                            )
+                            width_rid = self._get_sr_width(rid)
+                            width_occ = self._get_sr_width(occupier)
+                            if width_rid > width_occ or (abs(width_rid - width_occ) < 1e-5 and rid < occupier):
+                                p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
+                                continue
+                                
+                        planned_destinations[rid] = target_cell
+                        target_xy = cell_center(target_cell[0], target_cell[1], self.cell_size)
                         drive_robot(rid, target_xy)
                     else:
                         # Drive directly to goal if inside goal cell

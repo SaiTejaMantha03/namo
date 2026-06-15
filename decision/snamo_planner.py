@@ -247,6 +247,7 @@ class SNAMOPlanner:
         # No obstacle blocking → social-cost-weighted navigation
         if blocking is None:
             path = a_star(start, goal, work_grid, gs,
+                          other_robots=other_robots,
                           risk_map=self._social_risk,
                           risk_weight=self.social_weight)
             waypoints = path[1:] if path else []
@@ -267,6 +268,7 @@ class SNAMOPlanner:
             g_bypass = work_grid.copy()
             g_bypass[blocking[1], blocking[0]] = 2
             path = a_star(start, goal, g_bypass, gs,
+                          other_robots=other_robots,
                           risk_map=self._social_risk,
                           risk_weight=self.social_weight)
             if path:
@@ -285,7 +287,7 @@ class SNAMOPlanner:
             from core.planner import a_star as _astar
             g_free = work_grid.copy()
             g_free[blocking[1], blocking[0]] = 0  # treat as passable
-            path_direct = _astar(start, blocking, g_free, gs)
+            path_direct = _astar(start, blocking, g_free, gs, other_robots=other_robots)
             return "REMOVE", path_direct[1:] if len(path_direct) > 1 else [blocking]
 
         clear_cell, approach_cell = result
@@ -294,6 +296,7 @@ class SNAMOPlanner:
         g_obs = work_grid.copy()
         g_obs[blocking[1], blocking[0]] = 2
         seg1 = a_star(start, approach_cell, g_obs, gs,
+                      other_robots=other_robots,
                       risk_map=self._social_risk,
                       risk_weight=self.social_weight)
 
@@ -305,19 +308,20 @@ class SNAMOPlanner:
         g_after[blocking[1], blocking[0]] = 0
         g_after[clear_cell[1], clear_cell[0]] = 2
         seg3 = a_star(clear_cell, goal, g_after, gs,
+                      other_robots=other_robots,
                       risk_map=self._social_risk,
                       risk_weight=self.social_weight)
 
         if not seg1 or not seg3:
             # Social-cost path failed — retry without social cost
-            seg1 = a_star(start, approach_cell, g_obs, gs)
-            seg3 = a_star(clear_cell, goal, g_after, gs)
+            seg1 = a_star(start, approach_cell, g_obs, gs, other_robots=other_robots)
+            seg3 = a_star(clear_cell, goal, g_after, gs, other_robots=other_robots)
 
         if not seg1:
             # Approach cell unreachable — move directly toward box
             g_free = work_grid.copy()
             g_free[blocking[1], blocking[0]] = 0
-            path_direct = a_star(start, blocking, g_free, gs)
+            path_direct = a_star(start, blocking, g_free, gs, other_robots=other_robots)
             return "REMOVE", path_direct[1:] if len(path_direct) > 1 else [blocking]
 
         if not seg3:

@@ -1,0 +1,6 @@
+Config: configs/cross_intersection_coordination.yaml
+Strategy: social
+Belief sharing: False
+Success rate: 40.0%
+Avg steps: 189.2
+Avg deadlocks: 209.0

@@ -1,0 +1,6 @@
+Config: configs/symmetric_bottleneck_deadlock.yaml
+Strategy: social
+Belief sharing: False
+Success rate: 0.0%
+Avg steps: 300.0
+Avg deadlocks: 294.2
