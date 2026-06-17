@@ -35,12 +35,50 @@ def _l2_norm(cell: tuple[int, int]) -> float:
     return math.sqrt(cell[0] ** 2 + cell[1] ** 2)
 
 
-def _max_dist_cell(
+def _find_evasion_target(
     grid: np.ndarray,
     grid_size: int,
+    robot_cell: tuple,
     other_cells: list[tuple],
+    radius: int = 6,
 ) -> Optional[tuple[int, int]]:
-    """Find the free cell that maximises the minimum distance to all other_cells."""
+    """
+    Find a free cell for the robot to evade into.
+
+    Strategy (local-first):
+      1. Search all free cells within `radius` Manhattan distance from
+         `robot_cell`.  Prefer the one that maximises min-distance from
+         other robots.  This finds the corridor pocket in tight scenarios.
+      2. If no local candidate found, fall back to global max-dist search.
+    """
+    cx, cy = robot_cell
+
+    # --- Local search (within radius) ---
+    local_candidates = []
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            if abs(dx) + abs(dy) > radius:
+                continue
+            nc = (cx + dx, cy + dy)
+            if nc == robot_cell:
+                continue
+            nx, ny = nc
+            if not (0 <= nx < grid_size and 0 <= ny < grid_size):
+                continue
+            if grid[ny, nx] != 0:
+                continue
+            if nc in other_cells:
+                continue
+            min_d = min(
+                math.hypot(nx - oc[0], ny - oc[1]) for oc in other_cells
+            ) if other_cells else 1.0
+            local_candidates.append((min_d, nc))
+
+    if local_candidates:
+        local_candidates.sort(reverse=True)
+        return local_candidates[0][1]
+
+    # --- Global fallback ---
     best_cell = None
     best_dist = -1.0
     for row in range(grid_size):
@@ -51,7 +89,30 @@ def _max_dist_cell(
                 continue
             min_d = min(
                 math.hypot(col - oc[0], row - oc[1]) for oc in other_cells
-            )
+            ) if other_cells else 1.0
+            if min_d > best_dist:
+                best_dist = min_d
+                best_cell = (col, row)
+    return best_cell
+
+
+def _max_dist_cell(
+    grid: np.ndarray,
+    grid_size: int,
+    other_cells: list[tuple],
+) -> Optional[tuple[int, int]]:
+    """Legacy alias kept for API compatibility."""
+    best_cell = None
+    best_dist = -1.0
+    for row in range(grid_size):
+        for col in range(grid_size):
+            if grid[row, col] != 0:
+                continue
+            if (col, row) in other_cells:
+                continue
+            min_d = min(
+                math.hypot(col - oc[0], row - oc[1]) for oc in other_cells
+            ) if other_cells else 1.0
             if min_d > best_dist:
                 best_dist = min_d
                 best_cell = (col, row)
@@ -113,7 +174,7 @@ class DeadlockResolver:
             if rid == postponer:
                 continue
             other_cells = [robot_cells[r] for r in conflicting_robots if r != rid]
-            target = _max_dist_cell(self.grid, self.grid_size, other_cells)
+            target = _find_evasion_target(self.grid, self.grid_size, robot_cells[rid], other_cells)
             evasion_targets[rid] = target
 
         return assignments, evasion_targets
@@ -209,14 +270,119 @@ class DeadlockResolver:
         assignments = {r: "EVADE" for r in conflicting_robots}
         assignments[postponer] = "WAIT"
 
-        # Evaders use the same repulsive evasion target
+        # Evaders use local-first evasion target
         evasion_targets: dict[int, Optional[tuple]] = {}
         for rid in conflicting_robots:
             if rid == postponer:
                 evasion_targets[rid] = None
                 continue
             other_cells = [robot_cells[r] for r in conflicting_robots if r != rid]
-            target = _max_dist_cell(self.grid, self.grid_size, other_cells)
+            target = _find_evasion_target(self.grid, self.grid_size, robot_cells[rid], other_cells)
             evasion_targets[rid] = target
+
+        return assignments, evasion_targets
+
+    # ------------------------------------------------------------------
+    # SR-Social DR (Phase 2B — Novel Contribution)
+    # ------------------------------------------------------------------
+
+    def resolve_sr_social(
+        self,
+        conflicting_robots: list[int],
+        robot_cells: dict[int, tuple],
+        robot_goals: dict[int, tuple],
+        broadcaster: "BeliefBroadcaster",
+        social_map: "SocialCostmap",
+    ) -> tuple[dict[int, str], dict[int, Optional[tuple]]]:
+        """
+        Combined SR-Width + Social-Cost deadlock resolution.
+
+        Postponer selection — pocket-aware, SR-Width fallback:
+          1. POCKET CHECK (primary): Find which robot has a reachable perpendicular
+             escape cell (a corridor pocket — a free cell NOT on the shared movement
+             axis). That robot becomes the EVADER — it can actually escape.
+             The robot without a perpendicular escape must WAIT (it has nowhere to go).
+          2. SR-WIDTH FALLBACK: If both or neither robot has a pocket, use the
+             SR-Width criterion (wider interval = more uncertain = yields).
+          3. Tie-break: higher robot_id waits.
+
+        Evasion target — pocket cell for evader, then social-cost weighted:
+          The evader's target is its best perpendicular escape cell if found,
+          otherwise the social-cost-minimising reachable free cell.
+
+        Phase 2B — Novel Contribution.
+        """
+        if not conflicting_robots:
+            return {}, {}
+
+        def _perpendicular_escape(rid: int) -> Optional[tuple]:
+            """Return the best perpendicular free cell within radius 6, or None."""
+            cx, cy = robot_cells[rid]
+            other_positions = {robot_cells[r] for r in conflicting_robots if r != rid}
+            candidates = []
+            for dy in range(-6, 7):
+                for dx in range(-6, 7):
+                    if abs(dx) + abs(dy) > 6:
+                        continue
+                    nc = (cx + dx, cy + dy)
+                    nx, ny = nc
+                    if not (0 <= nx < self.grid_size and 0 <= ny < self.grid_size):
+                        continue
+                    if self.grid[ny, nx] != 0:
+                        continue
+                    if nc in other_positions:
+                        continue
+                    
+                    is_perp = False
+                    for other_pos in other_positions:
+                        if other_pos[1] == cy and ny != cy:
+                            is_perp = True
+                        elif other_pos[0] == cx and nx != cx:
+                            is_perp = True
+                            
+                    if is_perp:
+                        # Check if pocket is actually reachable from current cell
+                        path = a_star((cx, cy), nc, self.grid, self.grid_size, other_robots=list(other_positions))
+                        if path:
+                            dist_to_goal = math.hypot(nx - robot_goals[rid][0], ny - robot_goals[rid][1])
+                            candidates.append((dist_to_goal, nc))
+            if candidates:
+                candidates.sort()
+                return candidates[0][1]
+            return None
+
+        # --- 1. Pocket check ---
+        escapes = {rid: _perpendicular_escape(rid) for rid in conflicting_robots}
+        has_escape = {rid: esc is not None for rid, esc in escapes.items()}
+
+        can_escape = [rid for rid in conflicting_robots if has_escape[rid]]
+
+        assignments = {r: "WAIT" for r in conflicting_robots}
+
+        if can_escape:
+            # Pick the escaping robot with the narrowest SR width (most certain)
+            widths = {rid: broadcaster.get_sr_interval_width(rid) for rid in can_escape}
+            evader = min(widths, key=widths.get)
+        else:
+            # None can escape perpendicular. Pick the one with the narrowest SR width
+            widths = {rid: broadcaster.get_sr_interval_width(rid) for rid in conflicting_robots}
+            evader = min(widths, key=widths.get)
+
+        assignments[evader] = "EVADE"
+
+        # --- Evasion targets ---
+        evasion_targets: dict[int, Optional[tuple]] = {}
+        for rid in conflicting_robots:
+            if assignments[rid] == "WAIT":
+                evasion_targets[rid] = None
+                continue
+
+            # Use pocket cell if available, else social-cost weighted
+            if escapes.get(rid) is not None:
+                evasion_targets[rid] = escapes[rid]
+            else:
+                other_cells = [robot_cells[r] for r in conflicting_robots if r != rid]
+                target = _find_evasion_target(self.grid, self.grid_size, robot_cells[rid], other_cells)
+                evasion_targets[rid] = target
 
         return assignments, evasion_targets

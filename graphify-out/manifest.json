@@ -310,13 +310,13 @@
     "semantic_hash": ""
   },
   "multi_robot/coordinator.py": {
-    "mtime": 1781082090.5991476,
-    "ast_hash": "1825b81a89de869f144a0391b0d34276",
+    "mtime": 1781587570.1620338,
+    "ast_hash": "afec4044fe45d24161893472438e8bdc",
     "semantic_hash": ""
   },
   "multi_robot/deadlock_resolution.py": {
-    "mtime": 1781072048.6976454,
-    "ast_hash": "a5f3b02e49814d6347f5c1fed492b42f",
+    "mtime": 1781587368.2681813,
+    "ast_hash": "9fdfd3b81cd1063c83a720a75b31c584",
     "semantic_hash": ""
   },
   "run_coordination_eval.py": {
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "simulation/snamo_simulator.py": {
-    "mtime": 1781506841.8448033,
-    "ast_hash": "b59f69bfea5e9c1d1c8aa295a46ab2af",
+    "mtime": 1781588292.4354942,
+    "ast_hash": "437f035a4ebdab63646ba1f091a9e988",
     "semantic_hash": ""
   },
   "social/__init__.py": {
@@ -435,8 +435,8 @@
     "semantic_hash": ""
   },
   "results/coordination/single_corridor_yielding_repulsive.txt": {
-    "mtime": 1781507151.484533,
-    "ast_hash": "c3cacd613949242c752e833b79377d96",
+    "mtime": 1781588069.3635724,
+    "ast_hash": "f205ec50b2a6d08ab0ea50542876b63d",
     "semantic_hash": ""
   },
   "results/coordination/single_corridor_yielding_social.txt": {
@@ -457,6 +457,11 @@
   "results/coordination/warehouse_3robots_social.txt": {
     "mtime": 1781507124.7737527,
     "ast_hash": "90ed27e09075ed03b7756ce1f9b31221",
+    "semantic_hash": ""
+  },
+  "simulation/namounc_simulator.py": {
+    "mtime": 1781526906.8433547,
+    "ast_hash": "3cc78c32e4c5ec3576e574a9f4a18d51",
     "semantic_hash": ""
   }
 }

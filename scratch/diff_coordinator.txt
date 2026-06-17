@@ -1,0 +1,453 @@
+diff --git a/multi_robot/coordinator.py b/multi_robot/coordinator.py
+index 0af5f87..e7ff3d2 100644
+--- a/multi_robot/coordinator.py
++++ b/multi_robot/coordinator.py
+@@ -13,6 +13,7 @@ The coordinator:
+ """
+ 
+ from __future__ import annotations
++import math
+ import random
+ import numpy as np
+ from dataclasses import dataclass, field
+@@ -39,24 +40,39 @@ class RobotState:
+     planned_obstacle_cell: Optional[tuple] = None
+     wait_ticks: int = 0
+     evasion_target: Optional[tuple] = None
++    priority_score: float = 1.0     # Novel Phase 2A: inherited priority
+     _stuck_counter: int = 0         # steps without progress
+     _last_cell: Optional[tuple] = None
++    waiting_for_robot: Optional[int] = None
+ 
+ 
+ class RobotCoordinator:
+     """
+-    Implements Algorithm 1 from MR-NAMO (Paper 5).
++    Implements Algorithm 1 from MR-NAMO (Paper 5) with three novel extensions:
++
++      Phase 2A — Priority Inheritance:
++        When robot A waits for robot B, B inherits A's priority_score so
++        lower-priority robots cannot sneak ahead during convoy scenarios.
++
++      Phase 2B — resolve_sr_social():
++        A new DR strategy combining SR-Width priority with social-cost-aware
++        evasion target selection. Exposed as dr_strategy="sr_social".
++
++      Phase 2C — Adaptive Conflict Horizon:
++        h = clamp(ceil(mean_pairwise_dist / 2), 5, 20), recomputed each tick.
+ 
+     Parameters
+     ----------
+     grid           : 2-D numpy occupancy grid (0=free, 1=wall, 2=box).
+     grid_size      : cells per side.
+-    h              : conflict lookahead horizon (steps).
+-    dr_strategy    : "repulsive" | "social" | "sr_width".
++    h              : base conflict lookahead horizon (overridden by adaptive h).
++    dr_strategy    : "repulsive" | "social" | "sr_width" | "sr_social".
+     resolver       : DeadlockResolver instance.
+-    broadcaster    : BeliefBroadcaster (needed for sr_width strategy).
+-    social_map     : SocialCostmap (needed for social strategy).
++    broadcaster    : BeliefBroadcaster (needed for sr_width / sr_social).
++    social_map     : SocialCostmap (needed for social / sr_social strategy).
+     stuck_limit    : steps without progress before forced replan (default 8).
++    adaptive_h     : if True, recompute h each tick from pairwise distances.
++    priority_decay : fraction by which inherited priority decays per tick.
+     """
+ 
+     def __init__(
+@@ -64,21 +80,46 @@ class RobotCoordinator:
+         grid: np.ndarray,
+         grid_size: int,
+         h: int = 10,
+-        dr_strategy: str = "repulsive",
++        dr_strategy: str = "sr_social",
+         resolver: Optional["DeadlockResolver"] = None,
+         broadcaster: Optional["BeliefBroadcaster"] = None,
+         social_map: Optional["SocialCostmap"] = None,
+         stuck_limit: int = 8,
++        adaptive_h: bool = True,
++        priority_decay: float = 0.95,
+     ):
+         self.grid = grid
+         self.grid_size = grid_size
+-        self.h = h
++        self.base_h = h
+         self.dr_strategy = dr_strategy
+         self.resolver = resolver
+         self.broadcaster = broadcaster
+         self.social_map = social_map
+         self.stuck_limit = stuck_limit
++        self.adaptive_h = adaptive_h
++        self.priority_decay = priority_decay
+         self._detector = ConflictDetector()
++        self.deadlock_count = 0
++        self.yield_sr_widths = []
++
++    # ------------------------------------------------------------------
++    # Phase 2C: Adaptive conflict horizon
++    # ------------------------------------------------------------------
++
++    def _compute_adaptive_h(self, states: dict[int, RobotState]) -> int:
++        """h = clamp(ceil(mean_pairwise_Manhattan / 2), 5, 20)."""
++        active = [s for s in states.values() if s.status != "DONE"]
++        if len(active) < 2:
++            return self.base_h
++        dists = []
++        cells = [s.cell for s in active]
++        for i in range(len(cells)):
++            for j in range(i + 1, len(cells)):
++                dists.append(
++                    abs(cells[i][0] - cells[j][0]) + abs(cells[i][1] - cells[j][1])
++                )
++        mean_dist = sum(dists) / len(dists)
++        return max(5, min(20, math.ceil(mean_dist / 2)))
+ 
+     # ------------------------------------------------------------------
+     # Main per-timestep step
+@@ -95,20 +136,69 @@ class RobotCoordinator:
+         """
+         next_cells: dict[int, tuple] = {}
+ 
++        # Phase 2C: adaptive horizon
++        h = self._compute_adaptive_h(states) if self.adaptive_h else self.base_h
++
++        # Phase 2A: decay inherited priorities each tick
++        for state in states.values():
++            if state.priority_score > 1.0:
++                state.priority_score = max(1.0, state.priority_score * self.priority_decay)
++
+         # ---- 1. DONE and WAITING robots --------------------------------
+         for rid, state in states.items():
+             if state.status == "DONE":
+                 next_cells[rid] = state.cell
+                 continue
+-            if state.status == "WAITING":
+-                state.wait_ticks -= 1
+-                if state.wait_ticks <= 0:
+-                    state.status = "NAVIGATING"
+-                    state.plan = []   # force replan after wait
++            if state.status in ("WAITING", "POCKET_WAITING"):
++                other_evading = False
++                if getattr(state, "waiting_for_robot", None) in states:
++                    other_state = states[state.waiting_for_robot]
++                    
++                    if state.status == "POCKET_WAITING":
++                        if other_state.status == "DONE":
++                            # The other robot is done! We can resume immediately.
++                            state.status = "NAVIGATING"
++                            state.plan = []
++                            state.waiting_for_robot = None
++                            next_cells[rid] = state.cell
++                            continue
++                        else:
++                            # Check if other robot has passed the pocket cell using projection
++                            my_cell = state.cell
++                            other_cell = other_state.cell
++                            other_goal = other_state.goal
++                            
++                            dist = abs(other_cell[0] - my_cell[0]) + abs(other_cell[1] - my_cell[1])
++                            if dist <= 1:
++                                other_evading = True
++                            else:
++                                dir_goal = (other_goal[0] - other_cell[0], other_goal[1] - other_cell[1])
++                                dir_pocket = (my_cell[0] - other_cell[0], my_cell[1] - other_cell[1])
++                                dot = dir_goal[0] * dir_pocket[0] + dir_goal[1] * dir_pocket[1]
++                                if dot > 0:
++                                    other_evading = True
++                                else:
++                                    # The other robot has passed us! We can resume immediately.
++                                    state.status = "NAVIGATING"
++                                    state.plan = []
++                                    state.waiting_for_robot = None
++                                    next_cells[rid] = state.cell
++                                    continue
++                    else:
++                        # Normal WAITING robot: wait until the evader has finished evading
++                        if other_state.status == "EVADING":
++                            other_evading = True
++                
++                if not other_evading:
++                    state.wait_ticks -= 1
++                    if state.wait_ticks <= 0:
++                        state.status = "NAVIGATING"
++                        state.plan = []   # force replan after wait
++                        state.waiting_for_robot = None
+                 next_cells[rid] = state.cell
+ 
+         active_ids = [rid for rid in states
+-                      if states[rid].status not in ("DONE", "WAITING")]
++                      if states[rid].status not in ("DONE", "WAITING", "POCKET_WAITING")]
+ 
+         if not active_ids:
+             return next_cells
+@@ -124,9 +214,16 @@ class RobotCoordinator:
+ 
+             # Force replan if stuck too long; also clear EVADING so robot
+             # re-enters normal navigation after evasion completes.
++            diverged = False
++            if state.plan:
++                dx = abs(state.plan[0][0] - state.cell[0])
++                dy = abs(state.plan[0][1] - state.cell[1])
++                if dx + dy > 1:
++                    diverged = True
++
+             needs_replan = (
+                 not state.plan
+-                or (state.plan and state.plan[0] != state.cell)
++                or diverged
+                 or state._stuck_counter >= self.stuck_limit
+                 or (state.status == "EVADING" and state.cell == state.evasion_target)
+             )
+@@ -134,22 +231,52 @@ class RobotCoordinator:
+             if needs_replan:
+                 if state._stuck_counter >= self.stuck_limit:
+                     state._stuck_counter = 0
+-                if state.status == "EVADING":
++                if state.status == "EVADING" and state.cell == state.evasion_target:
++                    # Transition to WAITING in the pocket, waiting for the waiter to pass
++                    waiter_id = None
++                    for other_rid, other_state in states.items():
++                        if other_rid != rid and getattr(other_state, "waiting_for_robot", None) == rid:
++                            waiter_id = other_rid
++                            break
++                    if waiter_id is not None:
++                        state.status = "POCKET_WAITING"
++                        state.waiting_for_robot = waiter_id
++                        state.wait_ticks = 100
++                        state.evasion_target = None
++                    else:
++                        state.status = "NAVIGATING"
++                        state.evasion_target = None
++                elif state.status == "EVADING":
+                     state.status = "NAVIGATING"
+                     state.evasion_target = None
+ 
+-                other_rob_cells = [states[r].cell for r in states if r != rid]
++                done_cells = [
++                    states[r].cell for r in states
++                    if r != rid and states[r].status == "DONE"
++                ]
++                other_active_cells = [
++                    states[r].cell for r in states
++                    if r != rid and states[r].status != "DONE"
++                ]
+                 box_cells_list = list(box_states.values())
++
++                # Key insight: in tight single-width corridors with no boxes,
++                # blocking other robots as hard walls leaves A* with NO PATH
++                # (the only route goes through the other robot's cell).
++                # The conflict detector + DR handle actual avoidance — the
++                # planner just needs a valid route for the detector to inspect.
++                # With boxes present, we still block others to avoid pushing them.
+                 plan = a_star(
+                     state.cell, state.goal,
+                     self.grid, self.grid_size,
+-                    other_robots=other_rob_cells,
+-                    blocked_cells=box_cells_list,
++                    other_robots=other_active_cells if box_cells_list else [],
++                    blocked_cells=done_cells,
++                    ignore_boxes=True,
+                 )
+                 state.plan = plan if plan else [state.cell]
+ 
+         # ---- 3. Build plans for conflict detector ----------------------
+-        robot_plans = {rid: states[rid].plan[:self.h] for rid in active_ids}
++        robot_plans = {rid: states[rid].plan[:h] for rid in active_ids}
+ 
+         robot_states_cd = {
+             rid: {
+@@ -161,56 +288,22 @@ class RobotCoordinator:
+         }
+ 
+         # ---- 4. Detect conflicts ----------------------------------------
++        # Skip detection for robot pairs where one is already EVADING —
++        # they are in the process of resolving and re-detecting creates
++        # an infinite-WAIT loop (WAITER never resumes).
++        evading_ids = {rid for rid in active_ids if states[rid].status == "EVADING"}
+         conflicts = self._detector.detect(
+-            robot_plans, box_states, robot_states_cd, h=self.h
++            robot_plans, box_states, robot_states_cd, h=h
+         )
++        # Filter out C1 conflicts where one robot is already evading away
++        conflicts = [
++            c for c in conflicts
++            if not (c.conflict_type == ConflictType.ROBOT_ROBOT
++                    and any(rid in evading_ids for rid in c.robots_involved))
++        ]
+ 
+-        # ---- 4b. Head-on corridor deadlock: back-up maneuver -----------
+-        # When two robots are heading directly toward each other in a narrow
+-        # corridor (no side escape), the one with higher robot_id backs up
+-        # a few steps to let the other pass through.
+-        headon_pairs: set[tuple] = set()
+-        for c in conflicts:
+-            from multi_robot.conflict_detection import ConflictType as CT
+-            if c.conflict_type == CT.ROBOT_ROBOT and len(c.robots_involved) == 2:
+-                r1, r2 = c.robots_involved
+-                if r1 in active_ids and r2 in active_ids:
+-                    s1, s2 = states[r1], states[r2]
+-                    if len(s1.plan) > 1 and len(s2.plan) > 1:
+-                        # Check they are heading toward each other
+-                        dir1 = (s1.plan[1][0]-s1.cell[0], s1.plan[1][1]-s1.cell[1])
+-                        dir2 = (s2.plan[1][0]-s2.cell[0], s2.plan[1][1]-s2.cell[1])
+-                        dot = dir1[0]*dir2[0] + dir1[1]*dir2[1]
+-                        if dot < 0:   # opposite directions → head-on
+-                            headon_pairs.add((min(r1,r2), max(r1,r2)))
+-
+-        for r1, r2 in headon_pairs:
+-            # Robot with higher id backs up to let the other pass
+-            backer = max(r1, r2)
+-            state  = states[backer]
+-            # Back-up: move opposite to our current plan direction for a few steps
+-            if len(state.plan) >= 2:
+-                curr = state.cell
+-                nxt = state.plan[1]
+-                dx = curr[0] - nxt[0]
+-                dy = curr[1] - nxt[1]
+-                
+-                # Generate a short backtrack path
+-                backtrack = [curr]
+-                c = curr
+-                for _ in range(3):
+-                    c = (c[0] + dx, c[1] + dy)
+-                    if 0 <= c[0] < self.grid_size and 0 <= c[1] < self.grid_size and self.grid[c[1], c[0]] == 0:
+-                        backtrack.append(c)
+-                    else:
+-                        break
+-                
+-                # Stay at the backed-up position for a few ticks to let the other pass
+-                if len(backtrack) > 1:
+-                    last = backtrack[-1]
+-                    backtrack.extend([last] * 5)
+-                    state.plan = backtrack
+-                    state.status = "EVADING"
++        # ---- 4b. Head-on corridor deadlock is handled dynamically by resolve_sr_social ---
++        # (Heuristic back-up loop removed to allow pocket-based evasion to take precedence)
+ 
+         # ---- 5. Resolve deadlocks ---------------------------------------
+         resolved_rids: set[int] = set()
+@@ -223,42 +316,65 @@ class RobotCoordinator:
+             involved = [r for r in merged if r in active_ids]
+ 
+             if len(involved) >= 2:
+-                robot_cells_d = {rid: states[rid].cell for rid in involved}
+-                robot_goals_d = {rid: states[rid].goal for rid in involved}
+-
+-                if self.dr_strategy == "social" and self.social_map:
+-                    assignments, evasion_targets = self.resolver.resolve_social(
+-                        involved, robot_cells_d, robot_goals_d, self.social_map
+-                    )
+-                elif self.dr_strategy == "sr_width" and self.broadcaster:
+-                    assignments, evasion_targets = self.resolver.resolve_sr_width(
+-                        involved, robot_cells_d, robot_goals_d, self.broadcaster
+-                    )
++                # Don't re-run DR if any involved robot is already EVADING.
++                # Re-assigning WAIT against an evader creates an infinite loop.
++                if any(states[r].status == "EVADING" for r in involved):
++                    pass  # Resolution already in progress — don't re-assign WAIT
+                 else:
+-                    assignments, evasion_targets = self.resolver.resolve_repulsive(
+-                        involved, robot_cells_d, robot_goals_d
+-                    )
+-
+-                for rid, action in assignments.items():
+-                    state = states[rid]
+-                    if action == "WAIT":
+-                        state.status = "WAITING"
+-                        state.wait_ticks = random.randint(1, 3)
+-                        next_cells[rid] = state.cell
+-                        resolved_rids.add(rid)
+-                    elif action == "EVADE":
+-                        state.status = "EVADING"
+-                        target = evasion_targets.get(rid)
+-                        state.evasion_target = target
+-                        if target:
+-                            other_rob_cells = [states[r].cell for r in states if r != rid]
+-                            evade_plan = a_star(
+-                                state.cell, target,
+-                                self.grid, self.grid_size,
+-                                other_robots=other_rob_cells,
+-                            )
+-                            state.plan = evade_plan if evade_plan else [state.cell]
+-                        # Fall through — let step 6 advance the plan this tick
++                    self.deadlock_count += 1
++                    robot_cells_d = {rid: states[rid].cell for rid in involved}
++                    robot_goals_d = {rid: states[rid].goal for rid in involved}
++
++                    if self.dr_strategy == "sr_social" and self.broadcaster and self.social_map:
++                        assignments, evasion_targets = self.resolver.resolve_sr_social(
++                            involved, robot_cells_d, robot_goals_d,
++                            self.broadcaster, self.social_map
++                        )
++                    elif self.dr_strategy == "social" and self.social_map:
++                        assignments, evasion_targets = self.resolver.resolve_social(
++                            involved, robot_cells_d, robot_goals_d, self.social_map
++                        )
++                    elif self.dr_strategy == "sr_width" and self.broadcaster:
++                        assignments, evasion_targets = self.resolver.resolve_sr_width(
++                            involved, robot_cells_d, robot_goals_d, self.broadcaster
++                        )
++                    else:
++                        assignments, evasion_targets = self.resolver.resolve_repulsive(
++                            involved, robot_cells_d, robot_goals_d
++                        )
++
++                    if self.broadcaster:
++                        for rid, action in assignments.items():
++                            if action == "WAIT":
++                                w = self.broadcaster.get_sr_interval_width(rid)
++                                self.yield_sr_widths.append(w)
++
++                    for rid, action in assignments.items():
++                        state = states[rid]
++                        if action == "WAIT":
++                            # Phase 2A: transfer priority to all evaders
++                            evaders = []
++                            for other_rid, other_action in assignments.items():
++                                if other_action == "EVADE":
++                                    states[other_rid].priority_score += state.priority_score
++                                    evaders.append(other_rid)
++                            state.status = "WAITING"
++                            state.wait_ticks = random.randint(2, 5)
++                            state.waiting_for_robot = evaders[0] if evaders else None
++                            next_cells[rid] = state.cell
++                            resolved_rids.add(rid)
++                        elif action == "EVADE":
++                            state.status = "EVADING"
++                            target = evasion_targets.get(rid)
++                            state.evasion_target = target
++                            if target:
++                                other_rob_cells = [states[r].cell for r in states if r != rid]
++                                evade_plan = a_star(
++                                    state.cell, target,
++                                    self.grid, self.grid_size,
++                                    other_robots=other_rob_cells,
++                                )
++                                state.plan = evade_plan if evade_plan else [state.cell]
+ 
+         # ---- 6. Execute next step for all active robots ----------------
+         occupied_next: dict[int, tuple] = {}   # tracks where robots are moving
+@@ -277,9 +393,20 @@ class RobotCoordinator:
+ 
+             if len(state.plan) > 1:
+                 next_cell = state.plan[1]
+-                # Collision avoidance: don't step into another robot's current cell
+-                currently_occupied = {states[r].cell for r in states if r != rid}
+-                if next_cell not in currently_occupied and next_cell not in occupied_next.values():
++                # Collision avoidance: don't step into another robot's cell (active, waiting, or done).
++                currently_occupied = {
++                    states[r].cell for r in states
++                    if r != rid
++                }
++                # Phase 2A: respect priority — don't displace a higher-priority robot
++                priority_blocker = any(
++                    states[r].cell == next_cell
++                    and states[r].priority_score > state.priority_score
++                    for r in states if r != rid
++                )
++                if (next_cell not in currently_occupied
++                        and next_cell not in occupied_next.values()
++                        and not priority_blocker):
+                     state.plan.pop(0)
+                     state.cell = next_cell
+             # else: at end of plan, stay put (will replan next tick)

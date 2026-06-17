@@ -77,7 +77,7 @@ def drive_robot(robot_id, target_xy, speed=5.0):
     vy = dy * scale
     yaw = math.atan2(dy, dx)
     orientation = p.getQuaternionFromEuler([0, 0, yaw])
-    p.resetBasePositionAndOrientation(robot_id, [position[0], position[1], position[2]], orientation)
+    p.resetBasePositionAndOrientation(robot_id, [position[0], position[1], 0.15], orientation)
     p.resetBaseVelocity(robot_id, linearVelocity=[vx, vy, 0], angularVelocity=[0, 0, 0])
     return distance
 

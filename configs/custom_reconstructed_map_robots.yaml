@@ -115,7 +115,21 @@ obstacles:
 - pos:
   - 6
   - 18
-robots: []
+robots:
+- goal:
+  - 18
+  - 18
+  id: 3
+  start:
+  - 1
+  - 1
+- goal:
+  - 1
+  - 1
+  id: 4
+  start:
+  - 18
+  - 18
 walls:
 - pos:
   - 0
@@ -549,4 +563,4 @@ walls:
 world:
   cell_size: 1.0
   grid_size: 20
-  sim_steps: 1500
+  sim_steps: 3000

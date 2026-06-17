@@ -1,0 +1,508 @@
+diff --git a/simulation/snamo_simulator.py b/simulation/snamo_simulator.py
+index 3987f7e..b25cf22 100644
+--- a/simulation/snamo_simulator.py
++++ b/simulation/snamo_simulator.py
+@@ -1,15 +1,29 @@
+ """
+ simulation/snamo_simulator.py
+ -------------------------------
+-S-NAMO PyBullet simulator.
++S-NAMO PyBullet simulator — fully wired MR-NAMO architecture.
+ 
+-Uses SNAMOPlanner (social costmap + taboo zones + NAMOUnc uncertainty)
+-to drive robots through any YAML config map.
++Changes from previous version
++------------------------------
++1. Removed broken intersection token-ring that caused 0% pass rate on all
++   no-box corridor/intersection configs (single_corridor_yielding etc.).
++
++2. Wired the complete multi_robot/ MR-NAMO stack:
++     RobotCoordinator  — Algorithm 1 (plan → detect → resolve → execute)
++     ConflictDetector  — C1–C6 conflict types from Paper 5
++     DeadlockResolver  — Repulsive / Social / SR-Width / SR-Social strategies
++     BeliefBroadcaster — cooperative SR-belief sharing across fleet
++
++3. For box-map configs, SNAMOPlanner still makes per-robot BYPASS/REMOVE
++   decisions; the coordinator handles multi-robot spatial coordination.
++
++4. Added --dr-strategy CLI argument.
++   Default: "sr_social" (our novel Phase 2B contribution).
+ 
+ Usage:
+-    python simulation/snamo_simulator.py --config configs/movable_obstacle_choke_namo.yaml --gui
+-    python simulation/snamo_simulator.py --config configs/warehouse_3robots.yaml --gui
++    python simulation/snamo_simulator.py --config configs/single_corridor_yielding.yaml --gui
+     python simulation/snamo_simulator.py --config all
++    python simulation/snamo_simulator.py --config all --dr-strategy repulsive
+ """
+ 
+ import sys
+@@ -25,8 +39,11 @@ import pybullet_data
+ 
+ sys.path.append(str(Path(__file__).resolve().parent.parent))
+ 
+-from maps.namo_environments import NAMOEnvironment, WarehouseEnvironment
+ from decision.snamo_planner import SNAMOPlanner
++from multi_robot.coordinator import RobotCoordinator, RobotState
++from multi_robot.deadlock_resolution import DeadlockResolver
++from multi_robot.belief_broadcaster import BeliefBroadcaster
++from social.social_costmap import SocialCostmap
+ 
+ 
+ # ─────────────────────────────────────────────────────────────────────────────
+@@ -98,14 +115,14 @@ def drive_robot(rid, target_xy, speed=4.0):
+     s = speed / max(dist, 1e-6)
+     yaw = math.atan2(dy, dx)
+     p.resetBasePositionAndOrientation(
+-        rid, [pos[0], pos[1], pos[2]],
++        rid, [pos[0], pos[1], 0.15],
+         p.getQuaternionFromEuler([0, 0, yaw]))
+     p.resetBaseVelocity(rid, [dx * s, dy * s, 0], [0, 0, 0])
+     return dist
+ 
+ 
+ # ─────────────────────────────────────────────────────────────────────────────
+-# Grid builder — NO robot IDs stamped (critical fix)
++# Grid builder
+ # ─────────────────────────────────────────────────────────────────────────────
+ 
+ def build_clean_grid(cfg: dict) -> np.ndarray:
+@@ -156,16 +173,22 @@ COLORS = [
+ # Main simulation
+ # ─────────────────────────────────────────────────────────────────────────────
+ 
+-def run_simulation(config_path: str, gui: bool = False,
+-                   taboo_zones: list = None) -> dict:
++def run_simulation(
++    config_path: str,
++    gui: bool = False,
++    taboo_zones: list = None,
++    dr_strategy: str = "sr_social",
++) -> dict:
+     """
+     Run S-NAMO simulation on a YAML config.
+ 
+     Parameters
+     ----------
+-    config_path : path to YAML file.
+-    gui         : open PyBullet GUI window.
+-    taboo_zones : optional list of polygon vertex lists.
++    config_path  : path to YAML file.
++    gui          : open PyBullet GUI window.
++    taboo_zones  : optional list of polygon vertex lists.
++    dr_strategy  : DR strategy for multi-robot coordination.
++                   One of: "repulsive" | "social" | "sr_width" | "sr_social".
+ 
+     Returns
+     -------
+@@ -220,9 +243,9 @@ def run_simulation(config_path: str, gui: bool = False,
+                 box_init_xy[bid] = raw[:2]
+ 
+     # ── Spawn robots ───────────────────────────────────────────────────────
+-    robot_ids:    list[int]         = []
+-    robot_goals:  dict[int, tuple]  = {}
+-    planners:     dict[int, SNAMOPlanner] = {}
++    robot_ids:    list[int]              = []
++    robot_goals:  dict[int, tuple]       = {}
++    snamo_planners: dict[int, SNAMOPlanner] = {}
+ 
+     for i, rcfg in enumerate(robots_cfg):
+         sc = tuple(rcfg["start"])
+@@ -230,35 +253,61 @@ def run_simulation(config_path: str, gui: bool = False,
+         sx, sy = cell_center(sc[0], sc[1], cs)
+         rid = create_robot([sx, sy, 0.15], COLORS[i % len(COLORS)])
+         robot_ids.append(rid)
+-        robot_goals[rid]  = gc
+-        planners[rid]     = SNAMOPlanner(
+-            grid      = base_grid.copy(),
+-            grid_size = gs,
+-            taboo_zones = taboo_zones or [],
++        robot_goals[rid] = gc
++        snamo_planners[rid] = SNAMOPlanner(
++            grid=base_grid.copy(),
++            grid_size=gs,
++            taboo_zones=taboo_zones or [],
+         )
+-        # Goal disc
+         gx, gy = cell_center(gc[0], gc[1], cs)
+         c = COLORS[i % len(COLORS)]
+         create_goal_marker([gx, gy, 0.01], [c[0], c[1], c[2], 0.30])
+ 
+-    # ── Per-robot state ────────────────────────────────────────────────────
+-    wp:          dict[int, list]  = {r: []       for r in robot_ids}
+-    last_action: dict[int, str]   = {r: "NAVIGATE" for r in robot_ids}
+-    push_obs_pending: dict[int, bool] = {r: False for r in robot_ids}
+-    wait_ticks:  dict[int, int]   = {r: 0  for r in robot_ids}  # forced wait counter
++    # ── MR-NAMO coordinator stack ──────────────────────────────────────────
++    social_map  = SocialCostmap(base_grid)
++    broadcaster = BeliefBroadcaster(robot_ids=robot_ids)
++    resolver    = DeadlockResolver(grid=base_grid, grid_size=gs)
++    coordinator = RobotCoordinator(
++        grid=base_grid,
++        grid_size=gs,
++        dr_strategy=dr_strategy,
++        resolver=resolver,
++        broadcaster=broadcaster,
++        social_map=social_map,
++        adaptive_h=True,
++    )
++
++    # Build RobotState objects for coordinator
++    coord_states: dict[int, RobotState] = {}
++    for i, rid in enumerate(robot_ids):
++        rcfg = robots_cfg[i]
++        coord_states[rid] = RobotState(
++            robot_id=rid,
++            cell=tuple(rcfg["start"]),
++            goal=tuple(rcfg["goal"]),
++        )
+ 
+-    # Intersection token: only one robot may be in the central 1/3 zone at a time
+-    intersection_holder: int | None = None  # rid currently holding the token
+-    cx_lo = gs // 3;  cx_hi = (2 * gs) // 3   # central zone bounds
++    # ── Per-robot drive state (separate from coordinator) ─────────────────
++    # The coordinator works in grid cells; we need per-robot physics targets.
++    # drive_target[rid] = (world_x, world_y) the robot is currently driving toward.
++    drive_target: dict[int, tuple] = {
++        rid: cell_center(*tuple(robots_cfg[i]["start"]), cs)
++        for i, rid in enumerate(robot_ids)
++    }
++    push_obs_pending: dict[int, bool] = {r: False for r in robot_ids}
++    last_snamo_action: dict[int, str] = {r: "NAVIGATE" for r in robot_ids}
+ 
+     collision_count = 0
+     success         = False
+     step            = 0
++    collision_pairs_seen: set = set()
+ 
+     name = cfg.get("meta", {}).get("name", config_path)
+-    print(f"\n[S-NAMO] '{name}' | robots={len(robot_ids)} boxes={len(box_ids)} max_steps={max_steps}")
++    print(f"\n[SNAMOSim] '{name}' | robots={len(robot_ids)} boxes={len(box_ids)} "
++          f"max_steps={max_steps} dr={dr_strategy}")
+ 
+     for step in range(max_steps):
++        collision_pairs_seen.clear()
+ 
+         # ── Read physics state ──────────────────────────────────────────
+         robot_cells: dict[int, tuple] = {}
+@@ -268,14 +317,21 @@ def run_simulation(config_path: str, gui: bool = False,
+ 
+         box_cells_live: list[tuple] = []
+         current_grid = base_grid.copy()
+-        for bid in box_ids:
++        box_states_coord: dict[int, tuple] = {}
++
++        for i, bid in enumerate(box_ids):
+             pos, _ = p.getBasePositionAndOrientation(bid)
+             bc = world_to_cell(pos[:2], cs)
+             box_cells_live.append(bc)
++            box_states_coord[bid] = bc
+             bx, by = bc
+             if 0 <= bx < gs and 0 <= by < gs:
+                 current_grid[by, bx] = 2
+ 
++        # Sync coordinator grid when boxes move
++        coordinator.grid = current_grid.copy()
++        resolver.grid    = current_grid.copy()
++
+         # ── Success check ───────────────────────────────────────────────
+         all_done = True
+         for rid in robot_ids:
+@@ -287,132 +343,129 @@ def run_simulation(config_path: str, gui: bool = False,
+                 break
+         if all_done:
+             success = True
+-            print(f"[S-NAMO] ✅  All robots at goals — step {step}")
++            print(f"[SNAMOSim] ✅  All robots at goals — step {step}")
+             break
+ 
+-        # ── Per-robot: replan + drive ────────────────────────────────────
+-        # Intersection token management (no-obstacle maps only)
+-        if not box_cells_live:
++        # ── Step coordinator globally only when a robot arrives at its target ────
++        any_arrived = False
++        for rid in robot_ids:
++            if coord_states[rid].status not in ("DONE", "WAITING", "POCKET_WAITING") and rid in drive_target:
++                pos, _ = p.getBasePositionAndOrientation(rid)
++                tx, ty = drive_target[rid]
++                if math.hypot(pos[0] - tx, pos[1] - ty) <= 0.15:
++                    any_arrived = True
++                    break
++
++        if any_arrived or step % 30 == 0:
++            print(f"[DEBUG] Step {step}")
++            for rid in robot_ids:
++                print(f"  Robot {rid} cell={robot_cells[rid]} target={drive_target[rid]} status={coord_states[rid].status} priority={coord_states[rid].priority_score:.2f}")
++            # Sync cell positions from physics
++            for rid in robot_ids:
++                coord_states[rid].cell = robot_cells[rid]
++
++            # Run coordinator globally once
++            next_cells = coordinator.step(coord_states, box_states_coord)
++
++            # Update drive target and run SNAMO planner for each robot
+             for rid in robot_ids:
+-                rc = robot_cells[rid]
+-                in_zone = (cx_lo <= rc[0] <= cx_hi and cx_lo <= rc[1] <= cx_hi)
+-                if in_zone:
+-                    if intersection_holder is None:
+-                        intersection_holder = rid
+-                    elif intersection_holder != rid:
+-                        # Another robot holds token — this one waits
+-                        wait_ticks[rid] = 15
+-                else:
+-                    if intersection_holder == rid:
+-                        intersection_holder = None  # released the zone
++                if coord_states[rid].status in ("DONE", "WAITING", "POCKET_WAITING"):
++                    continue
+ 
++                curr_cell = robot_cells[rid]
++                goal_cell = robot_goals[rid]
++                next_cell = next_cells.get(rid, curr_cell)
++
++                # ── Box-map: override with SNAMOPlanner waypoints ────────
++                # Skip SNAMOPlanner if robot is EVADING to prevent overriding local evasion path
++                if box_cells_live and coord_states[rid].status != "EVADING":
++                    other_cells = [robot_cells[r] for r in robot_ids if r != rid]
++                    plan_grid = current_grid.copy()
++                    for oc in other_cells:
++                        ox, oy = oc
++                        if (ox, oy) != goal_cell:
++                            if 0 <= ox < gs and 0 <= oy < gs and plan_grid[oy, ox] == 0:
++                                plan_grid[oy, ox] = 1
++
++                    snamo_planners[rid].update_grid(plan_grid)
++                    action, waypoints = snamo_planners[rid].plan(
++                        start=curr_cell, goal=goal_cell,
++                        box_cells=box_cells_live, other_robots=other_cells, grid=plan_grid,
++                    )
++                    last_snamo_action[rid] = action
++
++                    if waypoints:
++                        next_cell = waypoints[0]
++                        nxt_occupied = any(robot_cells[r] == next_cell
++                                           for r in robot_ids if r != rid)
++                        if nxt_occupied:
++                            p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
++                            continue
++
++                        if action == "REMOVE":
++                            bx, by = next_cell
++                            if 0 <= bx < gs and 0 <= by < gs:
++                                if current_grid[by, bx] == 2:
++                                    push_obs_pending[rid] = True
++                                elif push_obs_pending[rid]:
++                                    snamo_planners[rid].observe(success=True)
++                                    broadcaster.broadcast_outcome(rid, success=True)
++                                    push_obs_pending[rid] = False
++
++                drive_target[rid] = cell_center(next_cell[0], next_cell[1], cs)
++
++        # ── Drive robots ──────────────────────────────────────────────────
+         for rid in robot_ids:
+             pos, _ = p.getBasePositionAndOrientation(rid)
+             gxc, gyc = robot_goals[rid]
+             gxw, gyw = cell_center(gxc, gyc, cs)
+-
+-            # Already at goal
+             if math.hypot(pos[0] - gxw, pos[1] - gyw) <= 0.5:
+                 p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
+                 continue
+ 
+-            # Forced wait (intersection token or yield)
+-            if wait_ticks[rid] > 0:
+-                wait_ticks[rid] -= 1
++            if coord_states[rid].status in ("WAITING", "POCKET_WAITING"):
+                 p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
+-                wp[rid] = []  # clear plan so we replan fresh after waiting
+                 continue
+ 
+-            curr_cell = robot_cells[rid]
+-            goal_cell = robot_goals[rid]
+-
+-            # ── Replan when waypoints empty ──────────────────────────────
+-            if not wp[rid]:
+-                other_cells = [robot_cells[r] for r in robot_ids if r != rid]
+-
+-                if box_cells_live:
+-                    # Maps with obstacles: mark other robots as temporary walls,
+-                    # but NEVER block the planning robot's own goal cell.
+-                    plan_grid = current_grid.copy()
+-                    for oc in other_cells:
+-                        ox, oy = oc
+-                        if (ox, oy) == goal_cell:
+-                            continue   # don't block the goal even if someone is there
+-                        if 0 <= ox < gs and 0 <= oy < gs and plan_grid[oy, ox] == 0:
+-                            plan_grid[oy, ox] = 1
+-                else:
+-                    # Maps without obstacles: use live grid as-is
+-                    plan_grid = current_grid.copy()
+-
+-                planners[rid].update_grid(plan_grid)
+-                action, waypoints = planners[rid].plan(
+-                    start        = curr_cell,
+-                    goal         = goal_cell,
+-                    box_cells    = box_cells_live,
+-                    other_robots = other_cells if box_cells_live else [],
+-                    grid         = plan_grid,
+-                )
+-                wp[rid]          = list(waypoints)
+-                last_action[rid] = action
+-
+-            # ── Drive toward next waypoint ───────────────────────────────
+-            if wp[rid]:
+-                nxt = wp[rid][0]
+-
+-                # Yield if another robot occupies the next cell
+-                # (lower robot_ids index yields to higher-index robots)
+-                nxt_occupied = any(
+-                    robot_cells[r] == nxt
+-                    for r in robot_ids if r != rid
+-                )
+-                if nxt_occupied:
+-                    occupier = next(
+-                        r for r in robot_ids
+-                        if r != rid and robot_cells[r] == nxt
+-                    )
+-                    lo_rid, hi_rid = planners[rid].belief.success_rate_interval()
+-                    width_rid = hi_rid - lo_rid
+-                    lo_occ, hi_occ = planners[occupier].belief.success_rate_interval()
+-                    width_occ = hi_occ - lo_occ
+-                    rid_idx  = robot_ids.index(rid)
+-                    occ_idx = robot_ids.index(occupier)
+-                    
+-                    if width_rid > width_occ or (abs(width_rid - width_occ) < 1e-5 and rid_idx < occ_idx):
+-                        # This robot has wider interval (more uncertain) or tie-breaks lower — wait and clear plan
+-                        p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
+-                        wp[rid] = []   # force replan next tick around the blocker
+-                        continue
+-
+-                nx_w, ny_w = cell_center(nxt[0], nxt[1], cs)
+-                dist_wp = drive_robot(rid, (nx_w, ny_w))
+-
+-                if dist_wp < 0.20:
+-                    wp[rid].pop(0)
+-
+-                    # Detect push: if this cell had a box, trigger observe()
+-                    if last_action[rid] == "REMOVE":
+-                        bx, by = nxt
+-                        if 0 <= bx < gs and 0 <= by < gs:
+-                            if current_grid[by, bx] == 2:
+-                                push_obs_pending[rid] = True
+-                            elif push_obs_pending[rid]:
+-                                planners[rid].observe(success=True)
+-                                push_obs_pending[rid] = False
++            # Safe distance check: avoid driving into another robot that is too close
++            too_close = False
++            for other_rid in robot_ids:
++                if other_rid == rid:
++                    continue
++                if coord_states[other_rid].status in ("DONE", "POCKET_WAITING"):
++                    continue
++                other_pos, _ = p.getBasePositionAndOrientation(other_rid)
++                dist_phys = math.hypot(pos[0] - other_pos[0], pos[1] - other_pos[1])
++                # Safety threshold: combined radius (0.54) + 0.16 buffer = 0.70m
++                if dist_phys < 0.70:
++                    if coord_states[rid].priority_score <= coord_states[other_rid].priority_score:
++                        too_close = True
++                        break
++
++            if too_close:
++                p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
++            else:
++                drive_robot(rid, drive_target[rid])
+ 
+         # ── Physics step ─────────────────────────────────────────────────
+         p.stepSimulation()
+         if gui:
+             time.sleep(0.01)
+ 
+-        # ── Count collisions ─────────────────────────────────────────────
++        # ── Count collisions (one event per unique pair per step) ────────
+         for i in range(len(robot_ids)):
+             for j in range(i + 1, len(robot_ids)):
+-                if p.getContactPoints(robot_ids[i], robot_ids[j]):
++                key = ("rr", robot_ids[i], robot_ids[j])
++                if key not in collision_pairs_seen and p.getContactPoints(robot_ids[i], robot_ids[j]):
+                     collision_count += 1
++                    collision_pairs_seen.add(key)
+         for rid in robot_ids:
+             for bid in box_ids:
+-                if p.getContactPoints(rid, bid):
+-                    collision_count += 1
++                key = ("rb", rid, bid)
++                if key not in collision_pairs_seen and p.getContactPoints(rid, bid):
++                    if last_snamo_action.get(rid, "NAVIGATE") != "REMOVE":
++                        collision_count += 1
++                    collision_pairs_seen.add(key)
+ 
+     # ── Final push count ─────────────────────────────────────────────────
+     push_count = 0
+@@ -422,15 +475,19 @@ def run_simulation(config_path: str, gui: bool = False,
+         if math.hypot(pos[0] - ix, pos[1] - iy) > 0.4:
+             push_count += 1
+ 
+-    print(f"[S-NAMO] steps={step+1}  success={success}  "
+-          f"pushes={push_count}  collisions={collision_count//2}")
++    print(f"[SNAMOSim] Steps={step+1}  Success={success}  "
++          f"Pushes={push_count}  Collisions={collision_count}")
+     p.disconnect()
+ 
++    avg_w = np.mean(coordinator.yield_sr_widths) if coordinator.yield_sr_widths else 0.0
++
+     return {
+         "success":    success,
+         "steps":      step + 1,
+         "pushes":     push_count,
+-        "collisions": collision_count // 2,
++        "collisions": collision_count,
++        "deadlocks":  coordinator.deadlock_count,
++        "avg_sr_width": avg_w,
+     }
+ 
+ 
+@@ -447,6 +504,8 @@ ALL_CONFIGS = [
+     "configs/symmetric_bottleneck_deadlock.yaml",
+     "configs/narrow_doorway_congestion.yaml",
+     "configs/cross_intersection_coordination.yaml",
++    "configs/custom_reconstructed_map_robots.yaml",
++    "configs/symmetric_bottleneck_4robots.yaml",
+ ]
+ 
+ 
+@@ -455,23 +514,29 @@ def main():
+     ap.add_argument("--config", default="configs/movable_obstacle_choke_namo.yaml",
+                     help="YAML config path or 'all'")
+     ap.add_argument("--gui",   action="store_true", help="Open PyBullet GUI")
++    ap.add_argument("--dr-strategy", default="sr_social",
++                    choices=["repulsive", "social", "sr_width", "sr_social"],
++                    help="Deadlock resolution strategy (default: sr_social)")
+     args = ap.parse_args()
+ 
+     if args.config == "all":
+         rows = []
+         for cfg_path in ALL_CONFIGS:
+             print(f"\n{'='*58}\nRunning: {cfg_path}\n{'='*58}")
+-            r = run_simulation(cfg_path, gui=False)
++            r = run_simulation(cfg_path, gui=False, dr_strategy=args.dr_strategy)
+             rows.append((cfg_path.split("/")[-1], r))
+ 
+-        print(f"\n{'='*72}")
+-        print(f"{'Config':<44} {'OK':<5} {'Steps':<8} {'Pushes':<8} Collisions")
+-        print(f"{'='*72}")
++        print(f"\n{'='*92}")
++        print(f"{'Config':<44} {'OK':<5} {'Steps':<8} {'Pushes':<8} {'Collisions':<12} {'Deadlocks':<10} AvgSRWidth")
++        print(f"{'='*92}")
+         for name, r in rows:
+             ok = "✅" if r["success"] else "❌"
+-            print(f"{name:<44} {ok:<5} {r['steps']:<8} {r['pushes']:<8} {r['collisions']}")
++            print(f"{name:<44} {ok:<5} {r['steps']:<8} {r['pushes']:<8} {r['collisions']:<12} {r['deadlocks']:<10} {r['avg_sr_width']:.3f}")
+     else:
+-        run_simulation(args.config, gui=args.gui)
++        try:
++            run_simulation(args.config, gui=args.gui, dr_strategy=args.dr_strategy)
++        except p.error:
++            print("\n[SNAMOSim] GUI window closed. Terminating.")
+ 
+ 
+ if __name__ == "__main__":

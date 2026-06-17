@@ -93,18 +93,18 @@ class SNAMOPlanner:
     # Social-aware clearing direction
     # ------------------------------------------------------------------
 
-    def _social_clearing_direction(
+    def _social_clearing_directions(
         self,
         box_cell: tuple,
         grid: np.ndarray,
         other_robots: list = (),
         locked_zones: set = frozenset(),
-    ):
+    ) -> list[tuple[tuple, tuple]]:
         """
-        Find the push direction whose destination (clear_cell) has the
-        lowest social cost AND is not in a taboo zone.
+        Find all valid push directions whose destinations (clear_cell) are not in a taboo zone,
+        sorted by social cost ascending.
 
-        Returns (clear_cell, approach_cell) or None.
+        Returns list of (clear_cell, approach_cell).
         """
         bx, by = box_cell
         robot_set = set(map(tuple, other_robots))
@@ -148,12 +148,11 @@ class SNAMOPlanner:
             valid.append((social_cost, clear_cell, approach_cell))
 
         if not valid:
-            return None
+            return []
 
-        # Pick direction with lowest social cost at destination
+        # Sort by lowest social cost at destination
         valid.sort(key=lambda x: x[0])
-        _, clear_cell, approach_cell = valid[0]
-        return clear_cell, approach_cell
+        return [(clear_cell, approach_cell) for _, clear_cell, approach_cell in valid]
 
     # ------------------------------------------------------------------
     # Internal cost intervals (same as NAMOUnc, with social-weighted A*)
@@ -235,7 +234,12 @@ class SNAMOPlanner:
         gs = self.grid_size
 
         # --- Find first blocking box on direct path ---
-        path_direct = a_star(start, goal, work_grid, gs, ignore_boxes=True)
+        # Add a high penalty to box cells so A* prefers paths with fewer boxes
+        box_risk_map = (work_grid == 2).astype(float)
+        path_direct = a_star(start, goal, work_grid, gs,
+                             ignore_boxes=True,
+                             risk_map=box_risk_map,
+                             risk_weight=50.0)
         blocking = None
         if path_direct:
             box_set = set(map(tuple, box_cells))
@@ -276,59 +280,64 @@ class SNAMOPlanner:
             # fallthrough to REMOVE if bypass has no path
 
         # --- REMOVE: social-aware clearing direction ---
-        result = self._social_clearing_direction(
+        results = self._social_clearing_directions(
             blocking, work_grid, other_robots=other_robots
         )
 
-        if result is None:
-            # No valid social clearing direction found.
-            # Last resort: move directly toward the blocking box.
-            # (robot will physically push it via PyBullet contact)
-            from core.planner import a_star as _astar
-            g_free = work_grid.copy()
-            g_free[blocking[1], blocking[0]] = 0  # treat as passable
-            path_direct = _astar(start, blocking, g_free, gs, other_robots=other_robots)
-            return "REMOVE", path_direct[1:] if len(path_direct) > 1 else [blocking]
+        best_plan = None
+        fallback_plan = None
 
-        clear_cell, approach_cell = result
+        for clear_cell, approach_cell in results:
+            # Segment 1: start → approach cell (avoid the box)
+            g_obs = work_grid.copy()
+            g_obs[blocking[1], blocking[0]] = 2
+            seg1 = a_star(start, approach_cell, g_obs, gs,
+                          other_robots=other_robots,
+                          risk_map=self._social_risk,
+                          risk_weight=self.social_weight)
 
-        # Segment 1: start → approach cell (avoid the box)
-        g_obs = work_grid.copy()
-        g_obs[blocking[1], blocking[0]] = 2
-        seg1 = a_star(start, approach_cell, g_obs, gs,
-                      other_robots=other_robots,
-                      risk_map=self._social_risk,
-                      risk_weight=self.social_weight)
+            # Segment 2: approach → through box cell → clear cell (push)
+            seg2 = [blocking, clear_cell]
 
-        # Segment 2: approach → through box cell → clear cell (push)
-        seg2 = [blocking, clear_cell]
+            # Segment 3: clear_cell → goal (box now at clear_cell)
+            g_after = work_grid.copy()
+            g_after[blocking[1], blocking[0]] = 0
+            g_after[clear_cell[1], clear_cell[0]] = 2
+            seg3 = a_star(clear_cell, goal, g_after, gs,
+                          other_robots=other_robots,
+                          risk_map=self._social_risk,
+                          risk_weight=self.social_weight)
 
-        # Segment 3: clear_cell → goal (box now at clear_cell)
-        g_after = work_grid.copy()
-        g_after[blocking[1], blocking[0]] = 0
-        g_after[clear_cell[1], clear_cell[0]] = 2
-        seg3 = a_star(clear_cell, goal, g_after, gs,
-                      other_robots=other_robots,
-                      risk_map=self._social_risk,
-                      risk_weight=self.social_weight)
+            if not seg1 or not seg3:
+                # Social-cost path failed — retry without social cost
+                seg1_ns = a_star(start, approach_cell, g_obs, gs, other_robots=other_robots)
+                seg3_ns = a_star(clear_cell, goal, g_after, gs, other_robots=other_robots)
+                if seg1_ns and seg3_ns:
+                    seg1, seg3 = seg1_ns, seg3_ns
 
-        if not seg1 or not seg3:
-            # Social-cost path failed — retry without social cost
-            seg1 = a_star(start, approach_cell, g_obs, gs, other_robots=other_robots)
-            seg3 = a_star(clear_cell, goal, g_after, gs, other_robots=other_robots)
+            if seg1 and seg3:
+                best_plan = seg1[1:] + seg2 + seg3[1:]
+                break
 
-        if not seg1:
-            # Approach cell unreachable — move directly toward box
-            g_free = work_grid.copy()
-            g_free[blocking[1], blocking[0]] = 0
-            path_direct = a_star(start, blocking, g_free, gs, other_robots=other_robots)
-            return "REMOVE", path_direct[1:] if len(path_direct) > 1 else [blocking]
+            # Fallback: approach is reachable, but post-push path is blocked by other boxes.
+            # Plan post-push path ignoring other boxes.
+            if seg1:
+                seg3_ignore = a_star(clear_cell, goal, g_after, gs,
+                                     other_robots=other_robots,
+                                     ignore_boxes=True,
+                                     risk_map=self._social_risk,
+                                     risk_weight=self.social_weight)
+                if seg3_ignore and fallback_plan is None:
+                    fallback_plan = seg1[1:] + seg2 + seg3_ignore[1:]
 
-        if not seg3:
-            # Post-push path fails — return approach+push, replan after
-            waypoints = seg1[1:] + seg2
-            return "REMOVE", waypoints
+        if best_plan is not None:
+            return "REMOVE", best_plan
+        if fallback_plan is not None:
+            return "REMOVE", fallback_plan
 
-        # Full plan: approach → push → goal
-        waypoints = seg1[1:] + seg2 + seg3[1:]
-        return "REMOVE", waypoints
+        # Last resort fallback if no candidate was fully traversable
+        from core.planner import a_star as _astar
+        g_free = work_grid.copy()
+        g_free[blocking[1], blocking[0]] = 0  # treat as passable
+        path_direct = _astar(start, blocking, g_free, gs, other_robots=other_robots, ignore_boxes=True)
+        return "REMOVE", path_direct[1:] if len(path_direct) > 1 else [blocking]

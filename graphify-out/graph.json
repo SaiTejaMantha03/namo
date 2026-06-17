@@ -350,7 +350,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "decision_snamo_planner",
-      "community": 23,
+      "community": 28,
       "norm_label": "snamo_planner.py"
     },
     {
@@ -450,7 +450,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "decision_snamo_planner_rationale_1",
-      "community": 23,
+      "community": 28,
       "norm_label": "decision/snamo_planner.py -------------------------- s-namo (social namo) planne"
     },
     {
@@ -810,7 +810,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "mappo_mappo_env_namomappoenv_init",
-      "community": 4,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -1180,7 +1180,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster",
-      "community": 5,
+      "community": 27,
       "norm_label": "belief_broadcaster.py"
     },
     {
@@ -1190,7 +1190,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_beliefbroadcaster",
-      "community": 5,
+      "community": 27,
       "norm_label": "beliefbroadcaster"
     },
     {
@@ -1210,7 +1210,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_beliefbroadcaster_broadcast_outcome",
-      "community": 5,
+      "community": 27,
       "norm_label": ".broadcast_outcome()"
     },
     {
@@ -1220,7 +1220,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_beliefbroadcaster_get_sr_interval",
-      "community": 5,
+      "community": 27,
       "norm_label": ".get_sr_interval()"
     },
     {
@@ -1230,7 +1230,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_beliefbroadcaster_get_sr_interval_width",
-      "community": 5,
+      "community": 27,
       "norm_label": ".get_sr_interval_width()"
     },
     {
@@ -1240,7 +1240,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_beliefbroadcaster_get_all_means",
-      "community": 5,
+      "community": 27,
       "norm_label": ".get_all_means()"
     },
     {
@@ -1250,7 +1250,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_beliefbroadcaster_summary",
-      "community": 5,
+      "community": 27,
       "norm_label": ".summary()"
     },
     {
@@ -1260,7 +1260,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_rationale_1",
-      "community": 5,
+      "community": 27,
       "norm_label": "multi_robot/belief_broadcaster.py ----------------------------------- cooperativ"
     },
     {
@@ -1270,7 +1270,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_rationale_23",
-      "community": 5,
+      "community": 27,
       "norm_label": "central broker for cooperative belief sharing across a robot fleet.      in a re"
     },
     {
@@ -1280,7 +1280,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_rationale_59",
-      "community": 5,
+      "community": 27,
       "norm_label": "called by a robot immediately after a manipulation attempt.          updates the"
     },
     {
@@ -1290,7 +1290,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_rationale_90",
-      "community": 5,
+      "community": 27,
       "norm_label": "returns the current [p_lo, p_hi] sr interval for a robot."
     },
     {
@@ -1300,7 +1300,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_rationale_96",
-      "community": 5,
+      "community": 27,
       "norm_label": "returns the sr interval width (p_hi - p_lo) for a robot.          used by sr-wid"
     },
     {
@@ -1310,7 +1310,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "multi_robot_belief_broadcaster_rationale_105",
-      "community": 5,
+      "community": 27,
       "norm_label": "returns the current mean sr estimate for each robot."
     },
     {
@@ -1417,17 +1417,17 @@
       "label": "RobotState",
       "file_type": "code",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L31",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "multi_robot_coordinator_robotstate",
-      "community": 5,
+      "community": 31,
       "norm_label": "robotstate"
     },
     {
       "label": "RobotCoordinator",
       "file_type": "code",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L46",
+      "source_location": "L48",
       "_origin": "ast",
       "id": "multi_robot_coordinator_robotcoordinator",
       "community": 5,
@@ -1437,7 +1437,7 @@
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L62",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "multi_robot_coordinator_robotcoordinator_init",
       "community": 5,
@@ -1447,20 +1447,30 @@
       "label": "ndarray",
       "file_type": "code",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L62",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "multi_robot_coordinator_py_ndarray",
       "community": 5,
       "norm_label": "ndarray"
     },
     {
+      "label": "._compute_adaptive_h()",
+      "file_type": "code",
+      "source_file": "multi_robot/coordinator.py",
+      "source_location": "L106",
+      "_origin": "ast",
+      "id": "multi_robot_coordinator_robotcoordinator_compute_adaptive_h",
+      "community": 31,
+      "norm_label": "._compute_adaptive_h()"
+    },
+    {
       "label": ".step()",
       "file_type": "code",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L87",
+      "source_location": "L125",
       "_origin": "ast",
       "id": "multi_robot_coordinator_robotcoordinator_step",
-      "community": 5,
+      "community": 31,
       "norm_label": ".step()"
     },
     {
@@ -1477,30 +1487,40 @@
       "label": "All mutable state for a single robot across timesteps.",
       "file_type": "rationale",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L32",
+      "source_location": "L33",
       "_origin": "ast",
-      "id": "multi_robot_coordinator_rationale_32",
-      "community": 5,
+      "id": "multi_robot_coordinator_rationale_33",
+      "community": 31,
       "norm_label": "all mutable state for a single robot across timesteps."
     },
     {
-      "label": "Implements Algorithm 1 from MR-NAMO (Paper 5).      Parameters     ----------",
+      "label": "Implements Algorithm 1 from MR-NAMO (Paper 5) with three novel extensions:",
       "file_type": "rationale",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L47",
+      "source_location": "L49",
       "_origin": "ast",
-      "id": "multi_robot_coordinator_rationale_47",
+      "id": "multi_robot_coordinator_rationale_49",
       "community": 5,
-      "norm_label": "implements algorithm 1 from mr-namo (paper 5).      parameters     ----------"
+      "norm_label": "implements algorithm 1 from mr-namo (paper 5) with three novel extensions:"
+    },
+    {
+      "label": "h = clamp(ceil(mean_pairwise_Manhattan / 2), 5, 20).",
+      "file_type": "rationale",
+      "source_file": "multi_robot/coordinator.py",
+      "source_location": "L107",
+      "_origin": "ast",
+      "id": "multi_robot_coordinator_rationale_107",
+      "community": 31,
+      "norm_label": "h = clamp(ceil(mean_pairwise_manhattan / 2), 5, 20)."
     },
     {
       "label": "Run one timestep for ALL robots simultaneously.         Returns next_cells: {rob",
       "file_type": "rationale",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L92",
+      "source_location": "L130",
       "_origin": "ast",
-      "id": "multi_robot_coordinator_rationale_92",
-      "community": 5,
+      "id": "multi_robot_coordinator_rationale_130",
+      "community": 31,
       "norm_label": "run one timestep for all robots simultaneously.         returns next_cells: {rob"
     },
     {
@@ -1510,7 +1530,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "multi_robot_deadlock_resolution",
-      "community": 5,
+      "community": 24,
       "norm_label": "deadlock_resolution.py"
     },
     {
@@ -1520,18 +1540,18 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "multi_robot_deadlock_resolution_l2_norm",
-      "community": 5,
+      "community": 24,
       "norm_label": "_l2_norm()"
     },
     {
-      "label": "_max_dist_cell()",
+      "label": "_find_evasion_target()",
       "file_type": "code",
       "source_file": "multi_robot/deadlock_resolution.py",
       "source_location": "L38",
       "_origin": "ast",
-      "id": "multi_robot_deadlock_resolution_max_dist_cell",
-      "community": 5,
-      "norm_label": "_max_dist_cell()"
+      "id": "multi_robot_deadlock_resolution_find_evasion_target",
+      "community": 24,
+      "norm_label": "_find_evasion_target()"
     },
     {
       "label": "ndarray",
@@ -1540,58 +1560,78 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "multi_robot_deadlock_resolution_py_ndarray",
-      "community": 5,
+      "community": 24,
       "norm_label": "ndarray"
+    },
+    {
+      "label": "_max_dist_cell()",
+      "file_type": "code",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L99",
+      "_origin": "ast",
+      "id": "multi_robot_deadlock_resolution_max_dist_cell",
+      "community": 24,
+      "norm_label": "_max_dist_cell()"
     },
     {
       "label": "DeadlockResolver",
       "file_type": "code",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L61",
+      "source_location": "L122",
       "_origin": "ast",
       "id": "multi_robot_deadlock_resolution_deadlockresolver",
-      "community": 5,
+      "community": 24,
       "norm_label": "deadlockresolver"
     },
     {
       "label": ".__init__()",
       "file_type": "code",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L73",
+      "source_location": "L134",
       "_origin": "ast",
       "id": "multi_robot_deadlock_resolution_deadlockresolver_init",
-      "community": 5,
+      "community": 24,
       "norm_label": ".__init__()"
     },
     {
       "label": ".resolve_repulsive()",
       "file_type": "code",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L89",
+      "source_location": "L150",
       "_origin": "ast",
       "id": "multi_robot_deadlock_resolution_deadlockresolver_resolve_repulsive",
-      "community": 5,
+      "community": 24,
       "norm_label": ".resolve_repulsive()"
     },
     {
       "label": ".resolve_social()",
       "file_type": "code",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L125",
+      "source_location": "L186",
       "_origin": "ast",
       "id": "multi_robot_deadlock_resolution_deadlockresolver_resolve_social",
-      "community": 5,
+      "community": 24,
       "norm_label": ".resolve_social()"
     },
     {
       "label": ".resolve_sr_width()",
       "file_type": "code",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L181",
+      "source_location": "L242",
       "_origin": "ast",
       "id": "multi_robot_deadlock_resolution_deadlockresolver_resolve_sr_width",
-      "community": 5,
+      "community": 24,
       "norm_label": ".resolve_sr_width()"
+    },
+    {
+      "label": ".resolve_sr_social()",
+      "file_type": "code",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L289",
+      "_origin": "ast",
+      "id": "multi_robot_deadlock_resolution_deadlockresolver_resolve_sr_social",
+      "community": 24,
+      "norm_label": ".resolve_sr_social()"
     },
     {
       "label": "multi_robot/deadlock_resolution.py ------------------------------------ Deadlock",
@@ -1600,58 +1640,78 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "multi_robot_deadlock_resolution_rationale_1",
-      "community": 5,
+      "community": 24,
       "norm_label": "multi_robot/deadlock_resolution.py ------------------------------------ deadlock"
     },
     {
-      "label": "Find the free cell that maximises the minimum distance to all other_cells.",
+      "label": "Find a free cell for the robot to evade into.      Strategy (local-first):",
       "file_type": "rationale",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L43",
+      "source_location": "L45",
       "_origin": "ast",
-      "id": "multi_robot_deadlock_resolution_rationale_43",
-      "community": 5,
-      "norm_label": "find the free cell that maximises the minimum distance to all other_cells."
+      "id": "multi_robot_deadlock_resolution_rationale_45",
+      "community": 24,
+      "norm_label": "find a free cell for the robot to evade into.      strategy (local-first):"
+    },
+    {
+      "label": "Legacy alias kept for API compatibility.",
+      "file_type": "rationale",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L104",
+      "_origin": "ast",
+      "id": "multi_robot_deadlock_resolution_rationale_104",
+      "community": 24,
+      "norm_label": "legacy alias kept for api compatibility."
     },
     {
       "label": "Resolves multi-robot deadlocks using one of three strategies.      Parameters",
       "file_type": "rationale",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L62",
+      "source_location": "L123",
       "_origin": "ast",
-      "id": "multi_robot_deadlock_resolution_rationale_62",
-      "community": 5,
+      "id": "multi_robot_deadlock_resolution_rationale_123",
+      "community": 24,
       "norm_label": "resolves multi-robot deadlocks using one of three strategies.      parameters"
     },
     {
       "label": "Postponer = robot with smallest |position| (L2 norm).         Evaders get a new",
       "file_type": "rationale",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L95",
+      "source_location": "L156",
       "_origin": "ast",
-      "id": "multi_robot_deadlock_resolution_rationale_95",
-      "community": 5,
+      "id": "multi_robot_deadlock_resolution_rationale_156",
+      "community": 24,
       "norm_label": "postponer = robot with smallest |position| (l2 norm).         evaders get a new"
     },
     {
       "label": "Postponer = robot whose best evasion cell has the highest social cost.         E",
       "file_type": "rationale",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L132",
+      "source_location": "L193",
       "_origin": "ast",
-      "id": "multi_robot_deadlock_resolution_rationale_132",
-      "community": 5,
+      "id": "multi_robot_deadlock_resolution_rationale_193",
+      "community": 24,
       "norm_label": "postponer = robot whose best evasion cell has the highest social cost.         e"
     },
     {
       "label": "Postponer = robot with the WIDEST SR confidence interval.         The robot most",
       "file_type": "rationale",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L188",
+      "source_location": "L249",
       "_origin": "ast",
-      "id": "multi_robot_deadlock_resolution_rationale_188",
-      "community": 5,
+      "id": "multi_robot_deadlock_resolution_rationale_249",
+      "community": 24,
       "norm_label": "postponer = robot with the widest sr confidence interval.         the robot most"
+    },
+    {
+      "label": "Combined SR-Width + Social-Cost deadlock resolution.          Postponer selectio",
+      "file_type": "rationale",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L297",
+      "_origin": "ast",
+      "id": "multi_robot_deadlock_resolution_rationale_297",
+      "community": 24,
+      "norm_label": "combined sr-width + social-cost deadlock resolution.          postponer selectio"
     },
     {
       "label": "run_20_simulations.py",
@@ -1820,7 +1880,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "run_coordination_eval",
-      "community": 5,
+      "community": 30,
       "norm_label": "run_coordination_eval.py"
     },
     {
@@ -1830,7 +1890,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "run_coordination_eval_load_config",
-      "community": 5,
+      "community": 30,
       "norm_label": "load_config()"
     },
     {
@@ -1840,7 +1900,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "run_coordination_eval_build_grid_from_config",
-      "community": 5,
+      "community": 30,
       "norm_label": "build_grid_from_config()"
     },
     {
@@ -1850,7 +1910,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "run_coordination_eval_py_ndarray",
-      "community": 5,
+      "community": 30,
       "norm_label": "ndarray"
     },
     {
@@ -1860,7 +1920,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "run_coordination_eval_run_episode",
-      "community": 5,
+      "community": 30,
       "norm_label": "run_episode()"
     },
     {
@@ -1870,7 +1930,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "run_coordination_eval_main",
-      "community": 5,
+      "community": 30,
       "norm_label": "main()"
     },
     {
@@ -1880,7 +1940,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "run_coordination_eval_rationale_1",
-      "community": 5,
+      "community": 30,
       "norm_label": "run_coordination_eval.py -------------------------- evaluation harness for multi"
     },
     {
@@ -1890,7 +1950,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "run_coordination_eval_rationale_45",
-      "community": 5,
+      "community": 30,
       "norm_label": "build the numpy occupancy grid from a yaml config."
     },
     {
@@ -1900,7 +1960,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "run_coordination_eval_rationale_77",
-      "community": 5,
+      "community": 30,
       "norm_label": "run a single coordination episode. returns result dict."
     },
     {
@@ -2072,6 +2132,176 @@
       "id": "simulation_namo_simulator_main",
       "community": 4,
       "norm_label": "main()"
+    },
+    {
+      "label": "namounc_simulator.py",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator",
+      "community": 9,
+      "norm_label": "namounc_simulator.py"
+    },
+    {
+      "label": "build_grid()",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L57",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_build_grid",
+      "community": 9,
+      "norm_label": "build_grid()"
+    },
+    {
+      "label": "ndarray",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L57",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_py_ndarray",
+      "community": 9,
+      "norm_label": "ndarray"
+    },
+    {
+      "label": "NAMOUncAgent",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L78",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_namouncagent",
+      "community": 9,
+      "norm_label": "namouncagent"
+    },
+    {
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L86",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_namouncagent_init",
+      "community": 9,
+      "norm_label": ".__init__()"
+    },
+    {
+      "label": "._bypass_interval()",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L118",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_namouncagent_bypass_interval",
+      "community": 9,
+      "norm_label": "._bypass_interval()"
+    },
+    {
+      "label": "._removal_interval()",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L126",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_namouncagent_removal_interval",
+      "community": 9,
+      "norm_label": "._removal_interval()"
+    },
+    {
+      "label": ".decide()",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L153",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_namouncagent_decide",
+      "community": 9,
+      "norm_label": ".decide()"
+    },
+    {
+      "label": ".step()",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L233",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_namouncagent_step",
+      "community": 9,
+      "norm_label": ".step()"
+    },
+    {
+      "label": "BeliefBroadcaster",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L233",
+      "_origin": "ast",
+      "id": "beliefbroadcaster",
+      "community": 9,
+      "norm_label": "beliefbroadcaster"
+    },
+    {
+      "label": ".sr_summary()",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L312",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_namouncagent_sr_summary",
+      "community": 9,
+      "norm_label": ".sr_summary()"
+    },
+    {
+      "label": "run_episode()",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L324",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_run_episode",
+      "community": 9,
+      "norm_label": "run_episode()"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L426",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_main",
+      "community": 9,
+      "norm_label": "main()"
+    },
+    {
+      "label": "simulation/namounc_simulator.py --------------------------------- NAMOUnc Simula",
+      "file_type": "rationale",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_rationale_1",
+      "community": 9,
+      "norm_label": "simulation/namounc_simulator.py --------------------------------- namounc simula"
+    },
+    {
+      "label": "Single-robot uncertainty-aware NAMO agent.      Decides BYPASS / REMOVE using co",
+      "file_type": "rationale",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L79",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_rationale_79",
+      "community": 9,
+      "norm_label": "single-robot uncertainty-aware namo agent.      decides bypass / remove using co"
+    },
+    {
+      "label": "Returns (action, waypoints) where action is BYPASS / REMOVE / NAVIGATE.",
+      "file_type": "rationale",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L154",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_rationale_154",
+      "community": 9,
+      "norm_label": "returns (action, waypoints) where action is bypass / remove / navigate."
+    },
+    {
+      "label": "Advance the agent by one grid step.         Returns the (possibly modified) grid",
+      "file_type": "rationale",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L240",
+      "_origin": "ast",
+      "id": "simulation_namounc_simulator_rationale_240",
+      "community": 9,
+      "norm_label": "advance the agent by one grid step.         returns the (possibly modified) grid"
     },
     {
       "label": "scenario_config.json",
@@ -2507,7 +2737,7 @@
       "label": "cell_center()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L36",
+      "source_location": "L53",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_cell_center",
       "community": 25,
@@ -2517,7 +2747,7 @@
       "label": "world_to_cell()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L40",
+      "source_location": "L57",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_world_to_cell",
       "community": 25,
@@ -2527,7 +2757,7 @@
       "label": "create_wall()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L44",
+      "source_location": "L61",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_create_wall",
       "community": 25,
@@ -2537,7 +2767,7 @@
       "label": "create_box()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L54",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_create_box",
       "community": 25,
@@ -2547,7 +2777,7 @@
       "label": "create_robot()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L67",
+      "source_location": "L84",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_create_robot",
       "community": 25,
@@ -2557,7 +2787,7 @@
       "label": "create_goal_marker()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L80",
+      "source_location": "L97",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_create_goal_marker",
       "community": 25,
@@ -2567,7 +2797,7 @@
       "label": "drive_robot()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L89",
+      "source_location": "L106",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_drive_robot",
       "community": 25,
@@ -2577,7 +2807,7 @@
       "label": "build_clean_grid()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L111",
+      "source_location": "L128",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_build_clean_grid",
       "community": 25,
@@ -2587,17 +2817,17 @@
       "label": "ndarray",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L111",
+      "source_location": "L128",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_py_ndarray",
-      "community": 4,
+      "community": 25,
       "norm_label": "ndarray"
     },
     {
       "label": "run_simulation()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L159",
+      "source_location": "L176",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_run_simulation",
       "community": 25,
@@ -2607,7 +2837,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L453",
+      "source_location": "L476",
       "_origin": "ast",
       "id": "simulation_snamo_simulator_main",
       "community": 25,
@@ -2627,9 +2857,9 @@
       "label": "Move robot toward target_xy. Returns remaining distance.",
       "file_type": "rationale",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L90",
+      "source_location": "L107",
       "_origin": "ast",
-      "id": "simulation_snamo_simulator_rationale_90",
+      "id": "simulation_snamo_simulator_rationale_107",
       "community": 25,
       "norm_label": "move robot toward target_xy. returns remaining distance."
     },
@@ -2637,9 +2867,9 @@
       "label": "Build occupancy grid purely from YAML definitions.     0=free, 1=wall, 2=movable",
       "file_type": "rationale",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L112",
+      "source_location": "L129",
       "_origin": "ast",
-      "id": "simulation_snamo_simulator_rationale_112",
+      "id": "simulation_snamo_simulator_rationale_129",
       "community": 25,
       "norm_label": "build occupancy grid purely from yaml definitions.     0=free, 1=wall, 2=movable"
     },
@@ -2647,9 +2877,9 @@
       "label": "Run S-NAMO simulation on a YAML config.      Parameters     ----------     confi",
       "file_type": "rationale",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L161",
+      "source_location": "L182",
       "_origin": "ast",
-      "id": "simulation_snamo_simulator_rationale_161",
+      "id": "simulation_snamo_simulator_rationale_182",
       "community": 25,
       "norm_label": "run s-namo simulation on a yaml config.      parameters     ----------     confi"
     },
@@ -2680,7 +2910,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "path",
-      "community": 4,
+      "community": 1,
       "norm_label": "path"
     },
     {
@@ -2780,7 +3010,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "social_init",
-      "community": 23,
+      "community": 28,
       "norm_label": "__init__.py"
     },
     {
@@ -2790,7 +3020,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "social_social_costmap",
-      "community": 23,
+      "community": 28,
       "norm_label": "social_costmap.py"
     },
     {
@@ -2800,7 +3030,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "social_social_costmap_socialcostmap",
-      "community": 23,
+      "community": 28,
       "norm_label": "socialcostmap"
     },
     {
@@ -2810,7 +3040,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "social_social_costmap_socialcostmap_init",
-      "community": 23,
+      "community": 29,
       "norm_label": ".__init__()"
     },
     {
@@ -2820,7 +3050,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "social_social_costmap_py_ndarray",
-      "community": 23,
+      "community": 29,
       "norm_label": "ndarray"
     },
     {
@@ -2830,7 +3060,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "social_social_costmap_socialcostmap_compute",
-      "community": 23,
+      "community": 29,
       "norm_label": "._compute()"
     },
     {
@@ -2840,7 +3070,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "social_social_costmap_socialcostmap_passage_width",
-      "community": 23,
+      "community": 29,
       "norm_label": "._passage_width()"
     },
     {
@@ -2850,7 +3080,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "social_social_costmap_socialcostmap_dist_to_nearest_obstacle",
-      "community": 23,
+      "community": 29,
       "norm_label": "._dist_to_nearest_obstacle()"
     },
     {
@@ -2860,7 +3090,7 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "social_social_costmap_socialcostmap_from_blockage_probability",
-      "community": 23,
+      "community": 29,
       "norm_label": ".from_blockage_probability()"
     },
     {
@@ -2870,7 +3100,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "social_social_costmap_socialcostmap_cost",
-      "community": 23,
+      "community": 28,
       "norm_label": ".cost()"
     },
     {
@@ -2880,7 +3110,7 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "social_social_costmap_socialcostmap_map",
-      "community": 23,
+      "community": 29,
       "norm_label": ".map()"
     },
     {
@@ -2890,7 +3120,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "social_social_costmap_rationale_1",
-      "community": 23,
+      "community": 28,
       "norm_label": "social/social_costmap.py -------------------------- derives a [0, 1] social cost"
     },
     {
@@ -2900,7 +3130,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "social_social_costmap_rationale_26",
-      "community": 23,
+      "community": 28,
       "norm_label": "pre-computed social cost map for a given static obstacle layout.      parameters"
     },
     {
@@ -2910,7 +3140,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "social_social_costmap_rationale_82",
-      "community": 23,
+      "community": 29,
       "norm_label": "minimum ray-cast length in 4 cardinal directions (stops at wall)."
     },
     {
@@ -2920,7 +3150,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "social_social_costmap_rationale_96",
-      "community": 23,
+      "community": 29,
       "norm_label": "euclidean distance from each free cell to the nearest wall/box."
     },
     {
@@ -2930,7 +3160,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "social_social_costmap_rationale_128",
-      "community": 23,
+      "community": 29,
       "norm_label": "derives social cost directly from unet blockage probability output.          pas"
     },
     {
@@ -2940,7 +3170,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "social_social_costmap_rationale_158",
-      "community": 23,
+      "community": 28,
       "norm_label": "return the social cost [0, 1] for a given (col, row) cell."
     },
     {
@@ -2950,7 +3180,7 @@
       "source_location": "L166",
       "_origin": "ast",
       "id": "social_social_costmap_rationale_166",
-      "community": 23,
+      "community": 29,
       "norm_label": "the full (grid_size, grid_size) cost array."
     },
     {
@@ -2960,7 +3190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "social_taboo_zones",
-      "community": 23,
+      "community": 28,
       "norm_label": "taboo_zones.py"
     },
     {
@@ -3060,7 +3290,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "social_taboo_zones_rationale_1",
-      "community": 23,
+      "community": 28,
       "norm_label": "social/taboo_zones.py ----------------------- taboo zone management \u2014 prevents r"
     },
     {
@@ -3580,7 +3810,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "uncertainty_interval_decision_choose_action",
-      "community": 23,
+      "community": 9,
       "norm_label": "choose_action()"
     },
     {
@@ -3610,7 +3840,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "uncertainty_interval_decision_rationale_62",
-      "community": 23,
+      "community": 9,
       "norm_label": "convenience wrapper that returns the chosen action label and both u-values."
     },
     {
@@ -4204,6 +4434,17 @@
       "target": "core_planner"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "core_planner",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "context": "generic_arg",
       "confidence": "EXTRACTED",
@@ -4280,6 +4521,17 @@
       "target": "core_planner_a_star"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "core_planner_a_star",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
@@ -4321,6 +4573,17 @@
       "confidence_score": 1.0,
       "source": "multi_robot_coordinator",
       "target": "core_planner_find_clearing_direction"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "core_planner_find_clearing_direction",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -6401,9 +6664,9 @@
       "source_file": "mappo/mappo_env.py",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mappo_mappo_env",
-      "target": "multi_robot_belief_broadcaster",
-      "confidence_score": 1.0
+      "target": "multi_robot_belief_broadcaster"
     },
     {
       "relation": "imports",
@@ -6412,9 +6675,9 @@
       "source_file": "mappo/mappo_env.py",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mappo_mappo_env",
-      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
-      "confidence_score": 1.0
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster"
     },
     {
       "relation": "imports_from",
@@ -6574,9 +6837,9 @@
       "source_file": "mappo/mappo_env.py",
       "source_location": "L208",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mappo_mappo_env_namomappoenv",
-      "target": "mappo_mappo_env_namomappoenv_get_sr_width",
-      "confidence_score": 1.0
+      "target": "mappo_mappo_env_namomappoenv_get_sr_width"
     },
     {
       "relation": "method",
@@ -6584,9 +6847,9 @@
       "source_file": "mappo/mappo_env.py",
       "source_location": "L188",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mappo_mappo_env_namomappoenv",
-      "target": "mappo_mappo_env_namomappoenv_get_unet_local_crop",
-      "confidence_score": 1.0
+      "target": "mappo_mappo_env_namomappoenv_get_unet_local_crop"
     },
     {
       "relation": "method",
@@ -6644,9 +6907,9 @@
       "source_file": "mappo/mappo_env.py",
       "source_location": "L19",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "mappo_mappo_env_namomappoenv",
-      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
-      "confidence_score": 0.5
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster"
     },
     {
       "relation": "imports",
@@ -6776,9 +7039,9 @@
       "source_file": "mappo/mappo_env.py",
       "source_location": "L226",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mappo_mappo_env_namomappoenv_get_observations",
-      "target": "mappo_mappo_env_namomappoenv_get_unet_local_crop",
-      "confidence_score": 1.0
+      "target": "mappo_mappo_env_namomappoenv_get_unet_local_crop"
     },
     {
       "relation": "rationale_for",
@@ -6786,9 +7049,9 @@
       "source_file": "mappo/mappo_env.py",
       "source_location": "L189",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mappo_mappo_env_rationale_189",
-      "target": "mappo_mappo_env_namomappoenv_get_unet_local_crop",
-      "confidence_score": 1.0
+      "target": "mappo_mappo_env_namomappoenv_get_unet_local_crop"
     },
     {
       "relation": "calls",
@@ -6797,9 +7060,9 @@
       "source_file": "mappo/mappo_env.py",
       "source_location": "L420",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mappo_mappo_env_namomappoenv_step",
-      "target": "mappo_mappo_env_namomappoenv_get_sr_width",
-      "confidence_score": 1.0
+      "target": "mappo_mappo_env_namomappoenv_get_sr_width"
     },
     {
       "relation": "calls",
@@ -6818,9 +7081,9 @@
       "source_file": "mappo/mappo_env.py",
       "source_location": "L282",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mappo_mappo_env_rationale_282",
-      "target": "mappo_mappo_env_namomappoenv_step",
-      "confidence_score": 1.0
+      "target": "mappo_mappo_env_namomappoenv_step"
     },
     {
       "relation": "contains",
@@ -7626,6 +7889,38 @@
       "target": "multi_robot_belief_broadcaster"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "multi_robot_belief_broadcaster",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator",
+      "target": "multi_robot_belief_broadcaster",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L50",
+      "weight": 0.8,
+      "source": "beliefbroadcaster",
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
+      "confidence_score": 0.5
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "multi_robot/belief_broadcaster.py",
@@ -7808,6 +8103,80 @@
       "confidence_score": 1.0,
       "source": "run_coordination_eval_run_episode",
       "target": "multi_robot_belief_broadcaster_beliefbroadcaster"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L50",
+      "weight": 0.8,
+      "source": "simulation_namounc_simulator_namouncagent",
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L50",
+      "weight": 0.8,
+      "source": "simulation_namounc_simulator_py_ndarray",
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L354",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_run_episode",
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator",
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L45",
+      "weight": 0.8,
+      "source": "simulation_snamo_simulator_py_ndarray",
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L268",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator_run_simulation",
+      "target": "multi_robot_belief_broadcaster_beliefbroadcaster",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -8195,14 +8564,36 @@
       "target": "multi_robot_coordinator"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator",
+      "target": "multi_robot_coordinator",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_coordinator_rationale_32",
-      "target": "multi_robot_coordinator_robotstate"
+      "source": "multi_robot_coordinator_rationale_33",
+      "target": "multi_robot_coordinator_robotstate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/coordinator.py",
+      "source_location": "L106",
+      "weight": 1.0,
+      "source": "multi_robot_coordinator_robotcoordinator_compute_adaptive_h",
+      "target": "multi_robot_coordinator_robotstate",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -8268,14 +8659,56 @@
       "target": "multi_robot_coordinator_robotstate"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator",
+      "target": "multi_robot_coordinator_robotstate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L43",
+      "weight": 0.8,
+      "source": "simulation_snamo_simulator_py_ndarray",
+      "target": "multi_robot_coordinator_robotstate",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L284",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator_run_simulation",
+      "target": "multi_robot_coordinator_robotstate",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_coordinator_rationale_47",
-      "target": "multi_robot_coordinator_robotcoordinator"
+      "source": "multi_robot_coordinator_rationale_49",
+      "target": "multi_robot_coordinator_robotcoordinator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/coordinator.py",
+      "source_location": "L106",
+      "weight": 1.0,
+      "source": "multi_robot_coordinator_robotcoordinator",
+      "target": "multi_robot_coordinator_robotcoordinator_compute_adaptive_h",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -8350,6 +8783,38 @@
       "target": "multi_robot_coordinator_robotcoordinator"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator",
+      "target": "multi_robot_coordinator_robotcoordinator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L43",
+      "weight": 0.8,
+      "source": "simulation_snamo_simulator_py_ndarray",
+      "target": "multi_robot_coordinator_robotcoordinator",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L270",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator_run_simulation",
+      "target": "multi_robot_coordinator_robotcoordinator",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
@@ -8384,11 +8849,32 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "multi_robot/coordinator.py",
-      "source_location": "L92",
+      "source_location": "L107",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_coordinator_rationale_92",
-      "target": "multi_robot_coordinator_robotcoordinator_step"
+      "source": "multi_robot_coordinator_rationale_107",
+      "target": "multi_robot_coordinator_robotcoordinator_compute_adaptive_h",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/coordinator.py",
+      "source_location": "L137",
+      "weight": 1.0,
+      "source": "multi_robot_coordinator_robotcoordinator_step",
+      "target": "multi_robot_coordinator_robotcoordinator_compute_adaptive_h",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/coordinator.py",
+      "source_location": "L130",
+      "weight": 1.0,
+      "source": "multi_robot_coordinator_rationale_130",
+      "target": "multi_robot_coordinator_robotcoordinator_step",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -8399,6 +8885,16 @@
       "confidence_score": 1.0,
       "source": "multi_robot_deadlock_resolution",
       "target": "multi_robot_deadlock_resolution_deadlockresolver"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "multi_robot_deadlock_resolution",
+      "target": "multi_robot_deadlock_resolution_find_evasion_target",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -8464,6 +8960,17 @@
       "target": "multi_robot_deadlock_resolution"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator",
+      "target": "multi_robot_deadlock_resolution",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -8473,6 +8980,81 @@
       "confidence_score": 1.0,
       "source": "multi_robot_deadlock_resolution_deadlockresolver_resolve_repulsive",
       "target": "multi_robot_deadlock_resolution_l2_norm"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L177",
+      "weight": 1.0,
+      "source": "multi_robot_deadlock_resolution_deadlockresolver_resolve_repulsive",
+      "target": "multi_robot_deadlock_resolution_find_evasion_target",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L280",
+      "weight": 1.0,
+      "source": "multi_robot_deadlock_resolution_deadlockresolver_resolve_sr_width",
+      "target": "multi_robot_deadlock_resolution_find_evasion_target",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "multi_robot_deadlock_resolution_find_evasion_target",
+      "target": "multi_robot_deadlock_resolution_py_ndarray",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "multi_robot_deadlock_resolution_rationale_45",
+      "target": "multi_robot_deadlock_resolution_find_evasion_target",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "multi_robot_deadlock_resolution_deadlockresolver_init",
+      "target": "multi_robot_deadlock_resolution_py_ndarray"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "multi_robot_deadlock_resolution_max_dist_cell",
+      "target": "multi_robot_deadlock_resolution_py_ndarray"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L31",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "multi_robot_deadlock_resolution_py_ndarray",
+      "target": "social_social_costmap_socialcostmap"
     },
     {
       "relation": "calls",
@@ -8497,46 +9079,14 @@
       "target": "multi_robot_deadlock_resolution_max_dist_cell"
     },
     {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L38",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_deadlock_resolution_max_dist_cell",
-      "target": "multi_robot_deadlock_resolution_py_ndarray"
-    },
-    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L43",
+      "source_location": "L104",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_deadlock_resolution_rationale_43",
-      "target": "multi_robot_deadlock_resolution_max_dist_cell"
-    },
-    {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L73",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_deadlock_resolution_deadlockresolver_init",
-      "target": "multi_robot_deadlock_resolution_py_ndarray"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L31",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "multi_robot_deadlock_resolution_py_ndarray",
-      "target": "social_social_costmap_socialcostmap"
+      "source": "multi_robot_deadlock_resolution_rationale_104",
+      "target": "multi_robot_deadlock_resolution_max_dist_cell",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -8572,6 +9122,16 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L289",
+      "weight": 1.0,
+      "source": "multi_robot_deadlock_resolution_deadlockresolver",
+      "target": "multi_robot_deadlock_resolution_deadlockresolver_resolve_sr_social",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
       "source_location": "L181",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -8592,11 +9152,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L62",
+      "source_location": "L123",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_deadlock_resolution_rationale_62",
-      "target": "multi_robot_deadlock_resolution_deadlockresolver"
+      "source": "multi_robot_deadlock_resolution_rationale_123",
+      "target": "multi_robot_deadlock_resolution_deadlockresolver",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -8631,34 +9191,76 @@
       "target": "multi_robot_deadlock_resolution_deadlockresolver"
     },
     {
-      "relation": "rationale_for",
+      "relation": "imports",
+      "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L95",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L44",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_deadlock_resolution_rationale_95",
-      "target": "multi_robot_deadlock_resolution_deadlockresolver_resolve_repulsive"
+      "source": "simulation_snamo_simulator",
+      "target": "multi_robot_deadlock_resolution_deadlockresolver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L44",
+      "weight": 0.8,
+      "source": "simulation_snamo_simulator_py_ndarray",
+      "target": "multi_robot_deadlock_resolution_deadlockresolver",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L269",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator_run_simulation",
+      "target": "multi_robot_deadlock_resolution_deadlockresolver",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L132",
+      "source_location": "L156",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_deadlock_resolution_rationale_132",
-      "target": "multi_robot_deadlock_resolution_deadlockresolver_resolve_social"
+      "source": "multi_robot_deadlock_resolution_rationale_156",
+      "target": "multi_robot_deadlock_resolution_deadlockresolver_resolve_repulsive",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "multi_robot/deadlock_resolution.py",
-      "source_location": "L188",
+      "source_location": "L193",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "multi_robot_deadlock_resolution_rationale_188",
-      "target": "multi_robot_deadlock_resolution_deadlockresolver_resolve_sr_width"
+      "source": "multi_robot_deadlock_resolution_rationale_193",
+      "target": "multi_robot_deadlock_resolution_deadlockresolver_resolve_social",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L249",
+      "weight": 1.0,
+      "source": "multi_robot_deadlock_resolution_rationale_249",
+      "target": "multi_robot_deadlock_resolution_deadlockresolver_resolve_sr_width",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "multi_robot/deadlock_resolution.py",
+      "source_location": "L297",
+      "weight": 1.0,
+      "source": "multi_robot_deadlock_resolution_rationale_297",
+      "target": "multi_robot_deadlock_resolution_deadlockresolver_resolve_sr_social",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -9726,6 +10328,492 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "simulation_namounc_simulator_build_grid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L426",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "simulation_namounc_simulator_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "simulation_namounc_simulator_namouncagent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L324",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "simulation_namounc_simulator_run_episode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "uncertainty_action_uncertainty",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "uncertainty_action_uncertainty_manipulationbeliefmodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "uncertainty_bypass_model",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "uncertainty_bypass_model_trajectoryregressionmodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "uncertainty_interval_decision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator",
+      "target": "uncertainty_interval_decision_choose_action",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_rationale_1",
+      "target": "simulation_namounc_simulator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_build_grid",
+      "target": "simulation_namounc_simulator_py_ndarray",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L457",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_main",
+      "target": "simulation_namounc_simulator_build_grid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L118",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_bypass_interval",
+      "target": "simulation_namounc_simulator_py_ndarray",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L153",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_decide",
+      "target": "simulation_namounc_simulator_py_ndarray",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L126",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_removal_interval",
+      "target": "simulation_namounc_simulator_py_ndarray",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L233",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_step",
+      "target": "simulation_namounc_simulator_py_ndarray",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L47",
+      "weight": 0.8,
+      "source": "simulation_namounc_simulator_py_ndarray",
+      "target": "uncertainty_action_uncertainty_manipulationbeliefmodel",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L48",
+      "weight": 0.8,
+      "source": "simulation_namounc_simulator_py_ndarray",
+      "target": "uncertainty_bypass_model_trajectoryregressionmodel",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L324",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_run_episode",
+      "target": "simulation_namounc_simulator_py_ndarray",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L118",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent",
+      "target": "simulation_namounc_simulator_namouncagent_bypass_interval",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L153",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent",
+      "target": "simulation_namounc_simulator_namouncagent_decide",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent",
+      "target": "simulation_namounc_simulator_namouncagent_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L126",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent",
+      "target": "simulation_namounc_simulator_namouncagent_removal_interval",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L312",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent",
+      "target": "simulation_namounc_simulator_namouncagent_sr_summary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L233",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent",
+      "target": "simulation_namounc_simulator_namouncagent_step",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L47",
+      "weight": 0.8,
+      "source": "simulation_namounc_simulator_namouncagent",
+      "target": "uncertainty_action_uncertainty_manipulationbeliefmodel",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L48",
+      "weight": 0.8,
+      "source": "simulation_namounc_simulator_namouncagent",
+      "target": "uncertainty_bypass_model_trajectoryregressionmodel",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_rationale_79",
+      "target": "simulation_namounc_simulator_namouncagent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L340",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_run_episode",
+      "target": "simulation_namounc_simulator_namouncagent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L102",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_init",
+      "target": "uncertainty_action_uncertainty_manipulationbeliefmodel"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L104",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_init",
+      "target": "uncertainty_bypass_model_trajectoryregressionmodel"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L175",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_decide",
+      "target": "simulation_namounc_simulator_namouncagent_bypass_interval",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_decide",
+      "target": "simulation_namounc_simulator_namouncagent_removal_interval",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L177",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_decide",
+      "target": "uncertainty_interval_decision_choose_action"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L258",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_step",
+      "target": "simulation_namounc_simulator_namouncagent_decide",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_rationale_154",
+      "target": "simulation_namounc_simulator_namouncagent_decide",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L233",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_namouncagent_step",
+      "target": "beliefbroadcaster",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L240",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_rationale_240",
+      "target": "simulation_namounc_simulator_namouncagent_step",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L377",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_run_episode",
+      "target": "simulation_namounc_simulator_namouncagent_step",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L47",
+      "weight": 0.8,
+      "source": "beliefbroadcaster",
+      "target": "uncertainty_action_uncertainty_manipulationbeliefmodel",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L48",
+      "weight": 0.8,
+      "source": "beliefbroadcaster",
+      "target": "uncertainty_bypass_model_trajectoryregressionmodel",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L354",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_run_episode",
+      "target": "beliefbroadcaster",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L397",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_run_episode",
+      "target": "simulation_namounc_simulator_namouncagent_sr_summary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L461",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_main",
+      "target": "simulation_namounc_simulator_run_episode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "simulation/namounc_simulator.py",
+      "source_location": "L443",
+      "weight": 1.0,
+      "source": "simulation_namounc_simulator_main",
+      "target": "path"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "simulation/scenario_config.json",
       "source_location": "L30",
       "weight": 1.0,
@@ -10234,6 +11322,28 @@
       "target": "simulation_snamo_simulator_world_to_cell"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator",
+      "target": "social_social_costmap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator",
+      "target": "social_social_costmap_socialcostmap",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "simulation/snamo_simulator.py",
@@ -10313,11 +11423,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L90",
+      "source_location": "L107",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "simulation_snamo_simulator_rationale_90",
-      "target": "simulation_snamo_simulator_drive_robot"
+      "source": "simulation_snamo_simulator_rationale_107",
+      "target": "simulation_snamo_simulator_drive_robot",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -10345,11 +11455,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L112",
+      "source_location": "L129",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "simulation_snamo_simulator_rationale_112",
-      "target": "simulation_snamo_simulator_build_clean_grid"
+      "source": "simulation_snamo_simulator_rationale_129",
+      "target": "simulation_snamo_simulator_build_clean_grid",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -10361,6 +11471,16 @@
       "confidence_score": 1.0,
       "source": "simulation_snamo_simulator_run_simulation",
       "target": "simulation_snamo_simulator_build_clean_grid"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L46",
+      "weight": 0.8,
+      "source": "simulation_snamo_simulator_py_ndarray",
+      "target": "social_social_costmap_socialcostmap",
+      "confidence_score": 0.5
     },
     {
       "relation": "calls",
@@ -10377,11 +11497,22 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "simulation/snamo_simulator.py",
-      "source_location": "L161",
+      "source_location": "L182",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "simulation_snamo_simulator_rationale_161",
-      "target": "simulation_snamo_simulator_run_simulation"
+      "source": "simulation_snamo_simulator_rationale_182",
+      "target": "simulation_snamo_simulator_run_simulation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "simulation/snamo_simulator.py",
+      "source_location": "L267",
+      "weight": 1.0,
+      "source": "simulation_snamo_simulator_run_simulation",
+      "target": "social_social_costmap_socialcostmap",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -12177,5 +13308,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c2a9ca39bc06e79c602aab5292351782f9e0f902"
+  "built_at_commit": "d308082aa3259125e6a252908bc8ee60876540c2"
 }

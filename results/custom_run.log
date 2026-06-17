@@ -1,0 +1,487 @@
+pybullet build time: Mar 13 2026 19:15:37
+
+[SNAMOSim] 'custom_reconstructed_map' | robots=2 boxes=38 max_steps=2200 dr=sr_social
+[DEBUG] Step 0
+  Robot 206 cell=(1, 1) target=(1.5, 1.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(18, 18) target=(18.5, 18.5) status=NAVIGATING priority=1.00
+[DEBUG] Step 23
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=EVADING priority=2.00
+  Robot 208 cell=(18, 18) target=(18.5, 18.5) status=WAITING priority=1.00
+[DEBUG] Step 30
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.90
+  Robot 208 cell=(18, 18) target=(18.5, 18.5) status=WAITING priority=1.00
+[DEBUG] Step 60
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.80
+  Robot 208 cell=(18, 18) target=(18.5, 18.5) status=WAITING priority=1.00
+[DEBUG] Step 90
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.71
+  Robot 208 cell=(18, 18) target=(18.5, 18.5) status=WAITING priority=1.00
+[DEBUG] Step 120
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.63
+  Robot 208 cell=(18, 18) target=(18.5, 18.5) status=WAITING priority=1.00
+[S-NAMO] (18, 18)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 143
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.55
+  Robot 208 cell=(18, 17) target=(18.5, 17.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 17)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 150
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.47
+  Robot 208 cell=(18, 17) target=(18.5, 16.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 17)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 169
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.40
+  Robot 208 cell=(18, 16) target=(18.5, 16.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 16)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 180
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.33
+  Robot 208 cell=(18, 16) target=(18.5, 15.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 16)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 195
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.26
+  Robot 208 cell=(18, 15) target=(18.5, 15.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 15)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 210
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.20
+  Robot 208 cell=(18, 15) target=(18.5, 14.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 15)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 221
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.14
+  Robot 208 cell=(18, 14) target=(18.5, 14.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 14)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 240
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.08
+  Robot 208 cell=(18, 13) target=(18.5, 13.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 13)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 270
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.03
+  Robot 208 cell=(18, 12) target=(18.5, 12.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 12)->(1, 1) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 299
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(18, 11) target=(18.5, 11.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 11)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 300
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(18, 11) target=(17.5, 11.5) status=NAVIGATING priority=1.00
+[S-NAMO] (18, 11)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 322
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 11) target=(17.5, 11.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 11)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 330
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 11) target=(17.5, 10.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 11)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 345
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 10) target=(17.5, 10.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 10)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 360
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 10) target=(17.5, 9.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 10)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 371
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 9) target=(17.5, 9.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 9)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 390
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 8) target=(17.5, 8.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 8)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 420
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 7) target=(17.5, 7.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 7)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 450
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 6) target=(17.5, 6.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 6)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 476
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 5) target=(17.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 5)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 480
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 5) target=(17.5, 4.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 5)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 502
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 4) target=(17.5, 4.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 4)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 510
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 4) target=(17.5, 3.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 4)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 528
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 3) target=(17.5, 3.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 3)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 540
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 3) target=(17.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 3)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 554
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(17, 2) target=(17.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (17, 2)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 570
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(16, 2) target=(16.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (16, 2)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 600
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(15, 2) target=(15.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (15, 2)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 623
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(15, 3) target=(15.5, 3.5) status=NAVIGATING priority=1.00
+[S-NAMO] (15, 3)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 630
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(15, 3) target=(15.5, 4.5) status=NAVIGATING priority=1.00
+[S-NAMO] (15, 3)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 649
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(15, 4) target=(15.5, 4.5) status=NAVIGATING priority=1.00
+[S-NAMO] (15, 4)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 660
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(15, 4) target=(15.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (15, 4)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 676
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(15, 5) target=(15.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (15, 5)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 690
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(15, 5) target=(15.5, 6.5) status=NAVIGATING priority=1.00
+[S-NAMO] (15, 5)->(1, 1) | obs=(15, 6) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 703
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(15, 6) target=(15.5, 6.5) status=NAVIGATING priority=1.00
+[S-NAMO] (15, 6)->(1, 1) | obs=(13, 5) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 720
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(14, 6) target=(14.5, 6.5) status=NAVIGATING priority=1.00
+[S-NAMO] (14, 6)->(1, 1) | obs=(13, 5) | SR=[0.74,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 750
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(13, 6) target=(13.5, 6.5) status=NAVIGATING priority=1.00
+[S-NAMO] (13, 6)->(1, 1) | obs=(13, 5) | SR=[0.74,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 774
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(13, 5) target=(13.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (13, 5)->(1, 1) | obs=(2, 1) | SR=[0.74,1.00] | U_by=inf U_re=21.6 | -> REMOVE
+[DEBUG] Step 780
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(13, 5) target=(12.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (13, 5)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=21.6 | -> REMOVE
+[DEBUG] Step 798
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(12, 5) target=(12.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (12, 5)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=20.6 | -> REMOVE
+[DEBUG] Step 810
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(12, 5) target=(11.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (12, 5)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=20.6 | -> REMOVE
+[DEBUG] Step 824
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(11, 5) target=(11.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (11, 5)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=19.6 | -> REMOVE
+[DEBUG] Step 840
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(11, 5) target=(10.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (11, 5)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=19.6 | -> REMOVE
+[DEBUG] Step 851
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(10, 5) target=(10.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (10, 5)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=18.6 | -> REMOVE
+[DEBUG] Step 870
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(9, 5) target=(9.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (9, 5)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=17.6 | -> REMOVE
+[DEBUG] Step 900
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(8, 5) target=(8.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (8, 5)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=16.7 | -> REMOVE
+[DEBUG] Step 930
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(7, 5) target=(7.5, 5.5) status=NAVIGATING priority=1.00
+[S-NAMO] (7, 5)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=15.2 | -> REMOVE
+[DEBUG] Step 953
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(7, 4) target=(7.5, 4.5) status=NAVIGATING priority=1.00
+[S-NAMO] (7, 4)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=14.1 | -> REMOVE
+[DEBUG] Step 960
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(7, 4) target=(7.5, 3.5) status=NAVIGATING priority=1.00
+[S-NAMO] (7, 4)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=14.1 | -> REMOVE
+[DEBUG] Step 979
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(7, 3) target=(7.5, 3.5) status=NAVIGATING priority=1.00
+[S-NAMO] (7, 3)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=13.1 | -> REMOVE
+[DEBUG] Step 990
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(7, 3) target=(7.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (7, 3)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=13.1 | -> REMOVE
+[DEBUG] Step 1005
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(7, 2) target=(7.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (7, 2)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=11.5 | -> REMOVE
+[DEBUG] Step 1020
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(6, 2) target=(6.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (6, 2)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=10.5 | -> REMOVE
+[DEBUG] Step 1050
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(5, 2) target=(5.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (5, 2)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=9.6 | -> REMOVE
+[DEBUG] Step 1080
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(4, 2) target=(4.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (4, 2)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=8.6 | -> REMOVE
+[DEBUG] Step 1107
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(3, 2) target=(3.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (3, 2)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=7.7 | -> REMOVE
+[DEBUG] Step 1110
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(3, 2) target=(2.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (3, 2)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=7.7 | -> REMOVE
+[DEBUG] Step 1134
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(2, 2) target=(2.5, 2.5) status=NAVIGATING priority=1.00
+[S-NAMO] (2, 2)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=5.5 | -> REMOVE
+[DEBUG] Step 1140
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(2, 2) target=(2.5, 1.5) status=NAVIGATING priority=1.00
+[S-NAMO] (2, 2)->(1, 1) | obs=(2, 1) | SR=[0.76,1.00] | U_by=inf U_re=5.5 | -> REMOVE
+[DEBUG] Step 1170
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(2, 1) target=(2.5, 1.5) status=NAVIGATING priority=1.00
+[DEBUG] Step 1200
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=NAVIGATING priority=1.00
+[DEBUG] Step 1230
+  Robot 206 cell=(1, 2) target=(1.5, 2.5) status=POCKET_WAITING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (1, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1253
+  Robot 206 cell=(2, 2) target=(2.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (2, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1260
+  Robot 206 cell=(2, 2) target=(3.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (2, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1279
+  Robot 206 cell=(3, 2) target=(3.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (3, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1290
+  Robot 206 cell=(3, 2) target=(4.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (3, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1305
+  Robot 206 cell=(4, 2) target=(4.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (4, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1320
+  Robot 206 cell=(4, 2) target=(5.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (4, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1331
+  Robot 206 cell=(5, 2) target=(5.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (5, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1350
+  Robot 206 cell=(6, 2) target=(6.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (6, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1380
+  Robot 206 cell=(7, 2) target=(7.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (7, 2)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1403
+  Robot 206 cell=(7, 3) target=(7.5, 3.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (7, 3)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1410
+  Robot 206 cell=(7, 3) target=(7.5, 4.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (7, 3)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1429
+  Robot 206 cell=(7, 4) target=(7.5, 4.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (7, 4)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1440
+  Robot 206 cell=(7, 4) target=(7.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (7, 4)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1456
+  Robot 206 cell=(7, 5) target=(7.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (7, 5)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1470
+  Robot 206 cell=(8, 5) target=(8.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (8, 5)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1500
+  Robot 206 cell=(9, 5) target=(9.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (9, 5)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1530
+  Robot 206 cell=(10, 5) target=(10.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (10, 5)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1557
+  Robot 206 cell=(11, 5) target=(11.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (11, 5)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1560
+  Robot 206 cell=(11, 5) target=(12.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (11, 5)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1583
+  Robot 206 cell=(12, 5) target=(12.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (12, 5)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1590
+  Robot 206 cell=(12, 5) target=(13.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (12, 5)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1608
+  Robot 206 cell=(13, 5) target=(13.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (13, 5)->(18, 18) | obs=(17, 12) | SR=[0.72,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1620
+  Robot 206 cell=(13, 5) target=(13.5, 6.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (13, 5)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1631
+  Robot 206 cell=(13, 6) target=(13.5, 6.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (13, 6)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1650
+  Robot 206 cell=(14, 6) target=(14.5, 6.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (14, 6)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=inf U_re=inf | -> BYPASS
+[DEBUG] Step 1680
+  Robot 206 cell=(15, 6) target=(15.5, 6.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (15, 6)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=25.4 U_re=28.6 | -> BYPASS
+[DEBUG] Step 1703
+  Robot 206 cell=(15, 5) target=(15.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (15, 5)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=24.3 U_re=27.6 | -> BYPASS
+[DEBUG] Step 1710
+  Robot 206 cell=(15, 5) target=(15.5, 4.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (15, 5)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=24.3 U_re=27.6 | -> BYPASS
+[DEBUG] Step 1729
+  Robot 206 cell=(15, 4) target=(15.5, 4.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (15, 4)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=23.3 U_re=26.5 | -> BYPASS
+[DEBUG] Step 1740
+  Robot 206 cell=(15, 4) target=(15.5, 3.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (15, 4)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=23.3 U_re=26.5 | -> BYPASS
+[DEBUG] Step 1755
+  Robot 206 cell=(15, 3) target=(15.5, 3.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (15, 3)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=22.3 U_re=25.5 | -> BYPASS
+[DEBUG] Step 1770
+  Robot 206 cell=(15, 3) target=(15.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (15, 3)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=22.3 U_re=25.5 | -> BYPASS
+[DEBUG] Step 1781
+  Robot 206 cell=(15, 2) target=(15.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (15, 2)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=20.7 U_re=23.9 | -> BYPASS
+[DEBUG] Step 1800
+  Robot 206 cell=(16, 2) target=(16.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (16, 2)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=19.6 U_re=22.8 | -> BYPASS
+[DEBUG] Step 1830
+  Robot 206 cell=(17, 2) target=(17.5, 2.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 2)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=18.1 U_re=21.2 | -> BYPASS
+[DEBUG] Step 1853
+  Robot 206 cell=(17, 3) target=(17.5, 3.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 3)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=17.1 U_re=20.2 | -> BYPASS
+[DEBUG] Step 1860
+  Robot 206 cell=(17, 3) target=(17.5, 4.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 3)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=17.1 U_re=20.2 | -> BYPASS
+[DEBUG] Step 1879
+  Robot 206 cell=(17, 4) target=(17.5, 4.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 4)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=16.1 U_re=19.2 | -> BYPASS
+[DEBUG] Step 1890
+  Robot 206 cell=(17, 4) target=(17.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 4)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=16.1 U_re=19.2 | -> BYPASS
+[DEBUG] Step 1905
+  Robot 206 cell=(17, 5) target=(17.5, 5.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 5)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=15.1 U_re=18.2 | -> BYPASS
+[DEBUG] Step 1920
+  Robot 206 cell=(17, 5) target=(17.5, 6.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 5)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=15.1 U_re=18.2 | -> BYPASS
+[DEBUG] Step 1931
+  Robot 206 cell=(17, 6) target=(17.5, 6.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 6)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=14.1 U_re=17.2 | -> BYPASS
+[DEBUG] Step 1950
+  Robot 206 cell=(17, 7) target=(17.5, 7.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 7)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=13.1 U_re=16.2 | -> BYPASS
+[DEBUG] Step 1980
+  Robot 206 cell=(17, 8) target=(17.5, 8.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 8)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=12.1 U_re=15.2 | -> BYPASS
+[DEBUG] Step 2009
+  Robot 206 cell=(17, 9) target=(17.5, 9.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 9)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=11.1 U_re=14.2 | -> BYPASS
+[DEBUG] Step 2010
+  Robot 206 cell=(17, 9) target=(17.5, 10.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 9)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=11.1 U_re=14.2 | -> BYPASS
+[DEBUG] Step 2036
+  Robot 206 cell=(17, 10) target=(17.5, 10.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 10)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=10.1 U_re=13.2 | -> BYPASS
+[DEBUG] Step 2040
+  Robot 206 cell=(17, 10) target=(17.5, 11.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 10)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=10.1 U_re=13.2 | -> BYPASS
+[DEBUG] Step 2062
+  Robot 206 cell=(17, 11) target=(17.5, 11.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 11)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=8.7 U_re=12.2 | -> BYPASS
+[DEBUG] Step 2070
+  Robot 206 cell=(17, 11) target=(18.5, 11.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[S-NAMO] (17, 11)->(18, 18) | obs=(17, 12) | SR=[0.74,1.00] | U_by=8.7 U_re=12.2 | -> BYPASS
+[DEBUG] Step 2085
+  Robot 206 cell=(18, 11) target=(18.5, 11.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[DEBUG] Step 2100
+  Robot 206 cell=(18, 12) target=(18.5, 12.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[DEBUG] Step 2130
+  Robot 206 cell=(18, 13) target=(18.5, 13.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[DEBUG] Step 2160
+  Robot 206 cell=(18, 14) target=(18.5, 14.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[DEBUG] Step 2186
+  Robot 206 cell=(18, 15) target=(18.5, 15.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[DEBUG] Step 2190
+  Robot 206 cell=(18, 15) target=(18.5, 16.5) status=NAVIGATING priority=1.00
+  Robot 208 cell=(1, 1) target=(1.5, 1.5) status=DONE priority=1.00
+[SNAMOSim] Steps=2200  Success=False  Pushes=2  Collisions=429
