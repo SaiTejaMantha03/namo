@@ -41,9 +41,11 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from decision.snamo_planner import SNAMOPlanner
 from multi_robot.coordinator import RobotCoordinator, RobotState
-from multi_robot.deadlock_resolution import DeadlockResolver
+from multi_robot.deadlock_resolution import DeadlockResolver, _find_evasion_target
 from multi_robot.belief_broadcaster import BeliefBroadcaster
 from social.social_costmap import SocialCostmap
+from core.planner import a_star
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -103,8 +105,8 @@ def create_goal_marker(pos, color):
                              basePosition=pos)
 
 
-def drive_robot(rid, target_xy, speed=4.0):
-    """Move robot toward target_xy. Returns remaining distance."""
+def drive_robot(rid: int, target_xy: tuple[float, float], speed: float = 6.0) -> float:
+    """Drive robot via kinematic velocity towards target."""
     pos, _ = p.getBasePositionAndOrientation(rid)
     dx = target_xy[0] - pos[0]
     dy = target_xy[1] - pos[1]
@@ -192,7 +194,7 @@ class SNAMOSimulator:
         self.base_grid = build_clean_grid(self.cfg)
         self.physics_client = None
         self.step_count = 0
-        self.collision_count = 0
+        self.robot_robot_collisions = 0
         self.success = False
         self.collision_pairs_seen = set()
         self.name = self.cfg.get("meta", {}).get("name", self.config_path)
@@ -287,17 +289,35 @@ class SNAMOSimulator:
         self.last_snamo_action = {r: "NAVIGATE" for r in self.robot_ids}
         
         self.step_count = 0
-        self.collision_count = 0
+        self.robot_robot_collisions = 0
         self.success = False
         self.collision_pairs_seen.clear()
+        self.stall_counter = 0
+        self.last_robot_positions = {}
+        self.stalled = False
 
     def step(self, rl_actions=None):
-        self.collision_pairs_seen.clear()
+        if getattr(self, "stalled", False):
+            return
 
         robot_cells = {}
+        any_moved = False
         for rid in self.robot_ids:
             pos, _ = p.getBasePositionAndOrientation(rid)
             robot_cells[rid] = world_to_cell(pos[:2], self.cs)
+            last_pos = self.last_robot_positions.get(rid, pos)
+            if math.hypot(pos[0] - last_pos[0], pos[1] - last_pos[1]) > 0.02:
+                any_moved = True
+            self.last_robot_positions[rid] = pos
+
+        if not any_moved and len(self.robot_ids) > 0:
+            self.stall_counter += 1
+        else:
+            self.stall_counter = 0
+
+        if self.stall_counter > 1500:
+            self.stalled = True
+            return
 
         box_cells_live = []
         current_grid = self.base_grid.copy()
@@ -327,6 +347,11 @@ class SNAMOSimulator:
             self.success = True
             return
 
+        for rid in self.robot_ids:
+            self.coord_states[rid].cell = robot_cells[rid]
+            if self.coord_states[rid].status != "DONE" and robot_cells[rid] == self.robot_goals[rid]:
+                self.coord_states[rid].status = "DONE"
+
         any_arrived = False
         for rid in self.robot_ids:
             if self.coord_states[rid].status not in ("DONE", "WAITING", "POCKET_WAITING") and rid in self.drive_target:
@@ -336,10 +361,7 @@ class SNAMOSimulator:
                     any_arrived = True
                     break
 
-        if any_arrived or self.step_count % 30 == 0:
-            for rid in self.robot_ids:
-                self.coord_states[rid].cell = robot_cells[rid]
-
+        if any_arrived or self.step_count % 5 == 0:
             next_cells = self.coordinator.step(self.coord_states, box_states_coord)
 
             # Map RL actions directly to coordinator status and next_cells if provided
@@ -354,9 +376,23 @@ class SNAMOSimulator:
                         self.last_snamo_action[rid] = "REMOVE"
                     elif act == 2: # YIELD
                         self.coord_states[rid].status = "EVADING"
+                        if self.coord_states[rid].evasion_target is None:
+                            other_cells = [robot_cells[r] for r in self.robot_ids if r != rid]
+                            target = _find_evasion_target(
+                                self.base_grid, self.gs, robot_cells[rid], other_cells
+                            )
+                            self.coord_states[rid].evasion_target = target
+                            if target:
+                                evade_plan = a_star(
+                                    robot_cells[rid], target,
+                                    self.base_grid, self.gs,
+                                    other_robots=other_cells
+                                )
+                                self.coord_states[rid].plan = evade_plan if evade_plan else [robot_cells[rid]]
                     elif act == 3: # WAIT
                         self.coord_states[rid].status = "WAITING"
                         self.coord_states[rid].evasion_target = None
+                        self.coord_states[rid].wait_ticks = 999999
 
             for rid in self.robot_ids:
                 if self.coord_states[rid].status in ("DONE", "WAITING", "POCKET_WAITING"):
@@ -387,7 +423,15 @@ class SNAMOSimulator:
 
                     if waypoints:
                         next_cell = waypoints[0]
-                        nxt_occupied = any(robot_cells[r] == next_cell for r in self.robot_ids if r != rid)
+                        # EVADING robots can push through WAITING robots
+                        if self.coord_states[rid].status == "EVADING":
+                            nxt_occupied = any(
+                                robot_cells[r] == next_cell
+                                for r in self.robot_ids
+                                if r != rid and self.coord_states[r].status not in ("WAITING", "POCKET_WAITING")
+                            )
+                        else:
+                            nxt_occupied = any(robot_cells[r] == next_cell for r in self.robot_ids if r != rid)
                         if nxt_occupied:
                             p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
                             continue
@@ -416,41 +460,18 @@ class SNAMOSimulator:
                 p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
                 continue
 
-            too_close = False
-            for other_rid in self.robot_ids:
-                if other_rid == rid:
-                    continue
-                if self.coord_states[other_rid].status in ("DONE", "POCKET_WAITING"):
-                    continue
-                other_pos, _ = p.getBasePositionAndOrientation(other_rid)
-                dist_phys = math.hypot(pos[0] - other_pos[0], pos[1] - other_pos[1])
-                if dist_phys < 0.70:
-                    if self.coord_states[rid].priority_score <= self.coord_states[other_rid].priority_score:
-                        too_close = True
-                        break
+            drive_robot(rid, self.drive_target[rid])
 
-            if too_close:
-                p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
-            else:
-                drive_robot(rid, self.drive_target[rid])
+        if self.gui:
+            time.sleep(0.001)
 
         p.stepSimulation()
-        if self.gui:
-            import time
-            time.sleep(0.01)
 
         for i in range(len(self.robot_ids)):
             for j in range(i + 1, len(self.robot_ids)):
                 key = ("rr", self.robot_ids[i], self.robot_ids[j])
                 if key not in self.collision_pairs_seen and p.getContactPoints(self.robot_ids[i], self.robot_ids[j]):
-                    self.collision_count += 1
-                    self.collision_pairs_seen.add(key)
-        for rid in self.robot_ids:
-            for bid in self.box_ids:
-                key = ("rb", rid, bid)
-                if key not in self.collision_pairs_seen and p.getContactPoints(rid, bid):
-                    if self.last_snamo_action.get(rid, "NAVIGATE") != "REMOVE":
-                        self.collision_count += 1
+                    self.robot_robot_collisions += 1
                     self.collision_pairs_seen.add(key)
 
         self.step_count += 1
@@ -473,7 +494,7 @@ def run_simulation(config_path: str, gui: bool = False, taboo_zones: list = None
     print(f"\n[SNAMOSim] '{sim.name}' | robots={len(sim.robot_ids)} boxes={len(sim.box_ids)} "
           f"max_steps={sim.max_steps} dr={dr_strategy}")
           
-    while sim.step_count < sim.max_steps and not sim.success:
+    while sim.step_count < sim.max_steps and not sim.success and not getattr(sim, "stalled", False):
         sim.step()
         
     push_count = 0
@@ -483,17 +504,30 @@ def run_simulation(config_path: str, gui: bool = False, taboo_zones: list = None
         if math.hypot(pos[0] - ix, pos[1] - iy) > 0.4:
             push_count += 1
 
-    print(f"[SNAMOSim] Steps={sim.step_count}  Success={sim.success}  "
-          f"Pushes={push_count}  Collisions={sim.collision_count}")
+    # Physically verify success
+    real_success = True
+    for rid in sim.robot_ids:
+        pos, _ = p.getBasePositionAndOrientation(rid)
+        gxc, gyc = sim.robot_goals[rid]
+        gxw, gyw = cell_center(gxc, gyc, sim.cs)
+        if math.hypot(pos[0] - gxw, pos[1] - gyw) > 0.6:
+            real_success = False
+            break
+
+    status_str = "SUCCESS" if real_success else ("STALLED" if getattr(sim, "stalled", False) else "FAILED")
+
+    print(f"[SNAMOSim] Steps={sim.step_count}  Status={status_str}  "
+          f"Pushes={push_count}  Collisions={sim.robot_robot_collisions}")
     sim.close()
 
     avg_w = float(np.mean(sim.coordinator.yield_sr_widths)) if sim.coordinator.yield_sr_widths else 0.0
 
     return {
-        "success":    sim.success,
+        "success":    real_success,
+        "stalled":    getattr(sim, "stalled", False),
         "steps":      sim.step_count,
         "pushes":     push_count,
-        "collisions": sim.collision_count,
+        "collisions": sim.robot_robot_collisions,
         "deadlocks":  sim.coordinator.deadlock_count,
         "avg_sr_width": avg_w,
     }
@@ -523,18 +557,49 @@ def main():
     args = ap.parse_args()
 
     if args.config == "all":
-        rows = []
-        for cfg_path in ALL_CONFIGS:
-            print(f"\n{'='*58}\nRunning: {cfg_path}\n{'='*58}")
-            r = run_simulation(cfg_path, gui=False, dr_strategy=args.dr_strategy)
-            rows.append((cfg_path.split("/")[-1], r))
+        strategies = ["repulsive", "social", "sr_social"]
+        all_results = {}
 
-        print(f"\n{'='*92}")
-        print(f"{'Config':<44} {'OK':<5} {'Steps':<8} {'Pushes':<8} {'Collisions':<12} {'Deadlocks':<10} AvgSRWidth")
-        print(f"{'='*92}")
-        for name, r in rows:
-            ok = "✅" if r["success"] else "❌"
-            print(f"{name:<44} {ok:<5} {r['steps']:<8} {r['pushes']:<8} {r['collisions']:<12} {r['deadlocks']:<10} {r['avg_sr_width']:.3f}")
+        for strat in strategies:
+            print(f"\n{'#'*60}\n  STRATEGY: {strat.upper()}\n{'#'*60}")
+            strat_results = []
+            for cfg_path in ALL_CONFIGS:
+                print(f"\n{'='*58}\nRunning: {cfg_path}\n{'='*58}")
+                r = run_simulation(cfg_path, gui=False, dr_strategy=strat)
+                strat_results.append((cfg_path.split("/")[-1], r))
+            all_results[strat] = strat_results
+
+        cfg_names = [name for name, _ in all_results[strategies[0]]]
+
+        print(f"\n\n{'='*95}")
+        print(f"  COMPARISON TABLE — DR Strategy Comparison")
+        print(f"{'='*95}")
+        header = f"{'Config':<38}"
+        for strat in strategies:
+            header += f" {strat.upper():^24}"
+        print(header)
+        sub = f"{'':38}"
+        for _ in strategies:
+            sub += f" {'OK':<5} {'Steps':<7} {'Push':<5} {'Col':<5}"
+        print(sub)
+        print(f"{'-'*95}")
+
+        for i, name in enumerate(cfg_names):
+            row = f"{name:<38}"
+            for strat in strategies:
+                r = all_results[strat][i][1]
+                ok = "PASS" if r["success"] else "FAIL"
+                row += f" {ok:<5} {r['steps']:<7} {r['pushes']:<5} {r['collisions']:<5}"
+            print(row)
+
+        print(f"{'-'*95}")
+        summary = f"{'PASS RATE':<38}"
+        for strat in strategies:
+            passed = sum(1 for _, r in all_results[strat] if r["success"])
+            total = len(all_results[strat])
+            summary += f" {f'{passed}/{total}':<24}"
+        print(summary)
+        print(f"{'='*95}")
     else:
         try:
             run_simulation(args.config, gui=args.gui, dr_strategy=args.dr_strategy)

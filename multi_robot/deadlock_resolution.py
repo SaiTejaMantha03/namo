@@ -363,26 +363,35 @@ class DeadlockResolver:
             # Pick the escaping robot with the narrowest SR width (most certain)
             widths = {rid: broadcaster.get_sr_interval_width(rid) for rid in can_escape}
             evader = min(widths, key=widths.get)
+            assignments[evader] = "EVADE"
+
+            # --- Evasion targets for pocket escape ---
+            evasion_targets: dict[int, Optional[tuple]] = {}
+            for rid in conflicting_robots:
+                if assignments[rid] == "WAIT":
+                    evasion_targets[rid] = None
+                else:
+                    evasion_targets[rid] = escapes.get(rid)
         else:
-            # None can escape perpendicular. Pick the one with the narrowest SR width
-            widths = {rid: broadcaster.get_sr_interval_width(rid) for rid in conflicting_robots}
-            evader = min(widths, key=widths.get)
+            # No pocket exists (4-robot symmetric deadlock).
+            # Strategy: ONE robot crosses through the intersection toward its goal.
+            # The other 3 wait. The crossing robot drives straight through.
+            # Pick the robot closest to its goal to go first.
+            dists = {rid: math.hypot(
+                robot_cells[rid][0] - robot_goals[rid][0],
+                robot_cells[rid][1] - robot_goals[rid][1]
+            ) for rid in conflicting_robots}
+            evader = min(dists, key=dists.get)
+            assignments[evader] = "EVADE"
 
-        assignments[evader] = "EVADE"
-
-        # --- Evasion targets ---
-        evasion_targets: dict[int, Optional[tuple]] = {}
-        for rid in conflicting_robots:
-            if assignments[rid] == "WAIT":
-                evasion_targets[rid] = None
-                continue
-
-            # Use pocket cell if available, else social-cost weighted
-            if escapes.get(rid) is not None:
-                evasion_targets[rid] = escapes[rid]
-            else:
-                other_cells = [robot_cells[r] for r in conflicting_robots if r != rid]
-                target = _find_evasion_target(self.grid, self.grid_size, robot_cells[rid], other_cells)
-                evasion_targets[rid] = target
+            # Evasion target = next cell toward goal (drive through intersection)
+            evasion_targets: dict[int, Optional[tuple]] = {}
+            for rid in conflicting_robots:
+                if assignments[rid] == "WAIT":
+                    evasion_targets[rid] = None
+                else:
+                    # For multi-robot symmetric deadlock, the evader should
+                    # drive ALL THE WAY to its goal, not stop at the intersection.
+                    evasion_targets[rid] = robot_goals[rid]
 
         return assignments, evasion_targets

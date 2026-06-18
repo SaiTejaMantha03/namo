@@ -44,6 +44,7 @@ class RobotState:
     _stuck_counter: int = 0         # steps without progress
     _last_cell: Optional[tuple] = None
     waiting_for_robot: Optional[int] = None
+    _post_evade_grace: int = 0
 
 
 class RobotCoordinator:
@@ -136,6 +137,11 @@ class RobotCoordinator:
         """
         next_cells: dict[int, tuple] = {}
 
+        # Decrement post-evasion grace counters
+        for state in states.values():
+            if state._post_evade_grace > 0:
+                state._post_evade_grace -= 1
+
         # Phase 2C: adaptive horizon
         h = self._compute_adaptive_h(states) if self.adaptive_h else self.base_h
 
@@ -185,9 +191,15 @@ class RobotCoordinator:
                                     next_cells[rid] = state.cell
                                     continue
                     else:
-                        # Normal WAITING robot: wait until the evader has finished evading
+                        # Normal WAITING robot: wait until the evader is far from intersection
                         if other_state.status == "EVADING":
                             other_evading = True
+                        elif other_state.status == "NAVIGATING":
+                            my_cell = state.cell
+                            other_cell = other_state.cell
+                            dist = abs(other_cell[0] - my_cell[0]) + abs(other_cell[1] - my_cell[1])
+                            if dist <= 8:
+                                other_evading = True  # still in intersection zone
                 
                 if not other_evading:
                     state.wait_ticks -= 1
@@ -226,29 +238,22 @@ class RobotCoordinator:
                 or diverged
                 or state._stuck_counter >= self.stuck_limit
                 or (state.status == "EVADING" and state.cell == state.evasion_target)
+                or (state.status == "EVADING" and state.evasion_target
+                    and (not state.plan or state.plan[-1] != state.evasion_target))
             )
 
             if needs_replan:
                 if state._stuck_counter >= self.stuck_limit:
                     state._stuck_counter = 0
                 if state.status == "EVADING" and state.cell == state.evasion_target:
-                    # Transition to WAITING in the pocket, waiting for the waiter to pass
-                    waiter_id = None
-                    for other_rid, other_state in states.items():
-                        if other_rid != rid and getattr(other_state, "waiting_for_robot", None) == rid:
-                            waiter_id = other_rid
-                            break
-                    if waiter_id is not None:
-                        state.status = "POCKET_WAITING"
-                        state.waiting_for_robot = waiter_id
-                        state.wait_ticks = 100
-                        state.evasion_target = None
-                    else:
-                        state.status = "NAVIGATING"
-                        state.evasion_target = None
+                    # Evader reached its target — transition to NAVIGATING
+                    state.status = "NAVIGATING"
+                    state.evasion_target = None
+                    state._post_evade_grace = 50  # skip conflict detection for 50 steps
                 elif state.status == "EVADING":
                     state.status = "NAVIGATING"
                     state.evasion_target = None
+                    state._post_evade_grace = 50
 
                 done_cells = [
                     states[r].cell for r in states
@@ -300,6 +305,12 @@ class RobotCoordinator:
             c for c in conflicts
             if not (c.conflict_type == ConflictType.ROBOT_ROBOT
                     and any(rid in evading_ids for rid in c.robots_involved))
+        ]
+        # Skip conflicts involving robots in post-evasion grace period
+        grace_ids = {rid for rid, s in states.items() if s._post_evade_grace > 0}
+        conflicts = [
+            c for c in conflicts
+            if not any(rid in grace_ids for rid in c.robots_involved)
         ]
 
         # ---- 4b. Head-on corridor deadlock is handled dynamically by resolve_sr_social ---
@@ -359,7 +370,7 @@ class RobotCoordinator:
                                     states[other_rid].priority_score += state.priority_score
                                     evaders.append(other_rid)
                             state.status = "WAITING"
-                            state.wait_ticks = random.randint(2, 5)
+                            state.wait_ticks = random.randint(3, 8)
                             state.waiting_for_robot = evaders[0] if evaders else None
                             next_cells[rid] = state.cell
                             resolved_rids.add(rid)
@@ -368,7 +379,12 @@ class RobotCoordinator:
                             target = evasion_targets.get(rid)
                             state.evasion_target = target
                             if target:
-                                other_rob_cells = [states[r].cell for r in states if r != rid]
+                                # When evading, don't treat WAITING robots as path obstacles
+                                # — they will yield. Only avoid DONE and EVADING robots.
+                                other_rob_cells = [
+                                    states[r].cell for r in states
+                                    if r != rid and states[r].status not in ("WAITING", "POCKET_WAITING")
+                                ]
                                 evade_plan = a_star(
                                     state.cell, target,
                                     self.grid, self.grid_size,
@@ -393,11 +409,16 @@ class RobotCoordinator:
 
             if len(state.plan) > 1:
                 next_cell = state.plan[1]
-                # Collision avoidance: don't step into another robot's cell (active, waiting, or done).
-                currently_occupied = {
-                    states[r].cell for r in states
-                    if r != rid
-                }
+                # Collision avoidance: don't step into another robot's cell.
+                # EXCEPTION: EVADING robots can push through WAITING robots.
+                currently_occupied = set()
+                for r in states:
+                    if r == rid:
+                        continue
+                    r_state = states[r]
+                    if state.status == "EVADING" and r_state.status in ("WAITING", "POCKET_WAITING"):
+                        continue  # evader can push through waiters
+                    currently_occupied.add(r_state.cell)
                 # Phase 2A: respect priority — don't displace a higher-priority robot
                 priority_blocker = any(
                     states[r].cell == next_cell

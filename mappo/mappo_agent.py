@@ -13,58 +13,109 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from mappo.mappo_env import NAMOmappoEnv
 
 class ActorNetwork(nn.Module):
+    """Shared-parameter actor with LayerNorm for training stability on MPS."""
     def __init__(self, obs_dim, action_dim=4):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(obs_dim, 256),
+            nn.Linear(obs_dim, 512),
+            nn.LayerNorm(512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.LayerNorm(256),
             nn.ReLU(),
             nn.Linear(256, 128),
+            nn.LayerNorm(128),
             nn.ReLU(),
-            nn.Linear(128, action_dim)
+            nn.Linear(128, action_dim),
         )
-        
-    def forward(self, obs):
+        # Orthogonal init for fast convergence
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.orthogonal_(m.weight, gain=0.01)
+                nn.init.zeros_(m.bias)
+
+    def forward(self, obs, action_mask=None):
         logits = self.net(obs)
+        if action_mask is not None:
+            INF = torch.finfo(logits.dtype).max
+            logits = logits.masked_fill(~action_mask, -INF)
         return logits
 
 class CriticNetwork(nn.Module):
+    """Centralised critic — sees joint obs of all agents."""
     def __init__(self, joint_obs_dim):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(joint_obs_dim, 512),
+            nn.Linear(joint_obs_dim, 1024),
+            nn.LayerNorm(1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.LayerNorm(512),
             nn.ReLU(),
             nn.Linear(512, 256),
+            nn.LayerNorm(256),
             nn.ReLU(),
-            nn.Linear(256, 1)
+            nn.Linear(256, 1),
         )
-        
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.orthogonal_(m.weight, gain=1.0)
+                nn.init.zeros_(m.bias)
+
     def forward(self, joint_obs):
-        value = self.net(joint_obs)
-        return value
+        return self.net(joint_obs)
 
 class MAPPOAgent:
-    def __init__(self, obs_dim, num_agents, lr=3e-4, gamma=0.99, lmbda=0.95, eps_clip=0.2, c_val=0.5, c_ent=0.01):
+    def __init__(self, obs_dim, num_agents, action_dim=4, device=None,
+                 lr=3e-4, gamma=0.99, lmbda=0.95, eps_clip=0.2,
+                 c_val=0.5, c_ent=0.02,
+                 ppo_epochs=4, minibatch_size=256, max_grad_norm=0.5):
+        self.obs_dim = obs_dim
         self.num_agents = num_agents
+        self.action_dim = action_dim
         self.gamma = gamma
         self.lmbda = lmbda
         self.eps_clip = eps_clip
         self.c_val = c_val
         self.c_ent = c_ent
+        self.ppo_epochs = ppo_epochs          # K update passes per batch
+        self.minibatch_size = minibatch_size  # mini-batch size for each pass
+        self.max_grad_norm = max_grad_norm    # gradient clipping
+        self.device = device if device is not None else torch.device("cpu")
+
+        self.actor = ActorNetwork(obs_dim, action_dim=action_dim).to(self.device)
+        self.critic = CriticNetwork(obs_dim * num_agents).to(self.device)
+
+        # Separate LRs: critic needs higher LR to keep up with actor
+        self.optimizer_actor = optim.Adam(self.actor.parameters(), lr=lr, eps=1e-5)
+        self.optimizer_critic = optim.Adam(self.critic.parameters(), lr=lr * 2, eps=1e-5)
         
-        self.actor = ActorNetwork(obs_dim)
-        self.critic = CriticNetwork(obs_dim * num_agents)
+        # Experience buffers
+        self.obs_history = []
+        self.joint_obs_history = []
+        self.action_history = []
+        self.reward_history = []
+        self.log_prob_history = []
+        self.done_history = []
+        self.action_mask_history = []
         
-        self.optimizer_actor = optim.Adam(self.actor.parameters(), lr=lr)
-        self.optimizer_critic = optim.Adam(self.critic.parameters(), lr=lr)
-        
-    def select_action(self, obs_dict):
+    def select_action(
+        self,
+        obs_dict,
+        action_masks=None,
+    ):
         actions = {}
         action_log_probs = {}
         entropy = {}
         
         for rid, obs in obs_dict.items():
-            obs_tensor = torch.tensor(obs, dtype=torch.float32)
-            logits = self.actor(obs_tensor)
+            obs_tensor = torch.tensor(obs, dtype=torch.float32).to(self.device)
+            
+            mask_tensor = None
+            if action_masks and rid in action_masks:
+                mask_tensor = torch.tensor(action_masks[rid], dtype=torch.bool).to(self.device)
+                
+            logits = self.actor(obs_tensor, action_mask=mask_tensor)
             dist = Categorical(logits=logits)
             action = dist.sample()
             
@@ -74,69 +125,160 @@ class MAPPOAgent:
             
         return actions, action_log_probs, entropy
         
-    def train_step(self, obs_history, joint_obs_history, action_history, reward_history, log_prob_history, done_history):
-        # Convert list to tensors
-        obs_t = torch.tensor(np.array(obs_history), dtype=torch.float32) # Shape: (T, N, obs_dim)
-        joint_obs_t = torch.tensor(np.array(joint_obs_history), dtype=torch.float32) # Shape: (T, joint_obs_dim)
-        action_t = torch.tensor(np.array(action_history), dtype=torch.long) # Shape: (T, N)
-        reward_t = torch.tensor(np.array(reward_history), dtype=torch.float32) # Shape: (T, N)
-        old_log_probs_t = torch.tensor(np.array(log_prob_history), dtype=torch.float32) # Shape: (T, N)
-        done_t = torch.tensor(np.array(done_history), dtype=torch.float32) # Shape: (T, N)
+    def train_step(self, obs_history, joint_obs_history, action_history,
+                   reward_history, log_prob_history, done_history):
+        """PPO update with K mini-batch epochs — fully vectorised on MPS."""
+        obs_t        = torch.tensor(np.array(obs_history),       dtype=torch.float32).to(self.device)  # (T, N, obs)
+        joint_obs_t  = torch.tensor(np.array(joint_obs_history), dtype=torch.float32).to(self.device)  # (T, joint)
+        action_t     = torch.tensor(np.array(action_history),    dtype=torch.long).to(self.device)     # (T, N)
+        reward_t     = torch.tensor(np.array(reward_history),    dtype=torch.float32).to(self.device)  # (T, N)
+        old_lp_t     = torch.tensor(np.array(log_prob_history),  dtype=torch.float32).to(self.device)  # (T, N)
+        done_t       = torch.tensor(np.array(done_history),      dtype=torch.float32).to(self.device)  # (T, N)
+
+        T, N = obs_t.shape[0], self.num_agents
+
+        # ── GAE returns & advantages (computed once, no grad) ────────────
+        with torch.no_grad():
+            values_t = self.critic(joint_obs_t).squeeze(-1)  # (T,)
+
+            advantages = torch.zeros(T, N, device=self.device)
+            returns    = torch.zeros(T, N, device=self.device)
+            for agent_idx in range(N):
+                gae = 0.0
+                for t in reversed(range(T)):
+                    val      = values_t[t].item()
+                    next_val = values_t[t + 1].item() if t < T - 1 else 0.0
+                    delta    = (reward_t[t, agent_idx]
+                                + self.gamma * next_val * (1.0 - done_t[t, agent_idx])
+                                - val)
+                    gae = delta + self.gamma * self.lmbda * (1.0 - done_t[t, agent_idx]) * gae
+                    advantages[t, agent_idx] = gae
+                    returns[t, agent_idx]    = gae + val
+
+        # Flatten across time × agents for the actor
+        obs_flat   = obs_t.view(-1, obs_t.shape[-1])         # (T*N, obs)
+        act_flat   = action_t.view(-1)                       # (T*N,)
+        old_lp_flat = old_lp_t.view(-1)                      # (T*N,)
+        adv_flat   = advantages.view(-1)                     # (T*N,)
+        ret_flat   = returns.view(-1)                        # (T*N,)
+
+        # Normalise advantages globally — prevents scale issues across scenarios
+        adv_flat = (adv_flat - adv_flat.mean()) / (adv_flat.std() + 1e-8)
+
+        D = obs_flat.shape[0]  # total data points
+        mb = min(self.minibatch_size, D)
+
+        total_actor_loss  = 0.0
+        total_critic_loss = 0.0
+        n_updates = 0
+
+        # ── K PPO mini-batch epochs — saturates MPS compute ─────────────
+        for _ in range(self.ppo_epochs):
+            perm = torch.randperm(D, device=self.device)
+            for start in range(0, D, mb):
+                idx = perm[start: start + mb]
+
+                # ── Actor update ────────────────────────────────────────
+                logits   = self.actor(obs_flat[idx])
+                dist     = Categorical(logits=logits)
+                new_lp   = dist.log_prob(act_flat[idx])
+                entropy  = dist.entropy().mean()
+
+                ratios = torch.exp(new_lp - old_lp_flat[idx])
+                surr1  = ratios * adv_flat[idx]
+                surr2  = torch.clamp(ratios,
+                                     1.0 - self.eps_clip,
+                                     1.0 + self.eps_clip) * adv_flat[idx]
+                actor_loss = -torch.min(surr1, surr2).mean() - self.c_ent * entropy
+
+                self.optimizer_actor.zero_grad()
+                actor_loss.backward()
+                nn.utils.clip_grad_norm_(self.actor.parameters(), self.max_grad_norm)
+                self.optimizer_actor.step()
+
+                # ── Critic update (uses joint obs — slice per timestep) ──
+                # Map flat actor indices back to timestep indices
+                t_idx = idx // N
+                t_idx = t_idx.clamp(0, T - 1)
+                pred_v   = self.critic(joint_obs_t[t_idx]).squeeze(-1)
+                tgt_ret  = ret_flat[idx]
+                critic_loss = nn.MSELoss()(pred_v, tgt_ret)
+
+                self.optimizer_critic.zero_grad()
+                critic_loss.backward()
+                nn.utils.clip_grad_norm_(self.critic.parameters(), self.max_grad_norm)
+                self.optimizer_critic.step()
+
+                total_actor_loss  += actor_loss.item()
+                total_critic_loss += critic_loss.item()
+                n_updates += 1
+
+        return total_actor_loss / n_updates, total_critic_loss / n_updates
+
+    def store_transition(self, obs, actions, log_probs, entropy, rewards, dones, action_masks=None):
+        """Store transition for experience replay."""
+        # obs is a dict {rid: obs_vec}
+        # Get sorted robot IDs (excluding "__all__")
+        robot_ids = sorted([rid for rid in obs.keys() if rid != "__all__"])
         
-        T = obs_t.shape[0]
-        N = self.num_agents
+        obs_list = [obs[rid] for rid in robot_ids]
+        joint_obs = np.concatenate(obs_list)
         
-        # Calculate state values using Centralized Critic
-        values_t = self.critic(joint_obs_t).squeeze(-1) # Shape: (T)
+        action_list = [actions.get(rid, 0) for rid in robot_ids]
+        log_prob_list = [log_probs.get(rid, 0.0) for rid in robot_ids]
+        entropy_list = [entropy.get(rid, 0.0) for rid in robot_ids]
+        reward_list = [rewards.get(rid, 0.0) for rid in robot_ids]
+        done_list = [dones.get(rid, False) for rid in robot_ids]
         
-        # Calculate Returns and Advantages using Generalized Advantage Estimation (GAE)
-        advantages = torch.zeros(T, N)
-        returns = torch.zeros(T, N)
+        self.obs_history.append(obs_list)
+        self.joint_obs_history.append(joint_obs)
+        self.action_history.append(action_list)
+        self.log_prob_history.append(log_prob_list)
+        self.reward_history.append(reward_list)
+        self.done_history.append(done_list)
+        self.action_mask_history.append(action_masks)
+
+    def update(self):
+        """Perform policy update using collected experience."""
+        if len(self.obs_history) == 0:
+            return
         
-        # Calculate advantages per agent using shared critic values
-        next_value = 0.0
-        for agent_idx in range(N):
-            gae = 0.0
-            for t in reversed(range(T)):
-                # Since MAPPO critic is centralized, we approximate value transition
-                val = values_t[t].item()
-                next_val = values_t[t+1].item() if t < T - 1 else 0.0
-                delta = reward_t[t, agent_idx] + self.gamma * next_val * (1.0 - done_t[t, agent_idx]) - val
-                gae = delta + self.gamma * self.lmbda * (1.0 - done_t[t, agent_idx]) * gae
-                advantages[t, agent_idx] = gae
-                returns[t, agent_idx] = advantages[t, agent_idx] + val
-                
-        # Policy Loss (Actor update)
-        # Flatten time and agent dimensions for Actor update since they share parameters
-        obs_flat = obs_t.view(-1, obs_t.shape[-1])
-        action_flat = action_t.view(-1)
-        old_log_probs_flat = old_log_probs_t.view(-1)
-        advantages_flat = advantages.view(-1)
+        actor_loss, critic_loss = self.train_step(
+            self.obs_history,
+            self.joint_obs_history,
+            self.action_history,
+            self.reward_history,
+            self.log_prob_history,
+            self.done_history,
+        )
         
-        logits = self.actor(obs_flat)
-        dist = Categorical(logits=logits)
-        new_log_probs = dist.log_prob(action_flat)
-        entropy = dist.entropy().mean()
+        # Clear buffers
+        self.obs_history = []
+        self.joint_obs_history = []
+        self.action_history = []
+        self.reward_history = []
+        self.log_prob_history = []
+        self.done_history = []
+        self.action_mask_history = []
         
-        ratios = torch.exp(new_log_probs - old_log_probs_flat)
-        surr1 = ratios * advantages_flat
-        surr2 = torch.clamp(ratios, 1.0 - self.eps_clip, 1.0 + self.eps_clip) * advantages_flat
-        actor_loss = -torch.min(surr1, surr2).mean() - self.c_ent * entropy
-        
-        self.optimizer_actor.zero_grad()
-        actor_loss.backward()
-        self.optimizer_actor.step()
-        
-        # Value Loss (Critic update)
-        pred_values = self.critic(joint_obs_t).squeeze(-1)
-        target_returns = returns.mean(dim=-1) # Centralized average return target
-        critic_loss = nn.MSELoss()(pred_values, target_returns)
-        
-        self.optimizer_critic.zero_grad()
-        critic_loss.backward()
-        self.optimizer_critic.step()
-        
-        return actor_loss.item(), critic_loss.item()
+        return actor_loss, critic_loss
+
+    def save(self, checkpoint_path):
+        """Save model checkpoint."""
+        torch.save({
+            'actor_state': self.actor.state_dict(),
+            'critic_state': self.critic.state_dict(),
+            'optimizer_actor_state': self.optimizer_actor.state_dict(),
+            'optimizer_critic_state': self.optimizer_critic.state_dict(),
+        }, checkpoint_path)
+
+    def load(self, checkpoint_path):
+        """Load model checkpoint."""
+        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        self.actor.load_state_dict(checkpoint['actor_state'])
+        self.critic.load_state_dict(checkpoint['critic_state'])
+        self.optimizer_actor.load_state_dict(checkpoint['optimizer_actor_state'])
+        self.optimizer_critic.load_state_dict(checkpoint['optimizer_critic_state'])
 
 def run_test():
     print("Initializing environment...")

@@ -201,6 +201,41 @@ class SNAMOPlanner:
     # Main planning API
     # ------------------------------------------------------------------
 
+    def evaluate_actions(self, start: tuple, goal: tuple, box_cells: list, other_robots: list = (), grid: np.ndarray = None):
+        """
+        Returns (total_cost, bypass_cost_lo, removal_cost_lo).
+        Used by RL environment for action masking and reward shaping.
+        """
+        if grid is not None:
+            self.grid = grid
+            self._social_risk = SocialCostmap(grid).map
+
+        work_grid = self.grid.copy()
+        gs = self.grid_size
+
+        box_risk_map = (work_grid == 2).astype(float)
+        path_direct = a_star(start, goal, work_grid, gs,
+                             ignore_boxes=True,
+                             risk_map=box_risk_map,
+                             risk_weight=50.0)
+        
+        blocking = None
+        if path_direct:
+            box_set = set(map(tuple, box_cells))
+            for cell in path_direct[1:]:
+                if cell in box_set:
+                    blocking = cell
+                    break
+
+        total_cost = float(len(path_direct) - 1) if path_direct else float('inf')
+
+        if blocking is None:
+            return total_cost, float('inf'), float('inf')
+
+        bypass_iv = self._bypass_interval(work_grid, start, goal, blocking)
+        removal_iv = self._removal_interval(work_grid, start, goal, blocking)
+        return total_cost, bypass_iv[0], removal_iv[0]
+
     def plan(
         self,
         start: tuple,
