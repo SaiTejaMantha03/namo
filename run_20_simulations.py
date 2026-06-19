@@ -19,7 +19,7 @@ import yaml
 
 def load_custom_map_yaml():
     project_dir = Path(__file__).resolve().parent
-    yaml_path = project_dir / "configs" / "custom_reconstructed_map.yaml"
+    yaml_path = project_dir / "configs" / "custom_reconstructed_map_robots.yaml"
     with open(yaml_path, "r") as f:
         config = yaml.safe_load(f)
         
