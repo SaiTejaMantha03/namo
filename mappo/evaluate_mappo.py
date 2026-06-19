@@ -18,16 +18,20 @@ def main():
     parser.add_argument("--max-steps", type=int, default=200, help="Max steps per episode")
     parser.add_argument("--gui", action="store_true", help="Run with PyBullet GUI")
     parser.add_argument("--checkpoint", default=None, help="Path to actor checkpoint (.pth)")
+    parser.add_argument("--episodes", type=int, default=1, help="Number of evaluation episodes")
+    parser.add_argument("--randomize-starts", action="store_true", help="Enable randomized starts to break initial symmetry")
+    parser.add_argument("--stochastic", action="store_true", help="Use stochastic action selection (Categorical)")
     args = parser.parse_args()
     
-    print(f"Loading environment with config: {args.config}")
-    env = NAMOmappoEnv(args.config, gui=args.gui, max_steps=args.max_steps)
+    print(f"Loading environment with config: {args.config} (randomize_starts={args.randomize_starts})")
+    env = NAMOmappoEnv(args.config, gui=args.gui, max_steps=args.max_steps, randomize_starts=args.randomize_starts)
     
     reset_result = env.reset()
     if isinstance(reset_result, tuple):
-        obs, _ = reset_result
+        obs, info = reset_result
     else:
         obs = reset_result
+        info = {"action_mask": env.current_action_masks}
     obs_dim = next(iter(obs.values())).shape[0]
     num_agents = len(obs)
     
@@ -54,76 +58,90 @@ def main():
     # Set to evaluation mode
     agent.actor.eval()
     
-    print("\nStarting MAPPO Evaluation Rollout...")
+    print(f"\nStarting MAPPO Evaluation: {args.episodes} episodes (stochastic={args.stochastic})...")
     print("=" * 60)
     
-    episode_reward = 0
-    collisions = 0
-    consecutive_waits = 0
+    successes = 0
+    total_steps = []
+    total_collisions = []
     
-    for t in range(args.max_steps):
-        # We don't need backprop for evaluation, so we can just use argmax
-        actions = {}
-        all_wait = True
-        for rid, agent_obs in obs.items():
-            obs_tensor = torch.tensor(agent_obs, dtype=torch.float32)
-            with torch.no_grad():
-                logits = agent.actor(obs_tensor)
-                # Deterministic action selection for evaluation
-                action = torch.argmax(logits).item()
-            actions[rid] = action
-            if action != 3:
-                all_wait = False
-                
-        if all_wait:
-            consecutive_waits += 1
+    for ep in range(args.episodes):
+        reset_result = env.reset()
+        if isinstance(reset_result, tuple):
+            obs, info = reset_result
         else:
-            consecutive_waits = 0
+            obs = reset_result
+            info = {"action_mask": env.current_action_masks}
             
-        next_obs, rewards, dones, info = env.step(actions)
+        episode_reward = 0
+        collisions = 0
+        consecutive_waits = 0
+        ep_success = False
         
-        episode_reward += sum(rewards.values())
-        collisions += info["collisions"]
-        
-        obs = next_obs
-        
-        if t % 5 == 0 or dones["__all__"] or consecutive_waits > 10:
-            print(f"Step {t:03d} | Actions: {list(actions.values())} | Current Reward: {episode_reward:.2f}")
-            
-            # Print per-robot distances
-            for rid in env.robot_ids:
-                pos, _ = p.getBasePositionAndOrientation(rid)
-                g = env.sim.robot_goals[rid]
-                dist = np.hypot(pos[0] - (g[0]+0.5)*env.cell_size, pos[1] - (g[1]+0.5)*env.cell_size)
-                act_name = ["NAV", "PUSH", "YIELD", "WAIT"][actions[rid]]
-                status = env.sim.coord_states[rid].status
-                print(f"  Robot {rid}: {act_name} | Status: {status:<10} | Dist to goal: {dist:.2f}m")
-                
-        if consecutive_waits > 10:
-            print(">>> WARNING: Model appears frozen (all agents outputting WAIT)")
-            break
-            
-        if dones["__all__"]:
-            print(f"\nEpisode finished at step {t}!")
-            
-            # Physically verify success
-            real_success = True
-            for rid in env.robot_ids:
-                pos, _ = p.getBasePositionAndOrientation(rid)
-                g = env.sim.robot_goals[rid]
-                dist = np.hypot(pos[0] - (g[0]+0.5)*env.cell_size, pos[1] - (g[1]+0.5)*env.cell_size)
-                if dist > 0.6:
-                    real_success = False
-                    break
+        for t in range(args.max_steps):
+            actions = {}
+            all_wait = True
+            action_mask = info.get("action_mask", {})
+            for rid, agent_obs in obs.items():
+                obs_tensor = torch.tensor(agent_obs, dtype=torch.float32)
+                mask = action_mask.get(rid, [True, True, True, True])
+                mask_tensor = torch.tensor(mask, dtype=torch.bool)
+                with torch.no_grad():
+                    logits = agent.actor(obs_tensor, mask_tensor)
+                    if args.stochastic:
+                        from torch.distributions import Categorical
+                        probs = torch.softmax(logits, dim=-1)
+                        dist = Categorical(probs)
+                        action = dist.sample().item()
+                    else:
+                        action = torch.argmax(logits).item()
+                actions[rid] = action
+                if action != 3:
+                    all_wait = False
                     
-            if real_success:
-                print(">>> SUCCESS: All robots reached their goals!")
+            if all_wait:
+                consecutive_waits += 1
             else:
-                print(">>> FAILED: Not all robots reached their goals.")
-            break
+                consecutive_waits = 0
+                
+            next_obs, rewards, dones, info = env.step(actions)
             
+            episode_reward += sum(rewards.values())
+            collisions += info["collisions"]
+            
+            obs = next_obs
+            
+            if consecutive_waits > 20:
+                break
+                
+            if dones["__all__"]:
+                # Verify success
+                real_success = True
+                for rid in env.robot_ids:
+                    pos, _ = p.getBasePositionAndOrientation(rid)
+                    g = env.sim.robot_goals[rid]
+                    dist = np.hypot(pos[0] - (g[0]+0.5)*env.cell_size, pos[1] - (g[1]+0.5)*env.cell_size)
+                    if dist > 0.6:
+                        real_success = False
+                        break
+                ep_success = real_success
+                break
+        
+        if ep_success:
+            successes += 1
+        total_steps.append(t + 1)
+        total_collisions.append(collisions)
+        
+        print(f"Episode {ep+1:>2}/{args.episodes} | Success: {ep_success:<5} | Steps: {t+1:>3} | Collisions: {collisions}")
+        
     print("=" * 60)
-    print(f"Evaluation Complete | Total Reward: {episode_reward:.2f} | Collisions: {collisions}")
+    success_rate = (successes / args.episodes) * 100
+    mean_steps = np.mean(total_steps)
+    mean_col = np.mean(total_collisions)
+    print(f"Evaluation Complete for {args.config}")
+    print(f"Success Rate: {success_rate:.1f}% ({successes}/{args.episodes})")
+    print(f"Average Steps: {mean_steps:.1f}")
+    print(f"Average Collisions: {mean_col:.2f}")
     env.close()
 
 if __name__ == "__main__":

@@ -246,39 +246,62 @@ class RobotCoordinator:
                 if state._stuck_counter >= self.stuck_limit:
                     state._stuck_counter = 0
                 if state.status == "EVADING" and state.cell == state.evasion_target:
-                    # Evader reached its target — transition to NAVIGATING
-                    state.status = "NAVIGATING"
-                    state.evasion_target = None
-                    state._post_evade_grace = 50  # skip conflict detection for 50 steps
+                    # Transition to WAITING in the pocket, waiting for the waiter to pass
+                    waiter_id = None
+                    for other_rid, other_state in states.items():
+                        if other_rid != rid and getattr(other_state, "waiting_for_robot", None) == rid:
+                            waiter_id = other_rid
+                            break
+                    if waiter_id is not None:
+                        state.status = "POCKET_WAITING"
+                        state.waiting_for_robot = waiter_id
+                        state.wait_ticks = 100
+                        state.evasion_target = None
+                    else:
+                        state.status = "NAVIGATING"
+                        state.evasion_target = None
+                        state._post_evade_grace = 50
                 elif state.status == "EVADING":
-                    state.status = "NAVIGATING"
-                    state.evasion_target = None
-                    state._post_evade_grace = 50
+                    if state.evasion_target:
+                        other_rob_cells = [
+                            states[r].cell for r in states
+                            if r != rid and states[r].status not in ("WAITING", "POCKET_WAITING")
+                        ]
+                        evade_plan = a_star(
+                            state.cell, state.evasion_target,
+                            self.grid, self.grid_size,
+                            other_robots=other_rob_cells,
+                        )
+                        state.plan = evade_plan if evade_plan else [state.cell]
+                    else:
+                        state.status = "NAVIGATING"
+                        state._post_evade_grace = 50
 
-                done_cells = [
-                    states[r].cell for r in states
-                    if r != rid and states[r].status == "DONE"
-                ]
-                other_active_cells = [
-                    states[r].cell for r in states
-                    if r != rid and states[r].status != "DONE"
-                ]
-                box_cells_list = list(box_states.values())
+                if state.status not in ("EVADING", "POCKET_WAITING", "WAITING"):
+                    done_cells = [
+                        states[r].cell for r in states
+                        if r != rid and states[r].status == "DONE"
+                    ]
+                    other_active_cells = [
+                        states[r].cell for r in states
+                        if r != rid and states[r].status != "DONE"
+                    ]
+                    box_cells_list = list(box_states.values())
 
-                # Key insight: in tight single-width corridors with no boxes,
-                # blocking other robots as hard walls leaves A* with NO PATH
-                # (the only route goes through the other robot's cell).
-                # The conflict detector + DR handle actual avoidance — the
-                # planner just needs a valid route for the detector to inspect.
-                # With boxes present, we still block others to avoid pushing them.
-                plan = a_star(
-                    state.cell, state.goal,
-                    self.grid, self.grid_size,
-                    other_robots=[],
-                    blocked_cells=done_cells,
-                    ignore_boxes=True,
-                )
-                state.plan = plan if plan else [state.cell]
+                    # Key insight: in tight single-width corridors with no boxes,
+                    # blocking other robots as hard walls leaves A* with NO PATH
+                    # (the only route goes through the other robot's cell).
+                    # The conflict detector + DR handle actual avoidance — the
+                    # planner just needs a valid route for the detector to inspect.
+                    # With boxes present, we still block others to avoid pushing them.
+                    plan = a_star(
+                        state.cell, state.goal,
+                        self.grid, self.grid_size,
+                        other_robots=[],
+                        blocked_cells=done_cells,
+                        ignore_boxes=True,
+                    )
+                    state.plan = plan if plan else [state.cell]
 
         # ---- 3. Build plans for conflict detector ----------------------
         robot_plans = {rid: states[rid].plan[:h] for rid in active_ids}
@@ -319,8 +342,9 @@ class RobotCoordinator:
         # ---- 5. Resolve deadlocks ---------------------------------------
         resolved_rids: set[int] = set()
 
-        if conflicts and self.resolver:
-            conflict_robot_sets = [set(c.robots_involved) for c in conflicts]
+        multi_robot_conflicts = [c for c in conflicts if len(c.robots_involved) >= 2]
+        if multi_robot_conflicts and self.resolver:
+            conflict_robot_sets = [set(c.robots_involved) for c in multi_robot_conflicts]
             merged: set = set()
             for s in conflict_robot_sets:
                 merged |= s
@@ -407,8 +431,19 @@ class RobotCoordinator:
                 next_cells[rid] = state.cell
                 continue
 
-            if len(state.plan) > 1:
-                next_cell = state.plan[1]
+            next_cell = None
+            should_pop = False
+
+            if state.plan:
+                if state.cell == state.plan[0]:
+                    if len(state.plan) > 1:
+                        next_cell = state.plan[1]
+                        should_pop = True
+                else:
+                    next_cell = state.plan[0]
+                    should_pop = False
+
+            if next_cell is not None:
                 # Collision avoidance: don't step into another robot's cell.
                 # EXCEPTION: EVADING robots can push through WAITING robots.
                 currently_occupied = set()
@@ -428,10 +463,14 @@ class RobotCoordinator:
                 if (next_cell not in currently_occupied
                         and next_cell not in occupied_next.values()
                         and not priority_blocker):
-                    state.plan.pop(0)
-                    state.cell = next_cell
-            # else: at end of plan, stay put (will replan next tick)
+                    if should_pop:
+                        state.plan.pop(0)
+                        state.cell = next_cell
+                    next_cells[rid] = next_cell
+                    occupied_next[rid] = next_cell
+                    continue
 
+            # Default: stay at current cell
             next_cells[rid] = state.cell
             occupied_next[rid] = state.cell
 

@@ -55,15 +55,16 @@ def collect_rollout(env, agent, max_steps, obs_dim, max_agents, action_dim):
     return obs_list, joint_obs_list, action_list, logprob_list, reward_list, done_list, ep_reward, ep_steps, info.get("success", False), ep_actions
 
 
-# ── 25-epoch validation curriculum ──────────────────────────────────────────
+# ── 35-epoch curriculum with congestion specialization ──────────────────────
 # Stage 1 (1–8):   Force PUSH learning — scenarios where push is mandatory
 # Stage 2 (9–18):  Scale to multi-robot warehouse + yielding
-# Stage 3 (19–25): Hard coordination & deadlock stress test
-# If results look good after 25 epochs → scale to 50+ epochs
+# Stage 3 (19–26): Hard coordination & deadlock stress test
+# Stage 4 (27–35): Congestion specialization and deadlock training
 CURRICULUM = [
     (1,  8,  ["namo_push_only.yaml", "movable_obstacle_choke_namo.yaml"]),
     (9,  18, ["warehouse_small.yaml", "warehouse_3robots.yaml", "single_corridor_yielding.yaml"]),
-    (19, 25, ["warehouse_large.yaml", "symmetric_bottleneck_deadlock.yaml", "cross_intersection_coordination.yaml"]),
+    (19, 26, ["warehouse_large.yaml", "symmetric_bottleneck_deadlock.yaml", "cross_intersection_coordination.yaml"]),
+    (27, 35, ["narrow_doorway_congestion.yaml", "symmetric_bottleneck_4robots.yaml", "cross_intersection_coordination.yaml"]),
 ]
 
 def get_configs_for_epoch(epoch):
@@ -123,7 +124,7 @@ def train(args):
 
             if env is not None:
                 env.close()
-            env = NAMOmappoEnv(config_path=str(cfg_path), gui=False, max_steps=args.max_steps)
+            env = NAMOmappoEnv(config_path=str(cfg_path), gui=False, max_steps=args.max_steps, randomize_starts=True)
 
             for ep in range(args.episodes_per_epoch):
                 o, jo, a, lp, r, d, ep_r, ep_s, success, ep_acts = collect_rollout(
@@ -205,10 +206,10 @@ def parse_args():
     p.add_argument("--config-dir", default="configs")
     p.add_argument("--checkpoint-dir", default="checkpoints/curriculum")
     p.add_argument("--load-checkpoint", default=None)
-    p.add_argument("--epochs", type=int, default=25,
-                   help="Training epochs. Use 25 for validation, 55 for full run.")
-    p.add_argument("--episodes-per-epoch", type=int, default=40, dest="episodes_per_epoch",
-                   help="Episodes per scenario per epoch. 40 gives ~2k steps/update on M3.")
+    p.add_argument("--epochs", type=int, default=35,
+                   help="Training epochs. Use 35 for validation with congestion, 55 for full run.")
+    p.add_argument("--episodes-per-epoch", type=int, default=50, dest="episodes_per_epoch",
+                   help="Episodes per scenario per epoch.")
     p.add_argument("--max-steps", type=int, default=250, dest="max_steps",
                    help="Max env steps per episode.")
     return p.parse_args()

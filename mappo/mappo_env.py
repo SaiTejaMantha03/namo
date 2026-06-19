@@ -14,23 +14,34 @@ from simulation.snamo_simulator import SNAMOSimulator, world_to_cell
 from decision.unet_decision_pipeline import UNetDecisionPipeline
 
 # ─── Reward shaping constants ─────────────────────────────────────────────────
-STEP_PENALTY        = -0.01   # per-step cost to incentivize efficiency
-COLLISION_PENALTY   = -0.10   # per robot-robot collision event
-GOAL_BONUS          = 1.0     # reaching goal
-TIMEOUT_PENALTY     = -1.0    # hitting max_steps without reaching goal
-PROGRESS_REWARD     = 0.02    # per step moving closer to goal (dense)
-PUSH_ATTEMPT_BONUS  = 0.05    # small bonus just for attempting PUSH (exploration)
-PUSH_SUCCESS_BONUS  = 0.50    # bonus for making real progress during PUSH
-PUSH_DIST_THRESHOLD = 0.10    # fraction of cell_size required for PUSH progress credit
+STEP_PENALTY          = -0.01   # per-step cost to incentivize efficiency
+COLLISION_PENALTY     = -0.10   # per robot-robot collision event
+GOAL_BONUS            = 1.0     # reaching goal
+TIMEOUT_PENALTY       = -1.0    # hitting max_steps without reaching goal
+PROGRESS_REWARD       = 0.02    # per step moving closer to goal (dense)
+PUSH_ATTEMPT_BONUS    = 0.05    # small bonus just for attempting PUSH (exploration)
+PUSH_SUCCESS_BONUS    = 0.50    # bonus for making real progress during PUSH
+PUSH_DIST_THRESHOLD   = 0.10    # fraction of cell_size required for PUSH progress credit
+
+# ─── NEW: Congestion / deadlock reward signals ────────────────────────────────
+DEADLOCK_PENALTY      = -0.05   # per step when robot is stuck AND nearby robots also stuck
+DEADLOCK_RESOLVE_BONUS = 0.30   # when a robot breaks out of a mutual-wait state
+YIELD_PENALTY         = -0.005  # slight nudge against indefinite yielding
 # ──────────────────────────────────────────────────────────────────────────────
+
+# Deadlock detection threshold: if robot moved less than this (world units) in
+# the last N steps we consider it "stuck"
+STUCK_DIST_THRESHOLD = 0.15  # world units
+STUCK_WINDOW         = 8     # number of control steps to look back
 
 
 class NAMOmappoEnv:
-    def __init__(self, config_path, gui=False, max_steps=40, control_interval=30):
+    def __init__(self, config_path, gui=False, max_steps=40, control_interval=30, randomize_starts=False):
         self.config_path = config_path
         self.gui = gui
         self.max_steps = max_steps
         self.control_interval = control_interval
+        self.randomize_starts = randomize_starts
         self.action_dim = 4  # NAVIGATE, PUSH, YIELD, WAIT
 
         with open(config_path, "r") as f:
@@ -53,16 +64,45 @@ class NAMOmappoEnv:
         self.current_action_masks = {}
         self.current_costs = {}
 
+        # ── NEW: per-robot state trackers for congestion features ─────────────
+        # wait_time: how many consecutive control steps the robot has been stuck
+        self._wait_time = {}
+        # position history for stuck detection
+        self._pos_history = {}
+        # was the robot stuck last step (for resolve bonus)
+        self._was_stuck = {}
+
     def reset(self):
         if self.sim is not None:
             self.sim.close()
 
         self.sim = SNAMOSimulator(self.config_path, gui=self.gui, dr_strategy="sr_social")
+
+        # Randomize starts if requested to break symmetry
+        if self.randomize_starts and hasattr(self.sim, "robots_cfg"):
+            import random
+            cfg_name = Path(self.config_path).name
+            if "narrow_doorway_congestion" in cfg_name:
+                for rcfg in self.sim.robots_cfg:
+                    rcfg["start"] = [random.randint(1, 4), rcfg["start"][1]]
+            elif "symmetric_bottleneck_4robots" in cfg_name or "cross_intersection_coordination" in cfg_name:
+                for rcfg in self.sim.robots_cfg:
+                    sx, sy = rcfg["start"]
+                    if sx < 5 and sy == 7:
+                        rcfg["start"] = [random.randint(1, 4), 7]
+                    elif sx > 10 and sy == 7:
+                        rcfg["start"] = [random.randint(11, 13), 7]
+                    elif sx == 7 and sy < 5:
+                        rcfg["start"] = [7, random.randint(1, 4)]
+                    elif sx == 7 and sy > 10:
+                        rcfg["start"] = [7, random.randint(11, 13)]
+
         self.sim.reset()
 
         self.robot_ids = self.sim.robot_ids
         self.current_step = 0
         self.agent_done_flags = {rid: False for rid in self.robot_ids}
+
         # Track previous distances for dense progress reward
         self._prev_dist = {}
         for rid in self.robot_ids:
@@ -72,6 +112,13 @@ class NAMOmappoEnv:
                 pos[0] - (g[0] + 0.5) * self.cell_size,
                 pos[1] - (g[1] + 0.5) * self.cell_size,
             )
+
+        # ── NEW: reset congestion trackers ────────────────────────────────────
+        for rid in self.robot_ids:
+            pos, _ = p.getBasePositionAndOrientation(rid)
+            self._wait_time[rid] = 0
+            self._pos_history[rid] = [pos[:2]] * STUCK_WINDOW
+            self._was_stuck[rid] = False
 
         obs = self._get_observations()
         info = {"action_mask": self.current_action_masks}
@@ -97,6 +144,26 @@ class NAMOmappoEnv:
         crop = padded[ay: ay + 5, ax: ax + 5]
         return crop
 
+    def _is_stuck(self, rid) -> bool:
+        """Return True if this robot has barely moved over the last STUCK_WINDOW steps."""
+        hist = self._pos_history[rid]
+        if len(hist) < 2:
+            return False
+        oldest = hist[0]
+        newest = hist[-1]
+        return math.hypot(newest[0] - oldest[0], newest[1] - oldest[1]) < STUCK_DIST_THRESHOLD
+
+    def _nearby_robot_count(self, rid, current_positions, radius=5.0) -> int:
+        """Number of other robots within `radius` world units."""
+        own = current_positions[rid]
+        count = 0
+        for other_rid, pos in current_positions.items():
+            if other_rid == rid:
+                continue
+            if math.hypot(pos[0] - own[0], pos[1] - own[1]) <= radius:
+                count += 1
+        return count
+
     def _get_observations(self):
         obs = {}
         current_robot_positions = {}
@@ -108,6 +175,9 @@ class NAMOmappoEnv:
         for bid in self.sim.box_ids:
             pos, _ = p.getBasePositionAndOrientation(bid)
             current_box_positions.append(pos[:2])
+
+        max_wait = float(self.max_steps)   # normalisation denominator
+        max_nearby = float(max(len(self.robot_ids) - 1, 1))
 
         for rid in self.robot_ids:
             crop = self._get_unet_local_crop(rid).flatten()
@@ -140,11 +210,19 @@ class NAMOmappoEnv:
             norm_sr_obs = min(1.0, sr_obs / 20.0)
             uncertainty_feats = np.array([sr_mean, sr_width, norm_sr_obs], dtype=np.float32)
 
-            norm_own = np.array(own_pos) / (self.grid_size * self.cell_size)
-            norm_goal = goal_pos / (self.grid_size * self.cell_size)
-            norm_dir = (goal_pos - np.array(own_pos)) / (self.grid_size * self.cell_size)
+            norm_own   = np.array(own_pos) / (self.grid_size * self.cell_size)
+            norm_goal  = goal_pos / (self.grid_size * self.cell_size)
+            norm_dir   = (goal_pos - np.array(own_pos)) / (self.grid_size * self.cell_size)
             norm_others = other_rob_pos / (self.grid_size * self.cell_size)
-            norm_boxes = nearby_boxes / (self.grid_size * self.cell_size)
+            norm_boxes  = nearby_boxes / (self.grid_size * self.cell_size)
+
+            # ── NEW: congestion features ──────────────────────────────────────
+            wait_norm = min(1.0, self._wait_time.get(rid, 0) / max_wait)
+            nearby_cnt = self._nearby_robot_count(rid, current_robot_positions)
+            nearby_norm = float(nearby_cnt) / max_nearby
+            stuck_flag = float(self._is_stuck(rid))
+            congestion_feats = np.array([wait_norm, nearby_norm, stuck_flag], dtype=np.float32)
+            # ─────────────────────────────────────────────────────────────────
 
             obs_vec = np.concatenate([
                 crop,              # 25
@@ -154,11 +232,11 @@ class NAMOmappoEnv:
                 norm_others,       # 6
                 norm_boxes,        # 6
                 uncertainty_feats, # 3
+                congestion_feats,  # 3  ← NEW (total: 49 → was 46)
             ])
             obs[rid] = obs_vec.astype(np.float32)
 
             # ── Action masking ─────────────────────────────────────────────
-            # Compute planner costs to assess feasibility
             planner = self.sim.snamo_planners[rid]
             total_cost, bypass_cost, removal_cost = planner.evaluate_actions(
                 start=tuple(self.sim.coord_states[rid].cell),
@@ -169,16 +247,12 @@ class NAMOmappoEnv:
             )
             self.current_costs[rid] = total_cost
 
-            # PUSH is valid if:
-            #   (a) there are boxes in this scenario at all, AND
-            #   (b) removal is physically possible (removal_cost != inf), OR
-            #   (c) bypass is also inf (robot is trapped — PUSH is the only escape)
             if self._has_boxes:
                 push_safe = (removal_cost != float('inf')) or (bypass_cost == float('inf'))
             else:
-                push_safe = False   # no boxes in scenario — PUSH is meaningless
+                push_safe = False
 
-            yield_safe = bypass_cost != float('inf')
+            yield_safe = len(self.robot_ids) > 1
             self.current_action_masks[rid] = [True, push_safe, yield_safe, True]
 
         return obs
@@ -188,6 +262,7 @@ class NAMOmappoEnv:
 
         # Save pre-step distances for dense progress reward
         starting_dists = {}
+        starting_positions = {}
         for rid in self.robot_ids:
             pos, _ = p.getBasePositionAndOrientation(rid)
             g = self.sim.robot_goals[rid]
@@ -195,6 +270,7 @@ class NAMOmappoEnv:
                 pos[0] - (g[0] + 0.5) * self.cell_size,
                 pos[1] - (g[1] + 0.5) * self.cell_size,
             )
+            starting_positions[rid] = pos[:2]
 
         collisions_before = self.sim.robot_robot_collisions
 
@@ -203,6 +279,28 @@ class NAMOmappoEnv:
             self.sim.step(rl_actions=actions)
 
         collisions_this_step = self.sim.robot_robot_collisions - collisions_before
+
+        # ── NEW: update congestion trackers ───────────────────────────────────
+        current_positions_post = {}
+        for rid in self.robot_ids:
+            pos, _ = p.getBasePositionAndOrientation(rid)
+            current_positions_post[rid] = pos[:2]
+            hist = self._pos_history.get(rid, [pos[:2]] * STUCK_WINDOW)
+            hist.append(pos[:2])
+            if len(hist) > STUCK_WINDOW:
+                hist.pop(0)
+            self._pos_history[rid] = hist
+
+        # Update wait_time: increment if stuck, reset if moved meaningfully
+        for rid in self.robot_ids:
+            if self._is_stuck(rid):
+                self._wait_time[rid] = self._wait_time.get(rid, 0) + 1
+            else:
+                self._wait_time[rid] = 0
+
+        # Count how many robots are stuck right now (for deadlock detection)
+        stuck_robots = {rid for rid in self.robot_ids if self._is_stuck(rid)}
+        # ─────────────────────────────────────────────────────────────────────
 
         obs = self._get_observations()
         rewards = {}
@@ -220,7 +318,6 @@ class NAMOmappoEnv:
             r = STEP_PENALTY
 
             # ── Dense progress reward ──────────────────────────────────────
-            # Reward proportional to how much closer we got to goal this step
             dist_delta = starting_dists[rid] - dist
             if dist_delta > 0:
                 r += PROGRESS_REWARD * (dist_delta / self.cell_size)
@@ -231,17 +328,30 @@ class NAMOmappoEnv:
 
             # ── PUSH-specific rewards ──────────────────────────────────────
             if actions.get(rid) == 1:  # PUSH action
-                # Small bonus just for trying PUSH (exploration incentive)
                 r += PUSH_ATTEMPT_BONUS
-                # Larger bonus if we actually made meaningful progress
                 threshold = PUSH_DIST_THRESHOLD * self.cell_size
                 if dist_delta >= threshold:
                     r += PUSH_SUCCESS_BONUS
 
-            # ── YIELD reward ───────────────────────────────────────────────
+            # ── YIELD penalty (discourage permanent yielding) ──────────────
             elif actions.get(rid) == 2:  # YIELD
-                # Yielding incurs the standard step penalty; no extra bonuses to avoid positive loops.
-                pass
+                r += YIELD_PENALTY
+
+            # ── NEW: Deadlock / congestion reward signals ──────────────────
+            is_stuck_now = rid in stuck_robots
+            was_stuck    = self._was_stuck.get(rid, False)
+            nearby_stuck = sum(1 for r2 in stuck_robots if r2 != rid)
+
+            # Penalty: stuck and at least one other nearby robot is also stuck
+            if is_stuck_now and nearby_stuck > 0:
+                r += DEADLOCK_PENALTY
+
+            # Bonus: robot just broke out of a deadlock (was stuck, now moving)
+            if was_stuck and not is_stuck_now and dist_delta > 0:
+                r += DEADLOCK_RESOLVE_BONUS
+
+            self._was_stuck[rid] = is_stuck_now
+            # ─────────────────────────────────────────────────────────────
 
             # ── Goal bonus ─────────────────────────────────────────────────
             if dist <= 0.6:
@@ -269,6 +379,7 @@ class NAMOmappoEnv:
             "success": self.sim.success,
             "collisions": collisions_this_step,
             "action_mask": self.current_action_masks,
+            "stuck_count": len(stuck_robots),
         }
 
         return obs, rewards, dones, info

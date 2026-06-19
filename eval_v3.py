@@ -40,7 +40,7 @@ OLD_RESULTS = {
 TRIALS = 10
 
 
-def run_episode(env, agent, obs_dim, max_agents, action_dim, max_steps):
+def run_episode(env, agent, obs_dim, max_agents, action_dim, max_steps, gui=False):
     """Run one episode, return (success, steps, push_actions, total_reward)."""
     obs, info = env.reset()
     done = False
@@ -60,14 +60,17 @@ def run_episode(env, agent, obs_dim, max_agents, action_dim, max_steps):
         total_reward += np.mean(list(rewards.values()))
         steps += 1
         done = dones.get("__all__", False)
+        if gui:
+            import time
+            time.sleep(0.05)
 
     success = info.get("success", False)
     return success, steps, push_count, total_reward
 
 
-def evaluate(checkpoint_path: str, trials: int = TRIALS):
+def evaluate(checkpoint_path: str, trials: int = TRIALS, gui: bool = False):
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-    print(f"\n[eval] device={device}  checkpoint={checkpoint_path}")
+    print(f"\n[eval] device={device}  checkpoint={checkpoint_path}  gui={gui}")
     print(f"[eval] Running {trials} trials per scenario\n")
 
     results = {}
@@ -82,7 +85,7 @@ def evaluate(checkpoint_path: str, trials: int = TRIALS):
 
         for t in range(trials):
             try:
-                env = NAMOmappoEnv(config_path=cfg_path, gui=False, max_steps=300)
+                env = NAMOmappoEnv(config_path=cfg_path, gui=gui, max_steps=300)
                 if agent is None:
                     obs, _ = env.reset()
                     sample = next(iter(obs.values()))
@@ -96,7 +99,7 @@ def evaluate(checkpoint_path: str, trials: int = TRIALS):
                     agent.load(checkpoint_path)
 
                 success, steps, pushes, reward = run_episode(
-                    env, agent, obs_dim, max_agents, action_dim, max_steps=300
+                    env, agent, obs_dim, max_agents, action_dim, max_steps=300, gui=gui
                 )
                 successes.append(int(success))
                 step_list.append(steps)
@@ -158,5 +161,7 @@ if __name__ == "__main__":
                     help="Path to trained model checkpoint")
     ap.add_argument("--trials", type=int, default=TRIALS,
                     help="Evaluation trials per scenario")
+    ap.add_argument("--gui", action="store_true",
+                    help="Run with PyBullet GUI enabled")
     args = ap.parse_args()
-    evaluate(args.checkpoint, args.trials)
+    evaluate(args.checkpoint, args.trials, gui=args.gui)
