@@ -76,7 +76,7 @@
     },
     "pure_snamo": {
       "sr": 100.0,
-      "avg_steps": 20.2
+      "avg_steps": 19.84
     }
   },
   "symmetric_bottleneck_deadlock": {
@@ -96,7 +96,7 @@
     },
     "pure_snamo": {
       "sr": 100.0,
-      "avg_steps": 19.67
+      "avg_steps": 19.74
     }
   },
   "cross_intersection": {
@@ -116,7 +116,7 @@
     },
     "pure_snamo": {
       "sr": 100.0,
-      "avg_steps": 34.49
+      "avg_steps": 34.43
     }
   },
   "warehouse_large": {
@@ -136,7 +136,7 @@
     },
     "pure_snamo": {
       "sr": 100.0,
-      "avg_steps": 49.3
+      "avg_steps": 49.17
     }
   },
   "narrow_doorway_congestion": {
@@ -156,7 +156,7 @@
     },
     "pure_snamo": {
       "sr": 100.0,
-      "avg_steps": 39.9
+      "avg_steps": 39.85
     }
   },
   "symmetric_bottleneck_4robots": {
@@ -175,8 +175,8 @@
       "avg_reward": 0.36619838622041945
     },
     "pure_snamo": {
-      "sr": 100.0,
-      "avg_steps": 39.32
+      "sr": 78.0,
+      "avg_steps": 51.63
     }
   }
 }

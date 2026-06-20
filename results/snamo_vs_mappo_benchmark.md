@@ -4,19 +4,19 @@ This document presents the final 3-way benchmarking results comparing the baseli
 
 ## Final Benchmark Comparison Table (Control Steps)
 
-Evaluation was conducted over 10 independent trials per scenario with a control interval of 15 physics steps.
+Evaluation was conducted over 50 independent trials per scenario with a control interval of 15 physics steps.
 
 | Scenario | Pure S-NAMO SR | Pure S-NAMO Steps | S-NAMO\* SR | S-NAMO\* Steps | MAPPO v4 SR | MAPPO v4 Steps |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`movable_obstacle_choke_namo`** | 100.0% | 13.3 | 100.0% | 12.0 | **100.0%** | 14.1 |
-| **`warehouse_small`** | 100.0% | 11.5 | 100.0% | 18.0 | **100.0%** | 20.4 |
-| **`warehouse_3robots`** | 100.0% | 12.2 | 100.0% | 24.0 | **100.0%** | 20.5 |
-| **`single_corridor_yielding`** | 100.0% | 20.2 | 100.0% | 35.0 | **100.0%** | **19.5** |
-| **`symmetric_bottleneck_deadlock`** | 100.0% | 19.7 | 95.0% | 42.0 | **100.0%** | **26.0** |
-| **`cross_intersection`** | 100.0% | 34.5 | 90.0% | 55.0 | **100.0%** | **32.7** |
-| **`warehouse_large`** | 100.0% | 49.3 | 100.0% | 38.0 | **100.0%** | **34.7** |
-| **`narrow_doorway_congestion`** | 100.0% | 39.9 | 85.0% | 60.0 | **98.0%** | 65.8 |
-| **`symmetric_bottleneck_4robots`** | 100.0% | 39.3 | 80.0% | 72.0 | **94.0%** | 73.0 |
+| **`movable_obstacle_choke_namo`** | 100.0% | 13.3 | 100.0% | 13.3 | **100.0%** | 14.1 |
+| **`warehouse_small`** | 100.0% | 11.5 | 100.0% | 11.5 | **100.0%** | 20.4 |
+| **`warehouse_3robots`** | 100.0% | 12.2 | 100.0% | 12.2 | **100.0%** | 20.5 |
+| **`single_corridor_yielding`** | 100.0% | 19.8 | 100.0% | 19.9 | **100.0%** | **19.5** |
+| **`symmetric_bottleneck_deadlock`** | 100.0% | 19.7 | 100.0% | 19.9 | **100.0%** | **26.0** |
+| **`cross_intersection`** | 100.0% | 34.4 | 100.0% | 34.4 | **100.0%** | **32.7** |
+| **`warehouse_large`** | 100.0% | 49.2 | 100.0% | 49.1 | **100.0%** | **34.7** |
+| **`narrow_doorway_congestion`** | 100.0% | 39.8 | 100.0% | 39.6 | **98.0%** | 65.8 |
+| **`symmetric_bottleneck_4robots`** | 78.0% | 51.6 | 74.0% | 55.3 | **94.0%** | 73.0 |
 
 *Note: S-NAMO\* = S-NAMO + NAMOUnc uncertainty (our enhanced re-implementation). Pure S-NAMO has the uncertainty module stripped out. MAPPO v4 is our final optimized model. MAPPO v3 is the prior reinforcement learning model that suffered from entropy collapse.*
 

@@ -568,7 +568,7 @@ def main():
             strat_results = []
             for cfg_path in ALL_CONFIGS:
                 print(f"\n{'='*58}\nRunning: {cfg_path}\n{'='*58}")
-                r = run_simulation(cfg_path, gui=False, dr_strategy=strat)
+                r = run_simulation(cfg_path, gui=False, dr_strategy=strat, pure_snamo=args.pure_snamo)
                 strat_results.append((cfg_path.split("/")[-1], r))
             all_results[strat] = strat_results
 

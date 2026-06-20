@@ -1,7 +1,7 @@
 {
   "movable_obstacle_choke_namo": {
     "sr": 100.0,
-    "avg_steps": 13.333333333333334,
+    "avg_steps": 13.333333333333336,
     "avg_pushes": 1.0,
     "avg_collisions": 0.0
   },
@@ -19,38 +19,38 @@
   },
   "single_corridor_yielding": {
     "sr": 100.0,
-    "avg_steps": 20.2,
+    "avg_steps": 19.84,
     "avg_pushes": 0.0,
     "avg_collisions": 1.0
   },
   "symmetric_bottleneck_deadlock": {
     "sr": 100.0,
-    "avg_steps": 19.666666666666664,
+    "avg_steps": 19.74,
     "avg_pushes": 0.0,
     "avg_collisions": 1.0
   },
   "cross_intersection": {
     "sr": 100.0,
-    "avg_steps": 34.486666666666665,
+    "avg_steps": 34.42933333333333,
     "avg_pushes": 0.0,
-    "avg_collisions": 0.9
+    "avg_collisions": 0.74
   },
   "warehouse_large": {
     "sr": 100.0,
-    "avg_steps": 49.3,
+    "avg_steps": 49.16666666666667,
     "avg_pushes": 0.0,
     "avg_collisions": 0.0
   },
   "narrow_doorway_congestion": {
     "sr": 100.0,
-    "avg_steps": 39.9,
+    "avg_steps": 39.84666666666667,
     "avg_pushes": 0.0,
     "avg_collisions": 0.0
   },
   "symmetric_bottleneck_4robots": {
-    "sr": 100.0,
-    "avg_steps": 39.32,
+    "sr": 78.0,
+    "avg_steps": 51.63333333333333,
     "avg_pushes": 0.0,
-    "avg_collisions": 2.6
+    "avg_collisions": 2.44
   }
 }

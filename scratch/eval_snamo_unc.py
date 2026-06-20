@@ -26,8 +26,14 @@ BENCHMARK_CONFIGS = [
     ("symmetric_bottleneck_4robots",  "configs/symmetric_bottleneck_4robots.yaml"),
 ]
 
+import argparse
+
 def main():
-    trials = 10
+    parser = argparse.ArgumentParser(description="Evaluate S-NAMO* Baseline")
+    parser.add_argument("--trials", type=int, default=10, help="Number of trials per scenario")
+    args = parser.parse_args()
+
+    trials = args.trials
     results = {}
     project_dir = Path(__file__).resolve().parent.parent
 
