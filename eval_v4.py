@@ -176,6 +176,9 @@ def evaluate(checkpoint_path: str, trials: int = TRIALS,
         results_v4[name] = {
             "sr": sr, "avg_steps": avg_st,
             "push_pct": push_pct, "avg_reward": avg_rew,
+            "raw_successes": successes,
+            "raw_steps": step_list,
+            "raw_pushes": push_list,
         }
 
         snamo = SNAMO_RESULTS.get(name, {})

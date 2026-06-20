@@ -1,11 +1,3 @@
-# S-NAMO vs MAPPO Benchmarking Results
-
-This document presents the final 3-way benchmarking results comparing the baseline **S-NAMO** paper results, the prior **MAPPO v3** model, and the optimized **MAPPO v4** model (using vectorised GAE, WAIT penalties, and traffic-aware congestion features).
-
-## Final Benchmark Comparison Tables (Mean ± Stddev over 50 Trials)
-
-*Evaluation conducted over 50 independent trials per scenario with a control interval of 15 physics steps. The starting locations of all robots and obstacles are **static (fixed)** across trials. Success Rate is reported as fold-mean ± fold-std over 5 folds of 10 trials. Makespan (makesp.) and obstacle transfers (nb. Transf.) are calculated as trial-wise mean ± std.*
-
 ### Map: `movable_obstacle_choke_namo` (Movable Obstacle Choke (NAMO))
 
 | Method | Succ. Rate | Dist. | nb. Transf. | makesp. | Plan. time |
@@ -78,31 +70,3 @@ This document presents the final 3-way benchmarking results comparing the baseli
 | **S-NAMO\*** | $0.74 \pm 0.10$ | - | $0.0 \pm 0.0$ | $55.33 \pm 27.29$ | - |
 | **MAPPO v4** | $0.78 \pm 0.16$ | - | $0.0 \pm 0.0$ | $113.50 \pm 108.42$ | - |
 
-*Note: S-NAMO\* represents our uncertainty-integrated baseline re-implementation. Pure S-NAMO has the uncertainty module disabled. MAPPO v4 is our final reinforcement learning model.*
-
-## Computational Complexity & Planning Latency Comparison
-
-| Attribute | Pure S-NAMO | S-NAMO\* (Uncertainty-Aware) | MAPPO v4 (RL) |
-| :--- | :--- | :--- | :--- |
-| **Planning Time (Latency)** | Low-Medium (0.010–0.100s) | Medium (0.015–0.150s) | **Very Low (0.001–0.003s)** |
-| **Scaling Complexity** | $O(V \log V)$ (Graph search) | $O(V \log V)$ + Regression | **$O(1)$ (Constant NN forward pass)** |
-| **Compute Type** | CPU-bound Search | CPU-bound Search | Neural Network Inference |
-| **Training Overhead** | **None (Instant)** | **None (Instant)** | High (Hours of RL updates) |
-| **Explainability** | High (Deterministic logic) | High (Laplace cost intervals) | Low (Black-box neural network) |
-
-## Key Takeaways
-
-1. **Beating the S-NAMO Baseline:** 
-   MAPPO v4 outperforms the S-NAMO heuristic baseline in success rate across all hard coordination scenarios:
-   - **`cross_intersection`**: 100.0% SR vs. 90.0% SR (+10.0% gain)
-   - **`narrow_doorway_congestion`**: 90.0% SR vs. 85.0% SR (+5.0% gain)
-   - **`symmetric_bottleneck_4robots`**: 90.0% SR vs. 80.0% SR (+10.0% gain)
-   - **`symmetric_bottleneck_deadlock`**: 100.0% SR vs. 95.0% SR (+5.0% gain)
-
-2. **Unlocking Yielding Speed (Symmetry Breaking):**
-   MAPPO v4 resolves corridor yield deadlocks much faster and more efficiently than S-NAMO:
-   - In **`single_corridor_yielding`**, MAPPO v4 takes only **19.4 control steps** (291 physics steps) compared to S-NAMO's **35.0 control steps** (525 physics steps). This is a **44% reduction in path time**.
-   - In **`symmetric_bottleneck_deadlock`**, MAPPO v4 takes only **26.3 control steps** compared to S-NAMO's **42.0 control steps** (a **37% reduction in path time**).
-
-3. **Complete Recovery from v3 Collapse:**
-   MAPPO v3 completely failed on the 4-robot congestion scenarios (0.0% success rate) and collapsed to a 30% success rate on the cross intersection due to infinite protective waiting behaviors. MAPPO v4 resolved this with the `WAIT_PENALTY` reward signal and vectorized GAE exploration, achieving **100% success rate** on the cross intersection and **90% success rate** on both 4-robot dense congestion scenarios.
