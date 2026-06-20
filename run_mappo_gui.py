@@ -17,12 +17,24 @@ def main():
     parser.add_argument("--checkpoint", default="checkpoints/v3_maxres/mappo_final.pth",
                         help="Path to MAPPO checkpoint")
     parser.add_argument("--no-gui", action="store_true", help="Run without GUI")
+    parser.add_argument("--control-interval", type=int, default=15,
+                        help="Control interval for step simulation (default 15 to match v4)")
     args = parser.parse_args()
 
     gui = not args.no_gui
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    
+    try:
+        chk = torch.load(args.checkpoint, map_location="cpu")
+        chk_obs_dim = chk['actor_state']['net.0.weight'].shape[1]
+        include_congestion = (chk_obs_dim == 49)
+        print(f"Detected checkpoint obs_dim={chk_obs_dim} (include_congestion_feats={include_congestion})")
+    except Exception as e:
+        print(f"WARNING: Could not auto-detect obs_dim from checkpoint: {e}. Defaulting to include_congestion_feats=True")
+        include_congestion = True
+
     print(f"Loading environment... Device: {device} GUI: {gui}")
-    env = NAMOmappoEnv(config_path=args.config, gui=gui, max_steps=300)
+    env = NAMOmappoEnv(config_path=args.config, gui=gui, max_steps=300, include_congestion_feats=include_congestion, control_interval=args.control_interval)
     
     obs, info = env.reset()
     sample = next(iter(obs.values()))

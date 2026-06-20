@@ -1,1 +1,44 @@
-{}
+{
+  "movable_obstacle_choke_namo": {
+    "sr": 100.0,
+    "avg_steps": 7.9,
+    "push_pct": 21.20253164556962,
+    "avg_reward": 4.817117439233242
+  },
+  "warehouse_small": {
+    "sr": 100.0,
+    "avg_steps": 6.0,
+    "push_pct": 50.0,
+    "avg_reward": 3.5823694272661095
+  },
+  "warehouse_3robots": {
+    "sr": 100.0,
+    "avg_steps": 8.8,
+    "push_pct": 63.63636363636363,
+    "avg_reward": 4.822120149629805
+  },
+  "single_corridor_yielding": {
+    "sr": 100.0,
+    "avg_steps": 32.5,
+    "push_pct": 0.0,
+    "avg_reward": 1.1642865840874101
+  },
+  "symmetric_bottleneck_deadlock": {
+    "sr": 100.0,
+    "avg_steps": 34.6,
+    "push_pct": 0.0,
+    "avg_reward": 1.1568031648999084
+  },
+  "cross_intersection": {
+    "sr": 30.0,
+    "avg_steps": 278.1,
+    "push_pct": 0.0,
+    "avg_reward": -1.0788486424290982
+  },
+  "warehouse_large": {
+    "sr": 100.0,
+    "avg_steps": 17.9,
+    "push_pct": 36.452513966480446,
+    "avg_reward": 7.238625247934769
+  }
+}

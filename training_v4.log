@@ -1,0 +1,659 @@
+pybullet build time: Mar 13 2026 19:15:37
+[train_v4] device: mps
+[train_v4] checkpoint obs_dim=46  include_congestion_feats=False
+
+[Epoch  19/55] configs: ['single_corridor_yielding', 'symmetric_bottleneck_deadlock']
+  loaded checkpoint: checkpoints/v3_maxres/mappo_final.pth  obs_dim=46
+    Ep 10/40 | Steps: 46 | Reward: 0.63 | Success: True
+    Ep 20/40 | Steps: 83 | Reward: -0.29 | Success: True
+    Ep 30/40 | Steps: 49 | Reward: 0.59 | Success: True
+    Ep 40/40 | Steps: 47 | Reward: 0.54 | Success: True
+    Ep 10/40 | Steps: 147 | Reward: -0.49 | Success: True
+    Ep 20/40 | Steps: 99 | Reward: -0.24 | Success: True
+    Ep 30/40 | Steps: 67 | Reward: 0.63 | Success: True
+    Ep 40/40 | Steps: 51 | Reward: 0.77 | Success: True
+  avg_reward=0.052  avg_steps=78.8  success=92.5%  time=121.1s
+  action%: NAV=37.1%  PUSH=0.0%  WAIT=57.8%  YIELD=5.1%
+  PPO update with 6302 steps...
+  actor_loss=-0.0629  critic_loss=0.0674
+
+[Epoch  20/55] configs: ['single_corridor_yielding', 'symmetric_bottleneck_deadlock']
+    Ep 10/40 | Steps: 48 | Reward: 0.52 | Success: True
+    Ep 20/40 | Steps: 35 | Reward: 0.90 | Success: True
+    Ep 30/40 | Steps: 40 | Reward: 0.44 | Success: True
+    Ep 40/40 | Steps: 31 | Reward: 0.83 | Success: True
+    Ep 10/40 | Steps: 200 | Reward: -2.60 | Success: False
+    Ep 20/40 | Steps: 78 | Reward: 0.35 | Success: True
+    Ep 30/40 | Steps: 61 | Reward: 0.39 | Success: True
+    Ep 40/40 | Steps: 75 | Reward: 0.29 | Success: True
+  avg_reward=0.183  avg_steps=80.6  success=91.2%  time=124.9s
+  action%: NAV=41.7%  PUSH=0.0%  WAIT=52.5%  YIELD=5.7%
+  PPO update with 6450 steps...
+  actor_loss=-0.0955  critic_loss=0.0528
+  saved: checkpoints/v4/mappo_epoch_020.pth
+
+[Epoch  21/55] configs: ['single_corridor_yielding', 'symmetric_bottleneck_deadlock']
+    Ep 10/40 | Steps: 29 | Reward: 0.83 | Success: True
+    Ep 20/40 | Steps: 46 | Reward: 0.79 | Success: True
+    Ep 30/40 | Steps: 39 | Reward: 0.59 | Success: True
+    Ep 40/40 | Steps: 54 | Reward: 0.84 | Success: True
+    Ep 10/40 | Steps: 84 | Reward: 0.36 | Success: True
+    Ep 20/40 | Steps: 83 | Reward: 0.53 | Success: True
+    Ep 30/40 | Steps: 84 | Reward: 0.41 | Success: True
+    Ep 40/40 | Steps: 72 | Reward: 0.24 | Success: True
+  avg_reward=0.239  avg_steps=72.9  success=95.0%  time=119.9s
+  action%: NAV=44.4%  PUSH=0.0%  WAIT=51.5%  YIELD=4.1%
+  PPO update with 5833 steps...
+  actor_loss=-0.0911  critic_loss=0.0671
+
+[Epoch  22/55] configs: ['single_corridor_yielding', 'symmetric_bottleneck_deadlock']
+    Ep 10/40 | Steps: 32 | Reward: 1.06 | Success: True
+    Ep 20/40 | Steps: 33 | Reward: 1.07 | Success: True
+    Ep 30/40 | Steps: 53 | Reward: 0.66 | Success: True
+    Ep 40/40 | Steps: 44 | Reward: 0.81 | Success: True
+    Ep 10/40 | Steps: 96 | Reward: 0.02 | Success: True
+    Ep 20/40 | Steps: 165 | Reward: -1.09 | Success: True
+    Ep 30/40 | Steps: 200 | Reward: -2.20 | Success: False
+    Ep 40/40 | Steps: 89 | Reward: 0.14 | Success: True
+  avg_reward=0.443  avg_steps=63.2  success=97.5%  time=104.4s
+  action%: NAV=47.5%  PUSH=0.0%  WAIT=48.4%  YIELD=4.2%
+  PPO update with 5056 steps...
+  actor_loss=-0.0929  critic_loss=0.0675
+  saved: checkpoints/v4/mappo_epoch_022.pth
+
+[Epoch  23/55] configs: ['single_corridor_yielding', 'symmetric_bottleneck_deadlock']
+    Ep 10/40 | Steps: 32 | Reward: 0.92 | Success: True
+    Ep 20/40 | Steps: 30 | Reward: 0.90 | Success: True
+    Ep 30/40 | Steps: 28 | Reward: 0.94 | Success: True
+    Ep 40/40 | Steps: 33 | Reward: 0.75 | Success: True
+    Ep 10/40 | Steps: 44 | Reward: 0.92 | Success: True
+    Ep 20/40 | Steps: 39 | Reward: 0.82 | Success: True
+    Ep 30/40 | Steps: 36 | Reward: 0.87 | Success: True
+    Ep 40/40 | Steps: 54 | Reward: 0.51 | Success: True
+  avg_reward=0.533  avg_steps=55.8  success=95.0%  time=93.5s
+  action%: NAV=50.3%  PUSH=0.0%  WAIT=46.4%  YIELD=3.2%
+  PPO update with 4464 steps...
+  actor_loss=-0.0961  critic_loss=0.0853
+
+[Epoch  24/55] configs: ['single_corridor_yielding', 'symmetric_bottleneck_deadlock']
+    Ep 10/40 | Steps: 31 | Reward: 0.78 | Success: True
+    Ep 20/40 | Steps: 33 | Reward: 0.83 | Success: True
+    Ep 30/40 | Steps: 40 | Reward: 0.96 | Success: True
+    Ep 40/40 | Steps: 25 | Reward: 1.03 | Success: True
+    Ep 10/40 | Steps: 39 | Reward: 1.01 | Success: True
+    Ep 20/40 | Steps: 42 | Reward: 0.75 | Success: True
+    Ep 30/40 | Steps: 88 | Reward: 0.22 | Success: True
+    Ep 40/40 | Steps: 44 | Reward: 0.82 | Success: True
+  avg_reward=0.515  avg_steps=60.4  success=95.0%  time=107.6s
+  action%: NAV=49.1%  PUSH=0.0%  WAIT=46.9%  YIELD=4.0%
+  PPO update with 4835 steps...
+  actor_loss=-0.0933  critic_loss=0.0664
+  saved: checkpoints/v4/mappo_epoch_024.pth
+
+[Epoch  25/55] configs: ['single_corridor_yielding', 'symmetric_bottleneck_deadlock']
+    Ep 10/40 | Steps: 27 | Reward: 0.94 | Success: True
+    Ep 20/40 | Steps: 74 | Reward: 0.42 | Success: True
+    Ep 30/40 | Steps: 37 | Reward: 1.21 | Success: True
+    Ep 40/40 | Steps: 33 | Reward: 0.95 | Success: True
+    Ep 10/40 | Steps: 36 | Reward: 0.89 | Success: True
+    Ep 20/40 | Steps: 200 | Reward: -1.41 | Success: False
+    Ep 30/40 | Steps: 32 | Reward: 0.97 | Success: True
+    Ep 40/40 | Steps: 55 | Reward: 0.67 | Success: True
+  avg_reward=0.476  avg_steps=62.2  success=91.2%  time=103.7s
+  action%: NAV=51.6%  PUSH=0.0%  WAIT=44.3%  YIELD=4.0%
+  PPO update with 4974 steps...
+  actor_loss=-0.0897  critic_loss=0.0726
+
+[Epoch  26/55] configs: ['single_corridor_yielding', 'symmetric_bottleneck_deadlock']
+    Ep 10/40 | Steps: 29 | Reward: 0.79 | Success: True
+    Ep 20/40 | Steps: 27 | Reward: 0.93 | Success: True
+    Ep 30/40 | Steps: 70 | Reward: 0.58 | Success: True
+    Ep 40/40 | Steps: 29 | Reward: 1.03 | Success: True
+    Ep 10/40 | Steps: 42 | Reward: 0.79 | Success: True
+    Ep 20/40 | Steps: 53 | Reward: 0.57 | Success: True
+    Ep 30/40 | Steps: 54 | Reward: 0.56 | Success: True
+    Ep 40/40 | Steps: 52 | Reward: 0.57 | Success: True
+  avg_reward=0.649  avg_steps=50.9  success=96.2%  time=88.4s
+  action%: NAV=54.0%  PUSH=0.0%  WAIT=42.3%  YIELD=3.7%
+  PPO update with 4074 steps...
+  actor_loss=-0.0968  critic_loss=0.0758
+  saved: checkpoints/v4/mappo_epoch_026.pth
+
+[Epoch  27/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 77 | Reward: 3.88 | Success: True
+    Ep 20/40 | Steps: 65 | Reward: 3.46 | Success: True
+    Ep 30/40 | Steps: 64 | Reward: 2.97 | Success: True
+    Ep 40/40 | Steps: 57 | Reward: 5.02 | Success: True
+    Ep 10/40 | Steps: 64 | Reward: 0.49 | Success: True
+    Ep 20/40 | Steps: 49 | Reward: 0.60 | Success: True
+    Ep 30/40 | Steps: 53 | Reward: 0.76 | Success: True
+    Ep 40/40 | Steps: 40 | Reward: 0.76 | Success: True
+    Ep 10/40 | Steps: 89 | Reward: 0.42 | Success: True
+    Ep 20/40 | Steps: 73 | Reward: 0.53 | Success: True
+    Ep 30/40 | Steps: 53 | Reward: 0.66 | Success: True
+    Ep 40/40 | Steps: 65 | Reward: 0.49 | Success: True
+  avg_reward=1.427  avg_steps=77.8  success=93.3%  time=377.6s
+  action%: NAV=36.3%  PUSH=4.8%  WAIT=54.6%  YIELD=4.3%
+  PPO update with 9342 steps...
+  actor_loss=-0.0878  critic_loss=0.4538
+
+[Epoch  28/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 44 | Reward: 8.45 | Success: True
+    Ep 20/40 | Steps: 54 | Reward: 7.03 | Success: True
+    Ep 30/40 | Steps: 44 | Reward: 6.95 | Success: True
+    Ep 40/40 | Steps: 43 | Reward: 6.63 | Success: True
+    Ep 10/40 | Steps: 62 | Reward: 0.59 | Success: True
+    Ep 20/40 | Steps: 47 | Reward: 0.84 | Success: True
+    Ep 30/40 | Steps: 47 | Reward: 0.82 | Success: True
+    Ep 40/40 | Steps: 47 | Reward: 0.88 | Success: True
+    Ep 10/40 | Steps: 200 | Reward: -1.39 | Success: False
+    Ep 20/40 | Steps: 142 | Reward: -0.43 | Success: True
+    Ep 30/40 | Steps: 56 | Reward: 0.87 | Success: True
+    Ep 40/40 | Steps: 143 | Reward: -0.02 | Success: True
+  avg_reward=2.654  avg_steps=69.5  success=95.8%  time=265.0s
+  action%: NAV=38.9%  PUSH=5.2%  WAIT=50.4%  YIELD=5.4%
+  PPO update with 8337 steps...
+  actor_loss=-0.1072  critic_loss=0.5432
+  saved: checkpoints/v4/mappo_epoch_028.pth
+
+[Epoch  29/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 41 | Reward: 8.81 | Success: True
+    Ep 20/40 | Steps: 41 | Reward: 8.23 | Success: True
+    Ep 30/40 | Steps: 42 | Reward: 9.82 | Success: True
+    Ep 40/40 | Steps: 42 | Reward: 8.52 | Success: True
+    Ep 10/40 | Steps: 73 | Reward: 0.44 | Success: True
+    Ep 20/40 | Steps: 108 | Reward: 0.43 | Success: True
+    Ep 30/40 | Steps: 36 | Reward: 0.93 | Success: True
+    Ep 40/40 | Steps: 45 | Reward: 0.89 | Success: True
+    Ep 10/40 | Steps: 83 | Reward: 0.48 | Success: True
+    Ep 20/40 | Steps: 35 | Reward: 0.78 | Success: True
+    Ep 30/40 | Steps: 62 | Reward: 0.47 | Success: True
+    Ep 40/40 | Steps: 62 | Reward: 0.37 | Success: True
+  avg_reward=3.335  avg_steps=60.5  success=98.3%  time=233.9s
+  action%: NAV=40.7%  PUSH=7.1%  WAIT=46.8%  YIELD=5.4%
+  PPO update with 7256 steps...
+  actor_loss=-0.1155  critic_loss=0.8974
+
+[Epoch  30/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 43 | Reward: 11.89 | Success: True
+    Ep 20/40 | Steps: 50 | Reward: 10.65 | Success: True
+    Ep 30/40 | Steps: 51 | Reward: 11.37 | Success: True
+    Ep 40/40 | Steps: 46 | Reward: 10.63 | Success: True
+    Ep 10/40 | Steps: 46 | Reward: 0.65 | Success: True
+    Ep 20/40 | Steps: 70 | Reward: 0.51 | Success: True
+    Ep 30/40 | Steps: 44 | Reward: 0.70 | Success: True
+    Ep 40/40 | Steps: 46 | Reward: 0.75 | Success: True
+    Ep 10/40 | Steps: 50 | Reward: 0.98 | Success: True
+    Ep 20/40 | Steps: 58 | Reward: 0.63 | Success: True
+    Ep 30/40 | Steps: 162 | Reward: -0.05 | Success: True
+    Ep 40/40 | Steps: 136 | Reward: -0.22 | Success: True
+  avg_reward=3.879  avg_steps=54.1  success=100.0%  time=220.8s
+  action%: NAV=43.6%  PUSH=9.0%  WAIT=41.4%  YIELD=6.0%
+  PPO update with 6495 steps...
+  actor_loss=-0.1170  critic_loss=1.3130
+  saved: checkpoints/v4/mappo_epoch_030.pth
+
+[Epoch  31/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 45 | Reward: 11.67 | Success: True
+    Ep 20/40 | Steps: 41 | Reward: 10.63 | Success: True
+    Ep 30/40 | Steps: 36 | Reward: 11.64 | Success: True
+    Ep 40/40 | Steps: 42 | Reward: 11.54 | Success: True
+    Ep 10/40 | Steps: 52 | Reward: 0.70 | Success: True
+    Ep 20/40 | Steps: 45 | Reward: 0.74 | Success: True
+    Ep 30/40 | Steps: 39 | Reward: 0.87 | Success: True
+    Ep 40/40 | Steps: 39 | Reward: 1.00 | Success: True
+    Ep 10/40 | Steps: 55 | Reward: 0.56 | Success: True
+    Ep 20/40 | Steps: 54 | Reward: 0.82 | Success: True
+    Ep 30/40 | Steps: 64 | Reward: 0.59 | Success: True
+    Ep 40/40 | Steps: 59 | Reward: 0.88 | Success: True
+  avg_reward=4.267  avg_steps=52.1  success=100.0%  time=196.3s
+  action%: NAV=43.3%  PUSH=10.6%  WAIT=38.9%  YIELD=7.1%
+  PPO update with 6247 steps...
+  actor_loss=-0.1184  critic_loss=1.5325
+
+[Epoch  32/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 37 | Reward: 10.81 | Success: True
+    Ep 20/40 | Steps: 41 | Reward: 10.40 | Success: True
+    Ep 30/40 | Steps: 38 | Reward: 11.50 | Success: True
+    Ep 40/40 | Steps: 36 | Reward: 11.94 | Success: True
+    Ep 10/40 | Steps: 34 | Reward: 0.97 | Success: True
+    Ep 20/40 | Steps: 31 | Reward: 1.01 | Success: True
+    Ep 30/40 | Steps: 69 | Reward: 0.68 | Success: True
+    Ep 40/40 | Steps: 32 | Reward: 0.93 | Success: True
+    Ep 10/40 | Steps: 37 | Reward: 0.87 | Success: True
+    Ep 20/40 | Steps: 76 | Reward: 0.58 | Success: True
+    Ep 30/40 | Steps: 63 | Reward: 0.58 | Success: True
+    Ep 40/40 | Steps: 89 | Reward: 0.44 | Success: True
+  avg_reward=4.509  avg_steps=47.1  success=100.0%  time=183.1s
+  action%: NAV=45.0%  PUSH=12.3%  WAIT=34.7%  YIELD=8.1%
+  PPO update with 5655 steps...
+  actor_loss=-0.1172  critic_loss=1.8886
+  saved: checkpoints/v4/mappo_epoch_032.pth
+
+[Epoch  33/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 41 | Reward: 11.29 | Success: True
+    Ep 20/40 | Steps: 35 | Reward: 12.47 | Success: True
+    Ep 30/40 | Steps: 36 | Reward: 12.43 | Success: True
+    Ep 40/40 | Steps: 40 | Reward: 13.05 | Success: True
+    Ep 10/40 | Steps: 42 | Reward: 0.62 | Success: True
+    Ep 20/40 | Steps: 40 | Reward: 0.85 | Success: True
+    Ep 30/40 | Steps: 72 | Reward: 0.62 | Success: True
+    Ep 40/40 | Steps: 123 | Reward: -0.02 | Success: True
+    Ep 10/40 | Steps: 42 | Reward: 0.81 | Success: True
+    Ep 20/40 | Steps: 45 | Reward: 0.94 | Success: True
+    Ep 30/40 | Steps: 45 | Reward: 0.72 | Success: True
+    Ep 40/40 | Steps: 49 | Reward: 0.80 | Success: True
+  avg_reward=4.702  avg_steps=50.8  success=100.0%  time=196.5s
+  action%: NAV=43.9%  PUSH=12.4%  WAIT=34.8%  YIELD=9.0%
+  PPO update with 6091 steps...
+  actor_loss=-0.1152  critic_loss=1.8982
+
+[Epoch  34/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 35 | Reward: 13.36 | Success: True
+    Ep 20/40 | Steps: 35 | Reward: 12.27 | Success: True
+    Ep 30/40 | Steps: 39 | Reward: 13.30 | Success: True
+    Ep 40/40 | Steps: 34 | Reward: 13.65 | Success: True
+    Ep 10/40 | Steps: 38 | Reward: 0.84 | Success: True
+    Ep 20/40 | Steps: 49 | Reward: 1.01 | Success: True
+    Ep 30/40 | Steps: 36 | Reward: 0.88 | Success: True
+    Ep 40/40 | Steps: 34 | Reward: 0.89 | Success: True
+    Ep 10/40 | Steps: 49 | Reward: 0.82 | Success: True
+    Ep 20/40 | Steps: 90 | Reward: 0.52 | Success: True
+    Ep 30/40 | Steps: 40 | Reward: 0.84 | Success: True
+    Ep 40/40 | Steps: 138 | Reward: 0.02 | Success: True
+  avg_reward=4.844  avg_steps=52.6  success=98.3%  time=217.0s
+  action%: NAV=43.2%  PUSH=12.1%  WAIT=35.5%  YIELD=9.2%
+  PPO update with 6314 steps...
+  actor_loss=-0.1107  critic_loss=2.0020
+  saved: checkpoints/v4/mappo_epoch_034.pth
+
+[Epoch  35/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 35 | Reward: 13.66 | Success: True
+    Ep 20/40 | Steps: 31 | Reward: 13.42 | Success: True
+    Ep 30/40 | Steps: 33 | Reward: 13.12 | Success: True
+    Ep 40/40 | Steps: 53 | Reward: 19.11 | Success: True
+    Ep 10/40 | Steps: 29 | Reward: 0.83 | Success: True
+    Ep 20/40 | Steps: 42 | Reward: 0.93 | Success: True
+    Ep 30/40 | Steps: 48 | Reward: 0.84 | Success: True
+    Ep 40/40 | Steps: 28 | Reward: 1.04 | Success: True
+    Ep 10/40 | Steps: 45 | Reward: 0.73 | Success: True
+    Ep 20/40 | Steps: 51 | Reward: 0.57 | Success: True
+    Ep 30/40 | Steps: 48 | Reward: 0.92 | Success: True
+    Ep 40/40 | Steps: 31 | Reward: 0.94 | Success: True
+  avg_reward=5.177  avg_steps=47.1  success=100.0%  time=185.4s
+  action%: NAV=43.6%  PUSH=14.7%  WAIT=32.0%  YIELD=9.7%
+  PPO update with 5656 steps...
+  actor_loss=-0.1093  critic_loss=2.4717
+
+[Epoch  36/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 38 | Reward: 13.77 | Success: True
+    Ep 20/40 | Steps: 33 | Reward: 14.62 | Success: True
+    Ep 30/40 | Steps: 42 | Reward: 13.98 | Success: True
+    Ep 40/40 | Steps: 32 | Reward: 13.67 | Success: True
+    Ep 10/40 | Steps: 37 | Reward: 0.88 | Success: True
+    Ep 20/40 | Steps: 54 | Reward: 0.99 | Success: True
+    Ep 30/40 | Steps: 49 | Reward: 0.56 | Success: True
+    Ep 40/40 | Steps: 45 | Reward: 0.82 | Success: True
+    Ep 10/40 | Steps: 43 | Reward: 0.88 | Success: True
+    Ep 20/40 | Steps: 73 | Reward: 0.76 | Success: True
+    Ep 30/40 | Steps: 36 | Reward: 0.88 | Success: True
+    Ep 40/40 | Steps: 50 | Reward: 0.83 | Success: True
+  avg_reward=5.243  avg_steps=49.5  success=99.2%  time=205.4s
+  action%: NAV=43.7%  PUSH=14.3%  WAIT=30.5%  YIELD=11.5%
+  PPO update with 5939 steps...
+  actor_loss=-0.1097  critic_loss=2.2714
+  saved: checkpoints/v4/mappo_epoch_036.pth
+
+[Epoch  37/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 35 | Reward: 14.67 | Success: True
+    Ep 20/40 | Steps: 53 | Reward: 21.18 | Success: True
+    Ep 30/40 | Steps: 32 | Reward: 13.47 | Success: True
+    Ep 40/40 | Steps: 45 | Reward: 17.16 | Success: True
+    Ep 10/40 | Steps: 50 | Reward: 1.10 | Success: True
+    Ep 20/40 | Steps: 62 | Reward: 0.75 | Success: True
+    Ep 30/40 | Steps: 58 | Reward: 0.68 | Success: True
+    Ep 40/40 | Steps: 56 | Reward: 0.62 | Success: True
+    Ep 10/40 | Steps: 31 | Reward: 0.85 | Success: True
+    Ep 20/40 | Steps: 57 | Reward: 0.76 | Success: True
+    Ep 30/40 | Steps: 74 | Reward: 0.51 | Success: True
+    Ep 40/40 | Steps: 37 | Reward: 0.79 | Success: True
+  avg_reward=5.580  avg_steps=48.9  success=100.0%  time=195.8s
+  action%: NAV=43.7%  PUSH=16.4%  WAIT=28.5%  YIELD=11.4%
+  PPO update with 5863 steps...
+  actor_loss=-0.1094  critic_loss=2.6199
+
+[Epoch  38/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 32 | Reward: 14.33 | Success: True
+    Ep 20/40 | Steps: 35 | Reward: 15.19 | Success: True
+    Ep 30/40 | Steps: 32 | Reward: 13.72 | Success: True
+    Ep 40/40 | Steps: 40 | Reward: 16.92 | Success: True
+    Ep 10/40 | Steps: 48 | Reward: 0.62 | Success: True
+    Ep 20/40 | Steps: 37 | Reward: 0.91 | Success: True
+    Ep 30/40 | Steps: 46 | Reward: 0.89 | Success: True
+    Ep 40/40 | Steps: 42 | Reward: 0.82 | Success: True
+    Ep 10/40 | Steps: 73 | Reward: 0.59 | Success: True
+    Ep 20/40 | Steps: 84 | Reward: 0.71 | Success: True
+    Ep 30/40 | Steps: 41 | Reward: 0.87 | Success: True
+    Ep 40/40 | Steps: 72 | Reward: 0.59 | Success: True
+  avg_reward=5.523  avg_steps=47.2  success=99.2%  time=210.2s
+  action%: NAV=43.7%  PUSH=15.5%  WAIT=30.1%  YIELD=10.7%
+  PPO update with 5664 steps...
+  actor_loss=-0.1097  critic_loss=2.7233
+  saved: checkpoints/v4/mappo_epoch_038.pth
+
+[Epoch  39/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 38 | Reward: 16.30 | Success: True
+    Ep 20/40 | Steps: 45 | Reward: 19.36 | Success: True
+    Ep 30/40 | Steps: 43 | Reward: 17.42 | Success: True
+    Ep 40/40 | Steps: 58 | Reward: 22.41 | Success: True
+    Ep 10/40 | Steps: 70 | Reward: 0.83 | Success: True
+    Ep 20/40 | Steps: 41 | Reward: 1.13 | Success: True
+    Ep 30/40 | Steps: 41 | Reward: 0.84 | Success: True
+    Ep 40/40 | Steps: 36 | Reward: 0.89 | Success: True
+    Ep 10/40 | Steps: 35 | Reward: 0.85 | Success: True
+    Ep 20/40 | Steps: 62 | Reward: 0.70 | Success: True
+    Ep 30/40 | Steps: 44 | Reward: 0.96 | Success: True
+    Ep 40/40 | Steps: 87 | Reward: 0.32 | Success: True
+  avg_reward=6.779  avg_steps=52.2  success=100.0%  time=215.1s
+  action%: NAV=42.0%  PUSH=20.6%  WAIT=27.0%  YIELD=10.4%
+  PPO update with 6267 steps...
+  actor_loss=-0.1135  critic_loss=3.4346
+
+[Epoch  40/55] configs: ['warehouse_large', 'symmetric_bottleneck_deadlock', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 72 | Reward: 27.74 | Success: True
+    Ep 20/40 | Steps: 72 | Reward: 27.71 | Success: True
+    Ep 30/40 | Steps: 73 | Reward: 27.71 | Success: True
+    Ep 40/40 | Steps: 59 | Reward: 22.94 | Success: True
+    Ep 10/40 | Steps: 51 | Reward: 0.92 | Success: True
+    Ep 20/40 | Steps: 65 | Reward: 0.45 | Success: True
+    Ep 30/40 | Steps: 47 | Reward: 0.81 | Success: True
+    Ep 40/40 | Steps: 52 | Reward: 0.92 | Success: True
+    Ep 10/40 | Steps: 52 | Reward: 0.90 | Success: True
+    Ep 20/40 | Steps: 41 | Reward: 0.79 | Success: True
+    Ep 30/40 | Steps: 48 | Reward: 0.84 | Success: True
+    Ep 40/40 | Steps: 37 | Reward: 0.90 | Success: True
+  avg_reward=8.482  avg_steps=57.5  success=100.0%  time=260.3s
+  action%: NAV=37.9%  PUSH=26.7%  WAIT=24.8%  YIELD=10.6%
+  PPO update with 6902 steps...
+  actor_loss=-0.1158  critic_loss=4.8134
+  saved: checkpoints/v4/mappo_epoch_040.pth
+
+[Epoch  41/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.84 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.82 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.96 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -0.83 | Success: False
+    Ep 10/40 | Steps: 200 | Reward: -2.29 | Success: False
+    Ep 20/40 | Steps: 135 | Reward: 0.22 | Success: True
+    Ep 30/40 | Steps: 200 | Reward: -1.02 | Success: False
+    Ep 40/40 | Steps: 45 | Reward: 0.78 | Success: True
+    Ep 10/40 | Steps: 112 | Reward: 0.48 | Success: True
+    Ep 20/40 | Steps: 59 | Reward: 0.68 | Success: True
+    Ep 30/40 | Steps: 50 | Reward: 0.96 | Success: True
+    Ep 40/40 | Steps: 26 | Reward: 0.98 | Success: True
+  avg_reward=-0.499  avg_steps=146.0  success=42.5%  time=595.9s
+  action%: NAV=53.0%  PUSH=0.0%  WAIT=30.9%  YIELD=16.1%
+  PPO update with 17517 steps...
+  actor_loss=-0.0968  critic_loss=0.0678
+
+[Epoch  42/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.18 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.44 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.80 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -0.96 | Success: False
+    Ep 10/40 | Steps: 174 | Reward: 0.32 | Success: True
+    Ep 20/40 | Steps: 200 | Reward: -1.87 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -1.45 | Success: False
+    Ep 40/40 | Steps: 78 | Reward: 0.87 | Success: True
+    Ep 10/40 | Steps: 125 | Reward: 0.21 | Success: True
+    Ep 20/40 | Steps: 98 | Reward: 0.84 | Success: True
+    Ep 30/40 | Steps: 70 | Reward: 0.75 | Success: True
+    Ep 40/40 | Steps: 45 | Reward: 0.80 | Success: True
+  avg_reward=-0.339  avg_steps=145.1  success=44.2%  time=607.1s
+  action%: NAV=55.4%  PUSH=0.0%  WAIT=28.2%  YIELD=16.4%
+  PPO update with 17415 steps...
+  actor_loss=-0.0957  critic_loss=0.0854
+  saved: checkpoints/v4/mappo_epoch_042.pth
+
+[Epoch  43/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.88 | Success: False
+    Ep 20/40 | Steps: 59 | Reward: 0.82 | Success: True
+    Ep 30/40 | Steps: 200 | Reward: -0.87 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -0.28 | Success: False
+    Ep 10/40 | Steps: 49 | Reward: 0.82 | Success: True
+    Ep 20/40 | Steps: 52 | Reward: 0.79 | Success: True
+    Ep 30/40 | Steps: 138 | Reward: 0.30 | Success: True
+    Ep 40/40 | Steps: 200 | Reward: -2.74 | Success: False
+    Ep 10/40 | Steps: 38 | Reward: 0.91 | Success: True
+    Ep 20/40 | Steps: 42 | Reward: 0.95 | Success: True
+    Ep 30/40 | Steps: 72 | Reward: 0.60 | Success: True
+    Ep 40/40 | Steps: 62 | Reward: 0.56 | Success: True
+  avg_reward=-0.099  avg_steps=129.9  success=50.8%  time=560.0s
+  action%: NAV=55.9%  PUSH=0.0%  WAIT=27.8%  YIELD=16.3%
+  PPO update with 15589 steps...
+  actor_loss=-0.1011  critic_loss=0.0870
+
+[Epoch  44/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.68 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.72 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.65 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -0.71 | Success: False
+    Ep 10/40 | Steps: 200 | Reward: -1.10 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -2.62 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.78 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -1.20 | Success: False
+    Ep 10/40 | Steps: 116 | Reward: 0.39 | Success: True
+    Ep 20/40 | Steps: 34 | Reward: 1.01 | Success: True
+    Ep 30/40 | Steps: 40 | Reward: 0.87 | Success: True
+    Ep 40/40 | Steps: 37 | Reward: 0.86 | Success: True
+  avg_reward=-0.095  avg_steps=128.9  success=50.8%  time=509.7s
+  action%: NAV=54.6%  PUSH=0.0%  WAIT=28.8%  YIELD=16.7%
+  PPO update with 15469 steps...
+  actor_loss=-0.1028  critic_loss=0.0954
+  saved: checkpoints/v4/mappo_epoch_044.pth
+
+[Epoch  45/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -1.18 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.43 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.65 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -0.69 | Success: False
+    Ep 10/40 | Steps: 97 | Reward: 0.66 | Success: True
+    Ep 20/40 | Steps: 200 | Reward: -0.73 | Success: False
+    Ep 30/40 | Steps: 75 | Reward: 0.96 | Success: True
+    Ep 40/40 | Steps: 200 | Reward: -0.37 | Success: False
+    Ep 10/40 | Steps: 31 | Reward: 1.06 | Success: True
+    Ep 20/40 | Steps: 39 | Reward: 0.94 | Success: True
+    Ep 30/40 | Steps: 78 | Reward: 0.55 | Success: True
+    Ep 40/40 | Steps: 34 | Reward: 1.05 | Success: True
+  avg_reward=0.026  avg_steps=123.2  success=52.5%  time=610.4s
+  action%: NAV=54.6%  PUSH=0.0%  WAIT=28.1%  YIELD=17.3%
+  PPO update with 14785 steps...
+  actor_loss=-0.1032  critic_loss=0.0910
+
+[Epoch  46/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.69 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.94 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -1.36 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -0.66 | Success: False
+    Ep 10/40 | Steps: 200 | Reward: -1.38 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.41 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -2.34 | Success: False
+    Ep 40/40 | Steps: 65 | Reward: 0.67 | Success: True
+    Ep 10/40 | Steps: 36 | Reward: 1.06 | Success: True
+    Ep 20/40 | Steps: 36 | Reward: 1.09 | Success: True
+    Ep 30/40 | Steps: 36 | Reward: 0.93 | Success: True
+    Ep 40/40 | Steps: 33 | Reward: 1.06 | Success: True
+  avg_reward=0.047  avg_steps=120.4  success=54.2%  time=3483.7s
+  action%: NAV=58.4%  PUSH=0.0%  WAIT=28.2%  YIELD=13.5%
+  PPO update with 14451 steps...
+  actor_loss=-0.1016  critic_loss=0.1009
+  saved: checkpoints/v4/mappo_epoch_046.pth
+
+[Epoch  47/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.65 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.86 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.83 | Success: False
+    Ep 40/40 | Steps: 118 | Reward: 0.49 | Success: True
+    Ep 10/40 | Steps: 134 | Reward: 0.34 | Success: True
+    Ep 20/40 | Steps: 200 | Reward: -0.87 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -2.03 | Success: False
+    Ep 40/40 | Steps: 70 | Reward: 0.85 | Success: True
+    Ep 10/40 | Steps: 38 | Reward: 1.10 | Success: True
+    Ep 20/40 | Steps: 28 | Reward: 0.96 | Success: True
+    Ep 30/40 | Steps: 24 | Reward: 0.99 | Success: True
+    Ep 40/40 | Steps: 33 | Reward: 1.17 | Success: True
+  avg_reward=0.235  avg_steps=111.2  success=61.7%  time=428.5s
+  action%: NAV=60.3%  PUSH=0.0%  WAIT=27.7%  YIELD=12.1%
+  PPO update with 13348 steps...
+  actor_loss=-0.0996  critic_loss=0.0785
+
+[Epoch  48/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.23 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.53 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.71 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -0.69 | Success: False
+    Ep 10/40 | Steps: 47 | Reward: 0.84 | Success: True
+    Ep 20/40 | Steps: 71 | Reward: 1.01 | Success: True
+    Ep 30/40 | Steps: 78 | Reward: 1.38 | Success: True
+    Ep 40/40 | Steps: 29 | Reward: 1.32 | Success: True
+    Ep 10/40 | Steps: 40 | Reward: 1.00 | Success: True
+    Ep 20/40 | Steps: 31 | Reward: 1.04 | Success: True
+    Ep 30/40 | Steps: 42 | Reward: 1.05 | Success: True
+    Ep 40/40 | Steps: 30 | Reward: 0.97 | Success: True
+  avg_reward=0.362  avg_steps=105.1  success=63.3%  time=570.0s
+  action%: NAV=58.2%  PUSH=0.0%  WAIT=29.3%  YIELD=12.5%
+  PPO update with 12612 steps...
+  actor_loss=-0.0977  critic_loss=0.0671
+  saved: checkpoints/v4/mappo_epoch_048.pth
+
+[Epoch  49/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.32 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.65 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.50 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -0.74 | Success: False
+    Ep 10/40 | Steps: 105 | Reward: 0.11 | Success: True
+    Ep 20/40 | Steps: 31 | Reward: 1.07 | Success: True
+    Ep 30/40 | Steps: 38 | Reward: 1.02 | Success: True
+    Ep 40/40 | Steps: 200 | Reward: -1.94 | Success: False
+    Ep 10/40 | Steps: 37 | Reward: 1.03 | Success: True
+    Ep 20/40 | Steps: 30 | Reward: 0.95 | Success: True
+    Ep 30/40 | Steps: 36 | Reward: 1.00 | Success: True
+    Ep 40/40 | Steps: 38 | Reward: 0.98 | Success: True
+  avg_reward=0.206  avg_steps=108.0  success=62.5%  time=417.0s
+  action%: NAV=59.0%  PUSH=0.0%  WAIT=28.7%  YIELD=12.3%
+  PPO update with 12963 steps...
+  actor_loss=-0.0953  critic_loss=0.0910
+
+[Epoch  50/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.47 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -0.68 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.48 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -0.15 | Success: False
+    Ep 10/40 | Steps: 64 | Reward: 0.76 | Success: True
+    Ep 20/40 | Steps: 200 | Reward: -2.48 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -2.42 | Success: False
+    Ep 40/40 | Steps: 200 | Reward: -1.31 | Success: False
+    Ep 10/40 | Steps: 35 | Reward: 1.23 | Success: True
+    Ep 20/40 | Steps: 28 | Reward: 0.97 | Success: True
+    Ep 30/40 | Steps: 28 | Reward: 1.14 | Success: True
+    Ep 40/40 | Steps: 34 | Reward: 1.18 | Success: True
+  avg_reward=0.221  avg_steps=105.7  success=64.2%  time=446.4s
+  action%: NAV=58.5%  PUSH=0.0%  WAIT=28.5%  YIELD=13.1%
+  PPO update with 12684 steps...
+  actor_loss=-0.1023  critic_loss=0.1089
+  saved: checkpoints/v4/mappo_epoch_050.pth
+
+[Epoch  51/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 200 | Reward: -0.63 | Success: False
+    Ep 20/40 | Steps: 107 | Reward: 0.47 | Success: True
+    Ep 30/40 | Steps: 200 | Reward: -0.32 | Success: False
+    Ep 40/40 | Steps: 45 | Reward: 0.99 | Success: True
+    Ep 10/40 | Steps: 86 | Reward: 0.24 | Success: True
+    Ep 20/40 | Steps: 83 | Reward: 0.60 | Success: True
+    Ep 30/40 | Steps: 35 | Reward: 0.94 | Success: True
+    Ep 40/40 | Steps: 39 | Reward: 1.13 | Success: True
+    Ep 10/40 | Steps: 31 | Reward: 1.40 | Success: True
+    Ep 20/40 | Steps: 31 | Reward: 1.14 | Success: True
+    Ep 30/40 | Steps: 39 | Reward: 1.12 | Success: True
+    Ep 40/40 | Steps: 39 | Reward: 0.89 | Success: True
+  avg_reward=0.415  avg_steps=87.1  success=75.8%  time=382.7s
+  action%: NAV=59.9%  PUSH=0.0%  WAIT=27.7%  YIELD=12.4%
+  PPO update with 10448 steps...
+  actor_loss=-0.0985  critic_loss=0.1099
+
+[Epoch  52/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 186 | Reward: 0.06 | Success: True
+    Ep 20/40 | Steps: 200 | Reward: -0.79 | Success: False
+    Ep 30/40 | Steps: 140 | Reward: 0.53 | Success: True
+    Ep 40/40 | Steps: 200 | Reward: -0.81 | Success: False
+    Ep 10/40 | Steps: 92 | Reward: 0.96 | Success: True
+    Ep 20/40 | Steps: 76 | Reward: 0.77 | Success: True
+    Ep 30/40 | Steps: 200 | Reward: -2.32 | Success: False
+    Ep 40/40 | Steps: 44 | Reward: 0.80 | Success: True
+    Ep 10/40 | Steps: 32 | Reward: 0.94 | Success: True
+    Ep 20/40 | Steps: 36 | Reward: 1.08 | Success: True
+    Ep 30/40 | Steps: 41 | Reward: 0.98 | Success: True
+    Ep 40/40 | Steps: 25 | Reward: 1.03 | Success: True
+  avg_reward=0.268  avg_steps=102.2  success=66.7%  time=417.0s
+  action%: NAV=56.4%  PUSH=0.0%  WAIT=29.3%  YIELD=14.3%
+  PPO update with 12263 steps...
+  actor_loss=-0.1008  critic_loss=0.1022
+  saved: checkpoints/v4/mappo_epoch_052.pth
+
+[Epoch  53/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 120 | Reward: 0.35 | Success: True
+    Ep 20/40 | Steps: 164 | Reward: 0.36 | Success: True
+    Ep 30/40 | Steps: 74 | Reward: 0.86 | Success: True
+    Ep 40/40 | Steps: 34 | Reward: 0.88 | Success: True
+    Ep 10/40 | Steps: 200 | Reward: -2.52 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -2.34 | Success: False
+    Ep 30/40 | Steps: 62 | Reward: 0.77 | Success: True
+    Ep 40/40 | Steps: 69 | Reward: 0.59 | Success: True
+    Ep 10/40 | Steps: 31 | Reward: 1.16 | Success: True
+    Ep 20/40 | Steps: 37 | Reward: 1.03 | Success: True
+    Ep 30/40 | Steps: 23 | Reward: 1.13 | Success: True
+    Ep 40/40 | Steps: 29 | Reward: 0.90 | Success: True
+  avg_reward=0.360  avg_steps=95.1  success=77.5%  time=393.2s
+  action%: NAV=60.4%  PUSH=0.0%  WAIT=26.8%  YIELD=12.8%
+  PPO update with 11409 steps...
+  actor_loss=-0.0999  critic_loss=0.1067
+
+[Epoch  54/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 105 | Reward: 0.62 | Success: True
+    Ep 20/40 | Steps: 200 | Reward: -0.79 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -0.56 | Success: False
+    Ep 40/40 | Steps: 133 | Reward: 0.38 | Success: True
+    Ep 10/40 | Steps: 200 | Reward: -2.22 | Success: False
+    Ep 20/40 | Steps: 200 | Reward: -2.16 | Success: False
+    Ep 30/40 | Steps: 200 | Reward: -2.25 | Success: False
+    Ep 40/40 | Steps: 39 | Reward: 0.96 | Success: True
+    Ep 10/40 | Steps: 26 | Reward: 1.05 | Success: True
+    Ep 20/40 | Steps: 32 | Reward: 1.15 | Success: True
+    Ep 30/40 | Steps: 36 | Reward: 1.10 | Success: True
+    Ep 40/40 | Steps: 35 | Reward: 1.09 | Success: True
+  avg_reward=0.298  avg_steps=90.1  success=76.7%  time=390.7s
+  action%: NAV=64.4%  PUSH=0.0%  WAIT=23.9%  YIELD=11.7%
+  PPO update with 10816 steps...
+  actor_loss=-0.0953  critic_loss=0.1093
+  saved: checkpoints/v4/mappo_epoch_054.pth
+
+[Epoch  55/55] configs: ['narrow_doorway_congestion', 'symmetric_bottleneck_4robots', 'cross_intersection_coordination']
+    Ep 10/40 | Steps: 77 | Reward: 0.74 | Success: True
+    Ep 20/40 | Steps: 200 | Reward: -0.22 | Success: False
+    Ep 30/40 | Steps: 48 | Reward: 0.85 | Success: True
+    Ep 40/40 | Steps: 52 | Reward: 0.89 | Success: True
+    Ep 10/40 | Steps: 43 | Reward: 0.65 | Success: True
+    Ep 20/40 | Steps: 77 | Reward: 1.15 | Success: True
+    Ep 30/40 | Steps: 39 | Reward: 1.32 | Success: True
+    Ep 40/40 | Steps: 52 | Reward: 0.71 | Success: True
+    Ep 10/40 | Steps: 31 | Reward: 0.89 | Success: True
+    Ep 20/40 | Steps: 34 | Reward: 1.12 | Success: True
+    Ep 30/40 | Steps: 24 | Reward: 1.07 | Success: True
+    Ep 40/40 | Steps: 34 | Reward: 1.17 | Success: True
+  avg_reward=0.358  avg_steps=76.1  success=87.5%  time=322.2s
+  action%: NAV=68.2%  PUSH=0.0%  WAIT=21.3%  YIELD=10.5%
+  PPO update with 9136 steps...
+  actor_loss=-0.0920  critic_loss=0.1079
+
+[train_v4] final model saved: checkpoints/v4/mappo_final.pth
+[train_v4] log saved: checkpoints/v4/training_log.json

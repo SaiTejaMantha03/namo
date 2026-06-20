@@ -1,0 +1,146 @@
+{
+  "movable_obstacle_choke_namo": {
+    "snamo": {
+      "sr": 100.0,
+      "avg_steps": 12.0
+    },
+    "mappo_v3": {
+      "sr": 100.0,
+      "avg_steps": 7.9
+    },
+    "mappo_v4": {
+      "sr": 100.0,
+      "avg_steps": 14.07,
+      "push_pct": 0.0,
+      "avg_reward": 1.0690239618053794
+    }
+  },
+  "warehouse_small": {
+    "snamo": {
+      "sr": 100.0,
+      "avg_steps": 18.0
+    },
+    "mappo_v3": {
+      "sr": 100.0,
+      "avg_steps": 8.0
+    },
+    "mappo_v4": {
+      "sr": 100.0,
+      "avg_steps": 20.36,
+      "push_pct": 7.023575638506876,
+      "avg_reward": 2.046723671210371
+    }
+  },
+  "warehouse_3robots": {
+    "snamo": {
+      "sr": 100.0,
+      "avg_steps": 24.0
+    },
+    "mappo_v3": {
+      "sr": 100.0,
+      "avg_steps": 10.0
+    },
+    "mappo_v4": {
+      "sr": 100.0,
+      "avg_steps": 20.48,
+      "push_pct": 35.25390625,
+      "avg_reward": 5.185433753933307
+    }
+  },
+  "single_corridor_yielding": {
+    "snamo": {
+      "sr": 100.0,
+      "avg_steps": 35.0
+    },
+    "mappo_v3": {
+      "sr": 100.0,
+      "avg_steps": 32.5
+    },
+    "mappo_v4": {
+      "sr": 100.0,
+      "avg_steps": 19.46,
+      "push_pct": 0.0,
+      "avg_reward": 1.1419017239283584
+    }
+  },
+  "symmetric_bottleneck_deadlock": {
+    "snamo": {
+      "sr": 95.0,
+      "avg_steps": 42.0
+    },
+    "mappo_v3": {
+      "sr": 100.0,
+      "avg_steps": 34.6
+    },
+    "mappo_v4": {
+      "sr": 100.0,
+      "avg_steps": 25.99,
+      "push_pct": 0.0,
+      "avg_reward": 1.1567521438316255
+    }
+  },
+  "cross_intersection": {
+    "snamo": {
+      "sr": 90.0,
+      "avg_steps": 55.0
+    },
+    "mappo_v3": {
+      "sr": 30.0,
+      "avg_steps": 180.0
+    },
+    "mappo_v4": {
+      "sr": 100.0,
+      "avg_steps": 32.71,
+      "push_pct": 0.0,
+      "avg_reward": 1.1016192648264949
+    }
+  },
+  "warehouse_large": {
+    "snamo": {
+      "sr": 100.0,
+      "avg_steps": 38.0
+    },
+    "mappo_v3": {
+      "sr": 100.0,
+      "avg_steps": 21.0
+    },
+    "mappo_v4": {
+      "sr": 100.0,
+      "avg_steps": 34.66,
+      "push_pct": 6.563762261973457,
+      "avg_reward": 2.682209345742936
+    }
+  },
+  "narrow_doorway_congestion": {
+    "snamo": {
+      "sr": 85.0,
+      "avg_steps": 60.0
+    },
+    "mappo_v3": {
+      "sr": 0.0,
+      "avg_steps": 200.0
+    },
+    "mappo_v4": {
+      "sr": 98.0,
+      "avg_steps": 65.79,
+      "push_pct": 0.0,
+      "avg_reward": 0.805776596312706
+    }
+  },
+  "symmetric_bottleneck_4robots": {
+    "snamo": {
+      "sr": 80.0,
+      "avg_steps": 72.0
+    },
+    "mappo_v3": {
+      "sr": 0.0,
+      "avg_steps": 200.0
+    },
+    "mappo_v4": {
+      "sr": 94.0,
+      "avg_steps": 72.99,
+      "push_pct": 0.0,
+      "avg_reward": 0.36619838622041945
+    }
+  }
+}

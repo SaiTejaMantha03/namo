@@ -27,6 +27,7 @@ PUSH_DIST_THRESHOLD   = 0.10    # fraction of cell_size required for PUSH progre
 DEADLOCK_PENALTY      = -0.05   # per step when robot is stuck AND nearby robots also stuck
 DEADLOCK_RESOLVE_BONUS = 0.30   # when a robot breaks out of a mutual-wait state
 YIELD_PENALTY         = -0.005  # slight nudge against indefinite yielding
+WAIT_PENALTY          = -0.02   # v4: penalise WAIT to prevent collapse on hard stages
 # ──────────────────────────────────────────────────────────────────────────────
 
 # Deadlock detection threshold: if robot moved less than this (world units) in
@@ -36,12 +37,13 @@ STUCK_WINDOW         = 8     # number of control steps to look back
 
 
 class NAMOmappoEnv:
-    def __init__(self, config_path, gui=False, max_steps=40, control_interval=30, randomize_starts=False):
+    def __init__(self, config_path, gui=False, max_steps=40, control_interval=30, randomize_starts=False, include_congestion_feats=True):
         self.config_path = config_path
         self.gui = gui
         self.max_steps = max_steps
         self.control_interval = control_interval
         self.randomize_starts = randomize_starts
+        self.include_congestion_feats = include_congestion_feats
         self.action_dim = 4  # NAVIGATE, PUSH, YIELD, WAIT
 
         with open(config_path, "r") as f:
@@ -224,7 +226,7 @@ class NAMOmappoEnv:
             congestion_feats = np.array([wait_norm, nearby_norm, stuck_flag], dtype=np.float32)
             # ─────────────────────────────────────────────────────────────────
 
-            obs_vec = np.concatenate([
+            obs_parts = [
                 crop,              # 25
                 norm_own,          # 2
                 norm_goal,         # 2
@@ -232,8 +234,10 @@ class NAMOmappoEnv:
                 norm_others,       # 6
                 norm_boxes,        # 6
                 uncertainty_feats, # 3
-                congestion_feats,  # 3  ← NEW (total: 49 → was 46)
-            ])
+            ]
+            if self.include_congestion_feats:
+                obs_parts.append(congestion_feats)
+            obs_vec = np.concatenate(obs_parts)
             obs[rid] = obs_vec.astype(np.float32)
 
             # ── Action masking ─────────────────────────────────────────────
@@ -336,6 +340,10 @@ class NAMOmappoEnv:
             # ── YIELD penalty (discourage permanent yielding) ──────────────
             elif actions.get(rid) == 2:  # YIELD
                 r += YIELD_PENALTY
+
+            # ── WAIT penalty (v4: prevent indefinite waiting on hard stages) ─
+            elif actions.get(rid) == 3:  # WAIT
+                r += WAIT_PENALTY
 
             # ── NEW: Deadlock / congestion reward signals ──────────────────
             is_stuck_now = rid in stuck_robots

@@ -71,6 +71,16 @@ def run_episode(env, agent, obs_dim, max_agents, action_dim, max_steps, gui=Fals
 def evaluate(checkpoint_path: str, trials: int = TRIALS, gui: bool = False):
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"\n[eval] device={device}  checkpoint={checkpoint_path}  gui={gui}")
+    
+    try:
+        chk = torch.load(checkpoint_path, map_location="cpu")
+        chk_obs_dim = chk['actor_state']['net.0.weight'].shape[1]
+        include_congestion = (chk_obs_dim == 49)
+        print(f"[eval] Detected checkpoint obs_dim={chk_obs_dim} (include_congestion_feats={include_congestion})")
+    except Exception as e:
+        print(f"[eval] WARNING: Could not auto-detect obs_dim from checkpoint: {e}. Defaulting to include_congestion_feats=True")
+        include_congestion = True
+
     print(f"[eval] Running {trials} trials per scenario\n")
 
     results = {}
@@ -85,7 +95,7 @@ def evaluate(checkpoint_path: str, trials: int = TRIALS, gui: bool = False):
 
         for t in range(trials):
             try:
-                env = NAMOmappoEnv(config_path=cfg_path, gui=gui, max_steps=300)
+                env = NAMOmappoEnv(config_path=cfg_path, gui=gui, max_steps=300, include_congestion_feats=include_congestion)
                 if agent is None:
                     obs, _ = env.reset()
                     sample = next(iter(obs.values()))
