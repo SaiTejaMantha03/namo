@@ -192,7 +192,25 @@ Consequence: **MAPPO v4 is being benchmarked against an already-enhanced baselin
 
 ---
 
-### Map-wise Benchmark Results (Mean ± Stddev over 50 Trials)
+### 3-Way Benchmark Comparison Table (SR / Makespan / Pushes)
+
+*Evaluation conducted over 50 independent trials per scenario with a control interval of 15 physics steps. The starting locations of all robots and obstacles are **static (fixed)** across trials. "Pure S-NAMO" represents the baseline with uncertainty disabled. "S-NAMO\*" represents our uncertainty-integrated re-implementation. "Makespan" refers to the average control steps, and "Pushes" refers to the average number of obstacle displacements per trial.*
+
+| Scenario | Pure S-NAMO (SR / Makespan / Pushes) | S-NAMO\* (SR / Makespan / Pushes) | MAPPO v4 (SR / Makespan / Pushes) |
+| :--- | :---: | :---: | :---: |
+| **`movable_obstacle_choke_namo`** | 100.0% / 13.3 / 1.0 | 100.0% / 13.3 / 1.0 | 100.0% / 14.1 / 0.0 |
+| **`warehouse_small`** | 100.0% / 11.5 / 0.0 | 100.0% / 11.5 / 0.0 | 100.0% / 20.4 / 5.7 |
+| **`warehouse_3robots`** | 100.0% / 12.2 / 0.0 | 100.0% / 12.2 / 0.0 | 100.0% / 20.5 / 28.8 |
+| **`single_corridor_yielding`** | 100.0% / 19.8 / 0.0 | 100.0% / 19.9 / 0.0 | 100.0% / 19.5 / 0.0 |
+| **`symmetric_bottleneck_deadlock`** | 100.0% / 19.7 / 0.0 | 100.0% / 19.9 / 0.0 | 100.0% / 26.0 / 0.0 |
+| **`cross_intersection`** | 100.0% / 34.4 / 0.0 | 100.0% / 34.4 / 0.0 | 100.0% / 32.7 / 0.0 |
+| **`warehouse_large`** | 100.0% / 49.2 / 0.0 | 100.0% / 49.1 / 0.0 | 100.0% / 34.7 / 9.1 |
+| **`narrow_doorway_congestion`** | 100.0% / 39.8 / 0.0 | 100.0% / 39.6 / 0.0 | 98.0% / 65.8 / 0.0 |
+| **`symmetric_bottleneck_4robots`** | 78.0% / 51.6 / 0.0 | 74.0% / 55.3 / 0.0 | 94.0% / 73.0 / 0.0 |
+
+---
+
+### Detailed Map-wise Benchmark Results (Mean ± Stddev over 50 Trials)
 
 *Evaluation conducted over 50 independent trials per scenario with a control interval of 15 physics steps. The starting locations of all robots and obstacles are **static (fixed)** across trials. Success Rate is reported as fold-mean ± fold-std over 5 folds of 10 trials. Makespan (makesp.) and obstacle transfers (nb. Transf.) are calculated as trial-wise mean ± std.*
 
