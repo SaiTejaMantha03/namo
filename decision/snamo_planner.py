@@ -56,14 +56,17 @@ class SNAMOPlanner:
         alpha: float = 9.0,
         beta: float = 1.0,
         social_weight: float = 5.0,
+        uncertainty: bool = True,
     ):
         self.grid = grid
         self.grid_size = grid_size
         self.social_weight = social_weight
+        self.uncertainty = uncertainty
 
         # Uncertainty model (NAMOUnc part)
-        self.belief = ManipulationBeliefModel(alpha=alpha, beta=beta)
-        self._traj_model = TrajectoryRegressionModel()
+        if self.uncertainty:
+            self.belief = ManipulationBeliefModel(alpha=alpha, beta=beta)
+            self._traj_model = TrajectoryRegressionModel()
 
         # Social costmap — derived from grid geometry (no human labels)
         self.social_map = SocialCostmap(grid)
@@ -81,7 +84,8 @@ class SNAMOPlanner:
 
     def observe(self, success: bool) -> None:
         """Call after each real push attempt to update the SR belief."""
-        self.belief.observe(success)
+        if self.uncertainty:
+            self.belief.observe(success)
 
     def update_grid(self, grid: np.ndarray) -> None:
         """Recompute social map when the grid changes (box moved)."""
@@ -292,15 +296,45 @@ class SNAMOPlanner:
             waypoints = path[1:] if path else []
             return "NAVIGATE", waypoints
 
-        # --- Decide BYPASS or REMOVE via Laplace criterion ---
-        bypass_iv  = self._bypass_interval(work_grid, start, goal, blocking)
-        removal_iv = self._removal_interval(work_grid, start, goal, blocking)
-        decision, U_bypass, U_removal = choose_action(bypass_iv, removal_iv)
+        # --- Decide BYPASS or REMOVE via uncertainty or deterministic rules ---
+        if self.uncertainty:
+            bypass_iv  = self._bypass_interval(work_grid, start, goal, blocking)
+            removal_iv = self._removal_interval(work_grid, start, goal, blocking)
+            decision, U_bypass, U_removal = choose_action(bypass_iv, removal_iv)
 
-        sr_lo, sr_hi = self.belief.success_rate_interval()
-        print(f"[S-NAMO] {start}->{goal} | obs={blocking} | "
-              f"SR=[{sr_lo:.2f},{sr_hi:.2f}] | "
-              f"U_by={U_bypass:.1f} U_re={U_removal:.1f} | -> {decision}")
+            sr_lo, sr_hi = self.belief.success_rate_interval()
+            print(f"[S-NAMO] {start}->{goal} | obs={blocking} | "
+                  f"SR=[{sr_lo:.2f},{sr_hi:.2f}] | "
+                  f"U_by={U_bypass:.1f} U_re={U_removal:.1f} | -> {decision}")
+        else:
+            # Pure deterministic: compare raw A* path lengths
+            g_bypass = work_grid.copy()
+            g_bypass[blocking[1], blocking[0]] = 2
+            bypass_path = a_star(start, goal, g_bypass, gs,
+                                 risk_map=self._social_risk,
+                                 risk_weight=self.social_weight)
+            bypass_len = (len(bypass_path) - 1) if bypass_path else 9999
+
+            g_obs = work_grid.copy()
+            g_obs[blocking[1], blocking[0]] = 2
+            path_to = a_star(start, blocking, g_obs, gs,
+                             risk_map=self._social_risk,
+                             risk_weight=self.social_weight)
+            
+            g_clear = work_grid.copy()
+            g_clear[blocking[1], blocking[0]] = 0
+            path_from = a_star(blocking, goal, g_clear, gs,
+                               risk_map=self._social_risk,
+                               risk_weight=self.social_weight)
+            
+            if path_to and path_from:
+                removal_len = (len(path_to) - 1) + 3 + (len(path_from) - 1)
+            else:
+                removal_len = 9999
+                
+            decision = "BYPASS" if bypass_len <= removal_len else "REMOVE"
+            print(f"[S-NAMO] {start}->{goal} | obs={blocking} | "
+                  f"Deterministic Plan (by_len={bypass_len}, re_len={removal_len}) | -> {decision}")
 
         # --- BYPASS ---
         if decision == "BYPASS":

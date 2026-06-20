@@ -2,6 +2,7 @@ import time
 import math
 import argparse
 import sys
+import json
 import subprocess
 import numpy as np
 import pybullet as p
@@ -13,6 +14,19 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from decision.unet_decision_pipeline import UNetDecisionPipeline
 from maps.namo_environments import WarehouseEnvironment, NAMOEnvironment
+
+# All 9 benchmark scenario configs (same set as snamo_simulator.py / eval_v4.py)
+BENCHMARK_CONFIGS = [
+    ("movable_obstacle_choke_namo",   "configs/movable_obstacle_choke_namo.yaml"),
+    ("warehouse_small",               "configs/warehouse_small.yaml"),
+    ("warehouse_3robots",             "configs/warehouse_3robots.yaml"),
+    ("single_corridor_yielding",      "configs/single_corridor_yielding.yaml"),
+    ("symmetric_bottleneck_deadlock", "configs/symmetric_bottleneck_deadlock.yaml"),
+    ("cross_intersection",            "configs/cross_intersection_coordination.yaml"),
+    ("warehouse_large",               "configs/warehouse_large.yaml"),
+    ("narrow_doorway_congestion",     "configs/narrow_doorway_congestion.yaml"),
+    ("symmetric_bottleneck_4robots",  "configs/symmetric_bottleneck_4robots.yaml"),
+]
 
 def cell_center(cell_x, cell_y, cell_size=1.0):
     return (cell_x + 0.5) * cell_size, (cell_y + 0.5) * cell_size
@@ -580,44 +594,124 @@ def simulate_env(env_name, gui=False):
         pos, _ = p.getBasePositionAndOrientation(rid)
         g = robot_goals[rid]
         dist = math.hypot(pos[0] - (g[0]+0.5)*cell_size, pos[1] - (g[1]+0.5)*cell_size)
-        print(f"Robot {rid} final dist: {dist:.4f} (pos: {pos[:2]}, goal: {g})")
         if dist > 0.4:
             all_reached_final = False
     if all_reached_final:
         success = True
-            
-    print("\n" + "="*50)
-    print("SIMULATION RESULTS:")
-    print(f"Success: {success}")
-    print(f"Steps: {step if success and (step < sim_steps - 1) else sim_steps}")
-    print(f"Obstacle Pushes: {push_count}")
-    print(f"Contacts/Collisions: {collision_count}")
-    print("="*50)
+
+    final_steps = step if success and (step < sim_steps - 1) else sim_steps
+    status_str = "SUCCESS" if success else "FAILED"
+    print(f"[NAMOSim] Steps={final_steps}  Status={status_str}  "
+          f"Pushes={push_count}  Collisions={collision_count}")
     p.disconnect()
     return {
         "success": success,
-        "steps": step if success and (step < sim_steps - 1) else sim_steps,
+        "steps": final_steps,
         "pushes": push_count,
         "collisions": collision_count
     }
 
 
+def run_yaml_scenario(config_path: str, gui: bool = False) -> dict:
+    """Thin wrapper so batch mode can call simulate_env cleanly."""
+    try:
+        return simulate_env(config_path, gui=gui)
+    except Exception as e:
+        print(f"[NAMOSim] ERROR on {config_path}: {e}")
+        try:
+            p.disconnect()
+        except Exception:
+            pass
+        return {"success": False, "steps": 9999, "pushes": 0, "collisions": 0}
+
+
+def run_batch(trials: int = 10, gui: bool = False) -> dict:
+    """
+    Run all 9 benchmark configs × `trials` times using the pure NAMO planner
+    (no uncertainty model, no social costmap, no multi-robot coordinator).
+    Saves results to results/evaluation_tables/pure_namo_eval_results.json.
+    """
+    project_dir = Path(__file__).resolve().parent.parent
+    results = {}
+
+    print("\n" + "=" * 70)
+    print(f"  Pure NAMO Batch Evaluation  |  trials={trials}  gui={gui}")
+    print("=" * 70)
+
+    for name, cfg_rel in BENCHMARK_CONFIGS:
+        cfg_path = str(project_dir / cfg_rel)
+        if not Path(cfg_path).exists():
+            print(f"[SKIP] {name} — config not found: {cfg_path}")
+            continue
+
+        successes, step_list, push_list, coll_list = [], [], [], []
+
+        for t in range(trials):
+            r = run_yaml_scenario(cfg_path, gui=gui)
+            successes.append(int(r["success"]))
+            step_list.append(r["steps"])
+            push_list.append(r["pushes"])
+            coll_list.append(r["collisions"])
+
+        sr       = 100.0 * sum(successes) / len(successes)
+        avg_st   = sum(step_list)  / len(step_list)
+        avg_push = sum(push_list)  / len(push_list)
+        avg_coll = sum(coll_list)  / len(coll_list)
+
+        results[name] = {
+            "sr":          sr,
+            "avg_steps":   avg_st,
+            "avg_pushes":  avg_push,
+            "avg_collisions": avg_coll,
+        }
+        status = "\u2705" if sr >= 80.0 else ("\u26a0\ufe0f" if sr >= 50.0 else "\u274c")
+        print(f"  {status}  {name:<40}  SR={sr:5.1f}%  Steps={avg_st:6.1f}  "
+              f"Pushes={avg_push:.1f}  Collisions={avg_coll:.1f}")
+
+    # Summary table
+    print("\n" + "=" * 70)
+    print(f"  {'Scenario':<40} {'SR':>6} {'Avg Steps':>10}")
+    print("=" * 70)
+    for name, r in results.items():
+        print(f"  {name:<40} {r['sr']:>5.1f}%  {r['avg_steps']:>8.1f}")
+    print("=" * 70)
+
+    # Save JSON
+    out_dir = project_dir / "results" / "evaluation_tables"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "pure_namo_eval_results.json"
+    with open(out_path, "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"\n[NAMOSim] Pure NAMO results saved → {out_path}")
+
+    return results
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--env", default="all")
-    parser.add_argument("--gui", action="store_true")
+    parser = argparse.ArgumentParser(description="Pure NAMO Simulator (no uncertainty, no social costmap)")
+    parser.add_argument("--env", default="all",
+                        help="'3x3', '5x5', a YAML config path, or 'all' (classic 3x3+5x5 demo)")
+    parser.add_argument("--gui",   action="store_true", help="Open PyBullet GUI")
+    parser.add_argument("--batch", action="store_true",
+                        help="Run all 9 benchmark configs and save results JSON")
+    parser.add_argument("--trials", type=int, default=10,
+                        help="Number of trials per scenario in batch mode (default: 10)")
     args = parser.parse_args()
-    
+
+    if args.batch:
+        run_batch(trials=args.trials, gui=args.gui)
+        return
+
     python_bin = sys.executable
     script_path = __file__
-    
+
     if args.env == "all":
         # Launch 3x3 and 5x5 as separate subprocesses to prevent OpenGL context crashes on Mac
         print("Launching 3x3 Simulation Subprocess...")
         cmd3 = [python_bin, script_path, "--env", "3x3"]
         if args.gui: cmd3.append("--gui")
         subprocess.run(cmd3)
-        
+
         print("\nLaunching 5x5 Simulation Subprocess...")
         cmd5 = [python_bin, script_path, "--env", "5x5"]
         if args.gui: cmd5.append("--gui")
@@ -626,7 +720,8 @@ def main():
         try:
             simulate_env(args.env, args.gui)
         except p.error:
-            print("\n[Simulation] GUI window was closed. Terminating.")
+            print("\n[NAMOSim] GUI window was closed. Terminating.")
+
 
 if __name__ == "__main__":
     main()

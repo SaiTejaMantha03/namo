@@ -176,11 +176,12 @@ COLORS = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 class SNAMOSimulator:
-    def __init__(self, config_path, gui=False, taboo_zones=None, dr_strategy="sr_social"):
+    def __init__(self, config_path, gui=False, taboo_zones=None, dr_strategy="sr_social", pure_snamo=False):
         self.config_path = config_path
         self.gui = gui
         self.taboo_zones = taboo_zones or []
         self.dr_strategy = dr_strategy
+        self.pure_snamo = pure_snamo
         
         with open(config_path) as f:
             self.cfg = yaml.safe_load(f)
@@ -254,6 +255,7 @@ class SNAMOSimulator:
                 grid=self.base_grid.copy(),
                 grid_size=self.gs,
                 taboo_zones=self.taboo_zones,
+                uncertainty=not self.pure_snamo,
             )
             gx, gy = cell_center(gc[0], gc[1], self.cs)
             c = COLORS[i % len(COLORS)]
@@ -484,8 +486,8 @@ class SNAMOSimulator:
                 pass
             self.physics_client = None
 
-def run_simulation(config_path: str, gui: bool = False, taboo_zones: list = None, dr_strategy: str = "sr_social") -> dict:
-    sim = SNAMOSimulator(config_path, gui=gui, taboo_zones=taboo_zones, dr_strategy=dr_strategy)
+def run_simulation(config_path: str, gui: bool = False, taboo_zones: list = None, dr_strategy: str = "sr_social", pure_snamo: bool = False) -> dict:
+    sim = SNAMOSimulator(config_path, gui=gui, taboo_zones=taboo_zones, dr_strategy=dr_strategy, pure_snamo=pure_snamo)
     sim.reset()
     
     if not sim.robots_cfg:
@@ -554,6 +556,7 @@ def main():
     ap.add_argument("--dr-strategy", default="sr_social",
                     choices=["repulsive", "social", "sr_width", "sr_social"],
                     help="Deadlock resolution strategy (default: sr_social)")
+    ap.add_argument("--pure-snamo", action="store_true", help="Run without uncertainty model (pure S-NAMO)")
     args = ap.parse_args()
 
     if args.config == "all":
@@ -602,7 +605,7 @@ def main():
         print(f"{'='*95}")
     else:
         try:
-            run_simulation(args.config, gui=args.gui, dr_strategy=args.dr_strategy)
+            run_simulation(args.config, gui=args.gui, dr_strategy=args.dr_strategy, pure_snamo=args.pure_snamo)
         except p.error:
             print("\n[SNAMOSim] GUI window closed. Terminating.")
 
