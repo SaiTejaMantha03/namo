@@ -17,6 +17,7 @@ Evaluation was conducted over 50 independent trials per scenario with a control 
 | **`warehouse_large`** | 100.0% / 49.2 / 0.0 | 100.0% / 49.1 / 0.0 | 100.0% / 34.7 / 9.1 |
 | **`narrow_doorway_congestion`** | 100.0% / 39.8 / 0.0 | 100.0% / 39.6 / 0.0 | 98.0% / 65.8 / 0.0 |
 | **`symmetric_bottleneck_4robots`** | 78.0% / 51.6 / 0.0 | 74.0% / 55.3 / 0.0 | 94.0% / 73.0 / 0.0 |
+| **`custom_reconstructed_map`** | 0.0% / — / — | 100.0% / 152.5 / 2.0 | 100.0% / 67.0 / 2.0 |
 
 *Note: S-NAMO\* represents our uncertainty-integrated baseline re-implementation. Pure S-NAMO has the uncertainty module disabled. MAPPO v4 is our final reinforcement learning model.*
 
@@ -97,6 +98,14 @@ Evaluation was conducted over 50 independent trials per scenario with a control 
 | **Pure S-NAMO** | $0.78 \pm 0.12$ | - | $0.0 \pm 0.0$ | $51.63 \pm 26.32$ | - |
 | **S-NAMO\*** | $0.74 \pm 0.10$ | - | $0.0 \pm 0.0$ | $55.33 \pm 27.29$ | - |
 | **MAPPO v4** | $0.78 \pm 0.16$ | - | $0.0 \pm 0.0$ | $113.50 \pm 108.42$ | - |
+
+### Map: `custom_reconstructed_map` (Custom Reconstructed Map)
+
+| Method | Succ. Rate | Dist. | nb. Transf. | makesp. | Plan. time |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Pure S-NAMO** | $0.00 \pm 0.00$ | - | — | — | - |
+| **S-NAMO\*** | $1.00 \pm 0.00$ | - | $2.0 \pm 0.0$ | $152.5 \pm 0.0$ | - |
+| **MAPPO v4** | $1.00 \pm 0.00$ | - | $2.0 \pm 0.0$ | $67.0 \pm 0.0$ | - |
 
 *Note: S-NAMO\* represents our uncertainty-integrated baseline re-implementation. Pure S-NAMO has the uncertainty module disabled. MAPPO v4 is our final reinforcement learning model.*
 

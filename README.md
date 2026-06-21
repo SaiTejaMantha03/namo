@@ -207,6 +207,7 @@ Consequence: **MAPPO v4 is being benchmarked against an already-enhanced baselin
 | **`warehouse_large`** | 100.0% / 49.2 / 0.0 | 100.0% / 49.1 / 0.0 | 100.0% / 34.7 / 9.1 |
 | **`narrow_doorway_congestion`** | 100.0% / 39.8 / 0.0 | 100.0% / 39.6 / 0.0 | 98.0% / 65.8 / 0.0 |
 | **`symmetric_bottleneck_4robots`** | 78.0% / 51.6 / 0.0 | 74.0% / 55.3 / 0.0 | 94.0% / 73.0 / 0.0 |
+| **`custom_reconstructed_map`** | 0.0% / — / — | 100.0% / 152.5 / 2.0 | 100.0% / 67.0 / 2.0 |
 
 ---
 
@@ -285,6 +286,14 @@ Consequence: **MAPPO v4 is being benchmarked against an already-enhanced baselin
 | **Pure S-NAMO** | $0.78 \pm 0.12$ | - | $0.0 \pm 0.0$ | $51.63 \pm 26.32$ | - |
 | **S-NAMO\*** | $0.74 \pm 0.10$ | - | $0.0 \pm 0.0$ | $55.33 \pm 27.29$ | - |
 | **MAPPO v4** | $0.78 \pm 0.16$ | - | $0.0 \pm 0.0$ | $113.50 \pm 108.42$ | - |
+
+### Map: `custom_reconstructed_map` (Custom Reconstructed Map)
+
+| Method | Succ. Rate | Dist. | nb. Transf. | makesp. | Plan. time |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Pure S-NAMO** | $0.00 \pm 0.00$ | - | — | — | - |
+| **S-NAMO\*** | $1.00 \pm 0.00$ | - | $2.0 \pm 0.0$ | $152.5 \pm 0.0$ | - |
+| **MAPPO v4** | $1.00 \pm 0.00$ | - | $2.0 \pm 0.0$ | $67.0 \pm 0.0$ | - |
 
 *Note on MAPPO v3 (prior RL model): MAPPO v3 suffered from entropy collapse and protective waiting, achieving 100% SR / 8.0 steps on `warehouse_small`, 100% SR / 32.5 steps on `single_corridor_yielding`, 30.0% SR / 180.0 steps on `cross_intersection`, and 0.0% SR on `narrow_doorway_congestion` and `symmetric_bottleneck_4robots`.*
 
