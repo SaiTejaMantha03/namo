@@ -10,7 +10,7 @@ robots:
     start: [2, 7]
     goal: [13, 7]
 obstacles:
-  - pos: [7, 7]  # Movable Box blocking the corridor
+  - pos: [4, 7]  # Movable Box blocking the corridor
 walls:
   # Block rows 0 to 6
   - pos: [1, 6]
