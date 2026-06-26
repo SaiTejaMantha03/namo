@@ -57,11 +57,13 @@ class SNAMOPlanner:
         beta: float = 1.0,
         social_weight: float = 5.0,
         uncertainty: bool = True,
+        verbose: bool = True,
     ):
         self.grid = grid
         self.grid_size = grid_size
         self.social_weight = social_weight
         self.uncertainty = uncertainty
+        self.verbose = verbose
 
         # Uncertainty model (NAMOUnc part)
         if self.uncertainty:
@@ -303,9 +305,10 @@ class SNAMOPlanner:
             decision, U_bypass, U_removal = choose_action(bypass_iv, removal_iv)
 
             sr_lo, sr_hi = self.belief.success_rate_interval()
-            print(f"[S-NAMO] {start}->{goal} | obs={blocking} | "
-                  f"SR=[{sr_lo:.2f},{sr_hi:.2f}] | "
-                  f"U_by={U_bypass:.1f} U_re={U_removal:.1f} | -> {decision}")
+            if self.verbose:
+                print(f"[S-NAMO] {start}->{goal} | obs={blocking} | "
+                      f"SR=[{sr_lo:.2f},{sr_hi:.2f}] | "
+                      f"U_by={U_bypass:.1f} U_re={U_removal:.1f} | -> {decision}")
         else:
             # Pure deterministic: compare raw A* path lengths
             g_bypass = work_grid.copy()
@@ -333,8 +336,9 @@ class SNAMOPlanner:
                 removal_len = 9999
                 
             decision = "BYPASS" if bypass_len <= removal_len else "REMOVE"
-            print(f"[S-NAMO] {start}->{goal} | obs={blocking} | "
-                  f"Deterministic Plan (by_len={bypass_len}, re_len={removal_len}) | -> {decision}")
+            if self.verbose:
+                print(f"[S-NAMO] {start}->{goal} | obs={blocking} | "
+                      f"Deterministic Plan (by_len={bypass_len}, re_len={removal_len}) | -> {decision}")
 
         # --- BYPASS ---
         if decision == "BYPASS":

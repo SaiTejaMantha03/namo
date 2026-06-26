@@ -62,10 +62,13 @@ def main():
             with torch.no_grad():
                 actions, _, _ = agent.select_action(obs, action_masks=action_mask)
             
-            if gui:
-                act_names = {0: "NAV", 1: "PUSH", 2: "YIELD", 3: "WAIT"}
-                action_strs = [f"Robot {rid}: {act_names[act]}" for rid, act in actions.items()]
-                print(f"Step {steps:3d} | Actions: " + "  ".join(action_strs))
+            act_names = {0: "NAV", 1: "PUSH", 2: "YIELD", 3: "WAIT"}
+            action_strs = []
+            for rid in env.robot_ids:
+                cell = env.sim.coord_states[rid].cell if (env.sim and rid in env.sim.coord_states) else (0, 0)
+                act = actions.get(rid, 3)
+                action_strs.append(f"Robot {rid}@{cell}: {act_names[act]}")
+            print(f"Step {steps:3d} | Actions: " + "  ".join(action_strs))
             
             obs, rewards, dones, info = env.step(actions)
             steps += 1

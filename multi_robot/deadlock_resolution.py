@@ -72,7 +72,9 @@ def _find_evasion_target(
             min_d = min(
                 math.hypot(nx - oc[0], ny - oc[1]) for oc in other_cells
             ) if other_cells else 1.0
-            local_candidates.append((min_d, nc))
+            dist_current = math.hypot(nx - cx, ny - cy)
+            score = min_d - 0.8 * dist_current
+            local_candidates.append((score, nc))
 
     if local_candidates:
         local_candidates.sort(reverse=True)
@@ -384,14 +386,19 @@ class DeadlockResolver:
             evader = min(dists, key=dists.get)
             assignments[evader] = "EVADE"
 
-            # Evasion target = next cell toward goal (drive through intersection)
+            # Evasion target calculation
             evasion_targets: dict[int, Optional[tuple]] = {}
             for rid in conflicting_robots:
                 if assignments[rid] == "WAIT":
                     evasion_targets[rid] = None
                 else:
-                    # For multi-robot symmetric deadlock, the evader should
-                    # drive ALL THE WAY to its goal, not stop at the intersection.
-                    evasion_targets[rid] = robot_goals[rid]
+                    if len(conflicting_robots) == 2:
+                        # 2-robot corridor deadlock with no pockets: back up to clear the corridor
+                        other_cells = [robot_cells[r] for r in conflicting_robots if r != rid]
+                        evasion_targets[rid] = _find_evasion_target(self.grid, self.grid_size, robot_cells[rid], other_cells)
+                    else:
+                        # For multi-robot symmetric deadlock, the evader should
+                        # drive ALL THE WAY to its goal, not stop at the intersection.
+                        evasion_targets[rid] = robot_goals[rid]
 
         return assignments, evasion_targets

@@ -135,6 +135,7 @@ class NAMO3DSimulator:
         wall_height = 0.8
         
         if self.gui:
+            p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
             p.resetDebugVisualizerCamera(
                 cameraDistance=self.size * 1.3,
                 cameraYaw=0,
@@ -177,6 +178,9 @@ class NAMO3DSimulator:
             push_cost=4.0, save_plot_path=plot_save_path
         )
         print(f" -> Automatically generated and saved plot to: results/visualizations/{plot_filename}")
+
+        if self.gui:
+            p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
 
         print(f"\n[Simulation] Executing NAMO {self.decision} on {self.size}x{self.size} grid...")
 

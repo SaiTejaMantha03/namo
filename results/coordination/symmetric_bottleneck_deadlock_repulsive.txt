@@ -1,6 +1,6 @@
 Config: configs/symmetric_bottleneck_deadlock.yaml
 Strategy: repulsive
 Belief sharing: False
-Success rate: 100.0%
-Avg steps: 34.0
-Avg deadlocks: 0.0
+Success rate: 0.0%
+Avg steps: 300.0
+Avg deadlocks: 1.0

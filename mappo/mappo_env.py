@@ -19,15 +19,17 @@ COLLISION_PENALTY     = -0.10   # per robot-robot collision event
 GOAL_BONUS            = 1.0     # reaching goal
 TIMEOUT_PENALTY       = -1.0    # hitting max_steps without reaching goal
 PROGRESS_REWARD       = 0.02    # per step moving closer to goal (dense)
-PUSH_ATTEMPT_BONUS    = 0.05    # small bonus just for attempting PUSH (exploration)
+BACKWARD_PENALTY      = -0.03   # penalty for moving AWAY from goal (discourages oscillation)
+# PUSH_ATTEMPT_BONUS removed — it was +0.05 just for pressing PUSH, causing
+# the policy to spam PUSH regardless of whether a box was blocking.
 PUSH_SUCCESS_BONUS    = 0.50    # bonus for making real progress during PUSH
 PUSH_DIST_THRESHOLD   = 0.10    # fraction of cell_size required for PUSH progress credit
 
-# ─── NEW: Congestion / deadlock reward signals ────────────────────────────────
+# ─── Congestion / deadlock reward signals ─────────────────────────────────────
 DEADLOCK_PENALTY      = -0.05   # per step when robot is stuck AND nearby robots also stuck
 DEADLOCK_RESOLVE_BONUS = 0.30   # when a robot breaks out of a mutual-wait state
 YIELD_PENALTY         = -0.005  # slight nudge against indefinite yielding
-WAIT_PENALTY          = -0.02   # v4: penalise WAIT to prevent collapse on hard stages
+WAIT_PENALTY          = -0.02   # penalise WAIT to prevent collapse on hard stages
 # ──────────────────────────────────────────────────────────────────────────────
 
 # Deadlock detection threshold: if robot moved less than this (world units) in
@@ -37,7 +39,7 @@ STUCK_WINDOW         = 8     # number of control steps to look back
 
 
 class NAMOmappoEnv:
-    def __init__(self, config_path, gui=False, max_steps=40, control_interval=30, randomize_starts=False, include_congestion_feats=True):
+    def __init__(self, config_path, gui=False, max_steps=40, control_interval=30, randomize_starts=False, include_congestion_feats=True, verbose=False, push_fail_rate=0.0):
         self.config_path = config_path
         self.gui = gui
         self.max_steps = max_steps
@@ -45,6 +47,8 @@ class NAMOmappoEnv:
         self.randomize_starts = randomize_starts
         self.include_congestion_feats = include_congestion_feats
         self.action_dim = 4  # NAVIGATE, PUSH, YIELD, WAIT
+        self.verbose = verbose
+        self.push_fail_rate = push_fail_rate
 
         with open(config_path, "r") as f:
             self.config = yaml.safe_load(f)
@@ -65,6 +69,8 @@ class NAMOmappoEnv:
         self.dr_strategy = "mappo"
         self.current_action_masks = {}
         self.current_costs = {}
+        # obs = 25 (crop) + 2 (pos) + 2 (goal) + 2 (dir) + 6 (others) + 6 (boxes) + 3 (uncertainty) [+ 3 (congestion)]
+        self._obs_dim = 49 if include_congestion_feats else 46
 
         # ── NEW: per-robot state trackers for congestion features ─────────────
         # wait_time: how many consecutive control steps the robot has been stuck
@@ -75,10 +81,8 @@ class NAMOmappoEnv:
         self._was_stuck = {}
 
     def reset(self):
-        if self.sim is not None:
-            self.sim.close()
-
-        self.sim = SNAMOSimulator(self.config_path, gui=self.gui, dr_strategy="sr_social")
+        if self.sim is None:
+            self.sim = SNAMOSimulator(self.config_path, gui=self.gui, dr_strategy="sr_social", push_fail_rate=self.push_fail_rate, verbose=self.verbose)
 
         # Randomize starts if requested to break symmetry
         if self.randomize_starts and hasattr(self.sim, "robots_cfg"):
@@ -108,7 +112,7 @@ class NAMOmappoEnv:
         # Track previous distances for dense progress reward
         self._prev_dist = {}
         for rid in self.robot_ids:
-            pos, _ = p.getBasePositionAndOrientation(rid)
+            pos, _ = p.getBasePositionAndOrientation(rid, physicsClientId=self.sim.physics_client)
             g = self.sim.robot_goals[rid]
             self._prev_dist[rid] = math.hypot(
                 pos[0] - (g[0] + 0.5) * self.cell_size,
@@ -117,7 +121,7 @@ class NAMOmappoEnv:
 
         # ── NEW: reset congestion trackers ────────────────────────────────────
         for rid in self.robot_ids:
-            pos, _ = p.getBasePositionAndOrientation(rid)
+            pos, _ = p.getBasePositionAndOrientation(rid, physicsClientId=self.sim.physics_client)
             self._wait_time[rid] = 0
             self._pos_history[rid] = [pos[:2]] * STUCK_WINDOW
             self._was_stuck[rid] = False
@@ -134,11 +138,11 @@ class NAMOmappoEnv:
                 if self.sim.base_grid[r, c] == 1:
                     grid[r, c] = 1
         for bid in self.sim.box_ids:
-            pos, _ = p.getBasePositionAndOrientation(bid)
+            pos, _ = p.getBasePositionAndOrientation(bid, physicsClientId=self.sim.physics_client)
             bx, by = world_to_cell(pos[:2], self.cell_size)
             if 0 <= bx < self.grid_size and 0 <= by < self.grid_size:
                 grid[by, bx] = 2
-        pos, _ = p.getBasePositionAndOrientation(agent_rid)
+        pos, _ = p.getBasePositionAndOrientation(agent_rid, physicsClientId=self.sim.physics_client)
         ax, ay = world_to_cell(pos[:2], self.cell_size)
         g = self.sim.robot_goals[agent_rid]
         heatmap = self.unet_pipeline.get_risk_map(grid, (ax, ay), g)
@@ -168,113 +172,148 @@ class NAMOmappoEnv:
 
     def _get_observations(self):
         obs = {}
-        current_robot_positions = {}
-        for rid in self.robot_ids:
-            pos, _ = p.getBasePositionAndOrientation(rid)
-            current_robot_positions[rid] = pos[:2]
+        try:
+            current_robot_positions = {}
+            for rid in self.robot_ids:
+                pos, _ = p.getBasePositionAndOrientation(rid, physicsClientId=self.sim.physics_client)
+                current_robot_positions[rid] = pos[:2]
 
-        current_box_positions = []
-        for bid in self.sim.box_ids:
-            pos, _ = p.getBasePositionAndOrientation(bid)
-            current_box_positions.append(pos[:2])
+            current_box_positions = []
+            for bid in self.sim.box_ids:
+                pos, _ = p.getBasePositionAndOrientation(bid, physicsClientId=self.sim.physics_client)
+                current_box_positions.append(pos[:2])
 
-        max_wait = float(self.max_steps)   # normalisation denominator
-        max_nearby = float(max(len(self.robot_ids) - 1, 1))
+            max_wait = float(self.max_steps)   # normalisation denominator
+            max_nearby = float(max(len(self.robot_ids) - 1, 1))
 
-        for rid in self.robot_ids:
-            crop = self._get_unet_local_crop(rid).flatten()
+            for rid in self.robot_ids:
+                crop = self._get_unet_local_crop(rid).flatten()
 
-            own_pos = current_robot_positions[rid]
-            g = self.sim.robot_goals[rid]
-            goal_pos = np.array([(g[0] + 0.5) * self.cell_size, (g[1] + 0.5) * self.cell_size])
+                own_pos = current_robot_positions[rid]
+                g = self.sim.robot_goals[rid]
+                goal_pos = np.array([(g[0] + 0.5) * self.cell_size, (g[1] + 0.5) * self.cell_size])
 
-            other_rob_pos = []
-            for other_rid in self.robot_ids:
-                if other_rid != rid:
-                    other_rob_pos.append(current_robot_positions[other_rid])
-            while len(other_rob_pos) < 3:
-                other_rob_pos.append([0.0, 0.0])
-            other_rob_pos = np.array(other_rob_pos).flatten()
+                other_rob_pos = []
+                for other_rid in self.robot_ids:
+                    if other_rid != rid:
+                        other_rob_pos.append(current_robot_positions[other_rid])
+                while len(other_rob_pos) < 3:
+                    other_rob_pos.append([0.0, 0.0])
+                other_rob_pos = np.array(other_rob_pos).flatten()
 
-            box_dists = []
-            for bp in current_box_positions:
-                box_dists.append((math.hypot(own_pos[0] - bp[0], own_pos[1] - bp[1]), bp))
-            box_dists.sort(key=lambda x: x[0])
+                box_dists = []
+                for bp in current_box_positions:
+                    box_dists.append((math.hypot(own_pos[0] - bp[0], own_pos[1] - bp[1]), bp))
+                box_dists.sort(key=lambda x: x[0])
 
-            nearby_boxes = [bp for _, bp in box_dists[:3]]
-            while len(nearby_boxes) < 3:
-                nearby_boxes.append([0.0, 0.0])
-            nearby_boxes = np.array(nearby_boxes).flatten()
+                nearby_boxes = [bp for _, bp in box_dists[:3]]
+                while len(nearby_boxes) < 3:
+                    nearby_boxes.append([0.0, 0.0])
+                nearby_boxes = np.array(nearby_boxes).flatten()
 
-            sr_mean = self.sim.broadcaster.belief_models[rid].mean()
-            sr_width = self.sim.broadcaster.get_sr_interval_width(rid)
-            sr_obs = float(self.sim.broadcaster.belief_models[rid]._n_obs)
-            norm_sr_obs = min(1.0, sr_obs / 20.0)
-            uncertainty_feats = np.array([sr_mean, sr_width, norm_sr_obs], dtype=np.float32)
+                sr_mean = self.sim.broadcaster.belief_models[rid].mean()
+                sr_width = self.sim.broadcaster.get_sr_interval_width(rid)
+                sr_obs = float(self.sim.broadcaster.belief_models[rid]._n_obs)
+                norm_sr_obs = min(1.0, sr_obs / 20.0)
+                uncertainty_feats = np.array([sr_mean, sr_width, norm_sr_obs], dtype=np.float32)
 
-            norm_own   = np.array(own_pos) / (self.grid_size * self.cell_size)
-            norm_goal  = goal_pos / (self.grid_size * self.cell_size)
-            norm_dir   = (goal_pos - np.array(own_pos)) / (self.grid_size * self.cell_size)
-            norm_others = other_rob_pos / (self.grid_size * self.cell_size)
-            norm_boxes  = nearby_boxes / (self.grid_size * self.cell_size)
+                norm_own   = np.array(own_pos) / (self.grid_size * self.cell_size)
+                norm_goal  = goal_pos / (self.grid_size * self.cell_size)
+                norm_dir   = (goal_pos - np.array(own_pos)) / (self.grid_size * self.cell_size)
+                norm_others = other_rob_pos / (self.grid_size * self.cell_size)
+                norm_boxes  = nearby_boxes / (self.grid_size * self.cell_size)
 
-            # ── NEW: congestion features ──────────────────────────────────────
-            wait_norm = min(1.0, self._wait_time.get(rid, 0) / max_wait)
-            nearby_cnt = self._nearby_robot_count(rid, current_robot_positions)
-            nearby_norm = float(nearby_cnt) / max_nearby
-            stuck_flag = float(self._is_stuck(rid))
-            congestion_feats = np.array([wait_norm, nearby_norm, stuck_flag], dtype=np.float32)
-            # ─────────────────────────────────────────────────────────────────
+                # ── NEW: congestion features ──────────────────────────────────────
+                wait_norm = min(1.0, self._wait_time.get(rid, 0) / max_wait)
+                nearby_cnt = self._nearby_robot_count(rid, current_robot_positions)
+                nearby_norm = float(nearby_cnt) / max_nearby
+                stuck_flag = float(self._is_stuck(rid))
+                congestion_feats = np.array([wait_norm, nearby_norm, stuck_flag], dtype=np.float32)
+                # ─────────────────────────────────────────────────────────────────
 
-            obs_parts = [
-                crop,              # 25
-                norm_own,          # 2
-                norm_goal,         # 2
-                norm_dir,          # 2
-                norm_others,       # 6
-                norm_boxes,        # 6
-                uncertainty_feats, # 3
-            ]
-            if self.include_congestion_feats:
-                obs_parts.append(congestion_feats)
-            obs_vec = np.concatenate(obs_parts)
-            obs[rid] = obs_vec.astype(np.float32)
+                obs_parts = [
+                    crop,              # 25
+                    norm_own,          # 2
+                    norm_goal,         # 2
+                    norm_dir,          # 2
+                    norm_others,       # 6
+                    norm_boxes,        # 6
+                    uncertainty_feats, # 3
+                ]
+                if self.include_congestion_feats:
+                    obs_parts.append(congestion_feats)
+                obs_vec = np.concatenate(obs_parts)
+                obs[rid] = obs_vec.astype(np.float32)
 
-            # ── Action masking ─────────────────────────────────────────────
-            planner = self.sim.snamo_planners[rid]
-            total_cost, bypass_cost, removal_cost = planner.evaluate_actions(
-                start=tuple(self.sim.coord_states[rid].cell),
-                goal=tuple(self.sim.coord_states[rid].goal),
-                box_cells=current_box_positions,
-                other_robots=other_rob_pos.reshape(-1, 2).tolist() if len(other_rob_pos) > 0 else [],
-                grid=self.sim.base_grid,
-            )
-            self.current_costs[rid] = total_cost
+                # ── Action masking ─────────────────────────────────────────────
+                planner = self.sim.snamo_planners[rid]
+                current_box_cells = [world_to_cell(bp, self.cell_size) for bp in current_box_positions]
+                total_cost, bypass_cost, removal_cost = planner.evaluate_actions(
+                    start=tuple(self.sim.coord_states[rid].cell),
+                    goal=tuple(self.sim.coord_states[rid].goal),
+                    box_cells=current_box_cells,
+                    other_robots=other_rob_pos.reshape(-1, 2).tolist() if len(other_rob_pos) > 0 else [],
+                    grid=self.sim.current_grid,
+                )
+                if self.verbose:
+                    print(f"[DEBUG COSTS] robot={rid} cell={self.sim.coord_states[rid].cell} costs={total_cost:.1f}, {bypass_cost:.1f}, {removal_cost:.1f}")
+                self.current_costs[rid] = total_cost
 
-            if self._has_boxes:
-                push_safe = (removal_cost != float('inf')) or (bypass_cost == float('inf'))
-            else:
-                push_safe = False
+                if self._has_boxes:
+                    # A box is actually blocking when at least one of the two
+                    # action costs is finite (evaluate_actions returns inf/inf
+                    # when no box lies on the direct path).
+                    box_is_blocking = not (bypass_cost == float('inf')
+                                           and removal_cost == float('inf'))
+                    # PUSH is only safe when:
+                    #   1. A box is actually blocking the path, AND
+                    #   2. We have a feasible removal path (removal_cost is finite)
+                    push_safe = box_is_blocking and removal_cost != float('inf')
+                    # NAVIGATE is only safe when we are not blocked, OR we have a bypass path
+                    navigate_safe = not (box_is_blocking and bypass_cost == float('inf'))
+                    # WAIT is only safe when we are not blocked, OR we have a bypass path (waiting for a box is futile)
+                    wait_safe = not (box_is_blocking and bypass_cost == float('inf'))
+                else:
+                    push_safe = False
+                    navigate_safe = True
+                    wait_safe = True
 
-            yield_safe = len(self.robot_ids) > 1
-            self.current_action_masks[rid] = [True, push_safe, yield_safe, True]
+                yield_safe = len(self.robot_ids) > 1
+                self.current_action_masks[rid] = [navigate_safe, push_safe, yield_safe, wait_safe]
 
-        return obs
+            return obs
+        except Exception:
+            return {rid: np.zeros(self._obs_dim, dtype=np.float32) for rid in self.robot_ids}
 
     def step(self, actions):
         self.current_step += 1
 
+        # Guard: physics server may have died (e.g., GUI window closed)
+        if self.sim is None or self.sim.physics_client is None:
+            dones = {"__all__": True}
+            dones.update({rid: True for rid in self.robot_ids})
+            rewards = {rid: TIMEOUT_PENALTY for rid in self.robot_ids}
+            obs = {rid: np.zeros(self._obs_dim, dtype=np.float32) for rid in self.robot_ids}
+            return obs, rewards, dones, {"success": False}
+
         # Save pre-step distances for dense progress reward
         starting_dists = {}
         starting_positions = {}
-        for rid in self.robot_ids:
-            pos, _ = p.getBasePositionAndOrientation(rid)
-            g = self.sim.robot_goals[rid]
-            starting_dists[rid] = math.hypot(
-                pos[0] - (g[0] + 0.5) * self.cell_size,
-                pos[1] - (g[1] + 0.5) * self.cell_size,
-            )
-            starting_positions[rid] = pos[:2]
+        try:
+            for rid in self.robot_ids:
+                pos, _ = p.getBasePositionAndOrientation(rid, physicsClientId=self.sim.physics_client)
+                g = self.sim.robot_goals[rid]
+                starting_dists[rid] = math.hypot(
+                    pos[0] - (g[0] + 0.5) * self.cell_size,
+                    pos[1] - (g[1] + 0.5) * self.cell_size,
+                )
+                starting_positions[rid] = pos[:2]
+        except Exception:
+            dones = {"__all__": True}
+            dones.update({rid: True for rid in self.robot_ids})
+            rewards = {rid: TIMEOUT_PENALTY for rid in self.robot_ids}
+            obs = {rid: np.zeros(self._obs_dim, dtype=np.float32) for rid in self.robot_ids}
+            return obs, rewards, dones, {"success": False}
 
         collisions_before = self.sim.robot_robot_collisions
 
@@ -286,14 +325,17 @@ class NAMOmappoEnv:
 
         # ── NEW: update congestion trackers ───────────────────────────────────
         current_positions_post = {}
-        for rid in self.robot_ids:
-            pos, _ = p.getBasePositionAndOrientation(rid)
-            current_positions_post[rid] = pos[:2]
-            hist = self._pos_history.get(rid, [pos[:2]] * STUCK_WINDOW)
-            hist.append(pos[:2])
-            if len(hist) > STUCK_WINDOW:
-                hist.pop(0)
-            self._pos_history[rid] = hist
+        try:
+            for rid in self.robot_ids:
+                pos, _ = p.getBasePositionAndOrientation(rid, physicsClientId=self.sim.physics_client)
+                current_positions_post[rid] = pos[:2]
+                hist = self._pos_history.get(rid, [pos[:2]] * STUCK_WINDOW)
+                hist.append(pos[:2])
+                if len(hist) > STUCK_WINDOW:
+                    hist.pop(0)
+                self._pos_history[rid] = hist
+        except Exception:
+            current_positions_post = {rid: starting_positions.get(rid, (0.0, 0.0)) for rid in self.robot_ids}
 
         # Update wait_time: increment if stuck, reset if moved meaningfully
         for rid in self.robot_ids:
@@ -311,7 +353,10 @@ class NAMOmappoEnv:
         dones = {}
 
         for rid in self.robot_ids:
-            pos, _ = p.getBasePositionAndOrientation(rid)
+            try:
+                pos, _ = p.getBasePositionAndOrientation(rid, physicsClientId=self.sim.physics_client)
+            except Exception:
+                pos = (0.0, 0.0, 0.0)
             g = self.sim.robot_goals[rid]
             dist = math.hypot(
                 pos[0] - (g[0] + 0.5) * self.cell_size,
@@ -321,10 +366,14 @@ class NAMOmappoEnv:
             # ── Base step penalty ──────────────────────────────────────────
             r = STEP_PENALTY
 
-            # ── Dense progress reward ──────────────────────────────────────
+            # ── Dense progress reward / backward penalty ───────────────────
             dist_delta = starting_dists[rid] - dist
             if dist_delta > 0:
+                # Moved closer to goal
                 r += PROGRESS_REWARD * (dist_delta / self.cell_size)
+            elif dist_delta < -0.1 * self.cell_size and actions.get(rid) != 1:
+                # Moved noticeably away from goal — penalise backward motion
+                r += BACKWARD_PENALTY
 
             # ── Collision penalty ──────────────────────────────────────────
             if collisions_this_step > 0:
@@ -332,16 +381,19 @@ class NAMOmappoEnv:
 
             # ── PUSH-specific rewards ──────────────────────────────────────
             if actions.get(rid) == 1:  # PUSH action
-                r += PUSH_ATTEMPT_BONUS
+                # No attempt bonus — only reward actual progress
                 threshold = PUSH_DIST_THRESHOLD * self.cell_size
                 if dist_delta >= threshold:
                     r += PUSH_SUCCESS_BONUS
+                elif dist_delta <= 0:
+                    # Pushed but moved backward or stayed — penalise wasted push
+                    r += BACKWARD_PENALTY
 
             # ── YIELD penalty (discourage permanent yielding) ──────────────
             elif actions.get(rid) == 2:  # YIELD
                 r += YIELD_PENALTY
 
-            # ── WAIT penalty (v4: prevent indefinite waiting on hard stages) ─
+            # ── WAIT penalty (prevent indefinite waiting on hard stages) ───
             elif actions.get(rid) == 3:  # WAIT
                 r += WAIT_PENALTY
 
@@ -395,3 +447,4 @@ class NAMOmappoEnv:
     def close(self):
         if self.sim is not None:
             self.sim.close()
+            self.sim = None

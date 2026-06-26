@@ -97,12 +97,13 @@ def run_episode(env, agent, obs_dim, max_agents, action_dim, max_steps, gui=Fals
 
 # ── Main evaluator ───────────────────────────────────────────────────────────
 def evaluate(checkpoint_path: str, trials: int = TRIALS,
-             gui: bool = False, control_interval: int = 15):
+             gui: bool = False, control_interval: int = 15,
+             push_fail_rate: float = 0.0):
     device = torch.device(
         "mps"  if torch.backends.mps.is_available() else
         "cuda" if torch.cuda.is_available() else "cpu"
     )
-    print(f"\n[eval_v4] device={device}  trials={trials}")
+    print(f"\n[eval_v4] device={device}  trials={trials}  push_fail_rate={push_fail_rate}")
     print(f"          checkpoint={checkpoint_path}")
     print(f"          control_interval={control_interval}\n")
 
@@ -135,6 +136,7 @@ def evaluate(checkpoint_path: str, trials: int = TRIALS,
                     max_steps=300,
                     control_interval=control_interval,
                     include_congestion_feats=include_congestion,
+                    push_fail_rate=push_fail_rate,
                 )
 
                 if agent is None:
@@ -265,8 +267,13 @@ if __name__ == "__main__":
         dest="control_interval",
         help="Must match the value used during v4 training (default 15)",
     )
+    ap.add_argument(
+        "--push-fail-rate", type=float, default=0.0,
+        help="Probability that a push attempt fails",
+    )
     args = ap.parse_args()
     evaluate(
         args.checkpoint, args.trials,
         gui=args.gui, control_interval=args.control_interval,
+        push_fail_rate=args.push_fail_rate,
     )

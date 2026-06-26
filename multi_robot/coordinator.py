@@ -160,9 +160,17 @@ class RobotCoordinator:
                 if getattr(state, "waiting_for_robot", None) in states:
                     other_state = states[state.waiting_for_robot]
                     
+                    if getattr(other_state, "_stuck_counter", 0) >= self.stuck_limit:
+                        # The robot we are waiting for is stuck! Resume to resolve deadlock.
+                        state.status = "NAVIGATING"
+                        state.plan = []
+                        state.waiting_for_robot = None
+                        next_cells[rid] = state.cell
+                        continue
+                        
                     if state.status == "POCKET_WAITING":
-                        if other_state.status == "DONE":
-                            # The other robot is done! We can resume immediately.
+                        if other_state.status in ("DONE", "POCKET_WAITING"):
+                            # The other robot is done or also pocket waiting (circular deadlock). Resume immediately.
                             state.status = "NAVIGATING"
                             state.plan = []
                             state.waiting_for_robot = None
@@ -271,6 +279,7 @@ class RobotCoordinator:
                             state.cell, state.evasion_target,
                             self.grid, self.grid_size,
                             other_robots=other_rob_cells,
+                            ignore_boxes=True,
                         )
                         state.plan = evade_plan if evade_plan else [state.cell]
                     else:
@@ -413,6 +422,7 @@ class RobotCoordinator:
                                     state.cell, target,
                                     self.grid, self.grid_size,
                                     other_robots=other_rob_cells,
+                                    ignore_boxes=True,
                                 )
                                 state.plan = evade_plan if evade_plan else [state.cell]
 
@@ -445,14 +455,11 @@ class RobotCoordinator:
 
             if next_cell is not None:
                 # Collision avoidance: don't step into another robot's cell.
-                # EXCEPTION: EVADING robots can push through WAITING robots.
                 currently_occupied = set()
                 for r in states:
                     if r == rid:
                         continue
                     r_state = states[r]
-                    if state.status == "EVADING" and r_state.status in ("WAITING", "POCKET_WAITING"):
-                        continue  # evader can push through waiters
                     currently_occupied.add(r_state.cell)
                 # Phase 2A: respect priority — don't displace a higher-priority robot
                 priority_blocker = any(

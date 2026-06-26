@@ -1,0 +1,72 @@
+[
+  {
+    "scenario": "single_corridor_yielding",
+    "sr": 100.0,
+    "avg_steps": 12.0,
+    "avg_reward": 1.2100008009066052,
+    "avg_collisions": 0.0
+  },
+  {
+    "scenario": "symmetric_bottleneck_deadlock",
+    "sr": 100.0,
+    "avg_steps": 16.0,
+    "avg_reward": 1.1644241119276804,
+    "avg_collisions": 0.0
+  },
+  {
+    "scenario": "warehouse_large",
+    "sr": 100.0,
+    "avg_steps": 22.0,
+    "avg_reward": 1.0570787420102625,
+    "avg_collisions": 0.0
+  },
+  {
+    "scenario": "warehouse_3robots",
+    "sr": 100.0,
+    "avg_steps": 26.0,
+    "avg_reward": 0.8863239685584918,
+    "avg_collisions": 0.0
+  },
+  {
+    "scenario": "cross_intersection",
+    "sr": 100.0,
+    "avg_steps": 16.0,
+    "avg_reward": 1.1706105153950725,
+    "avg_collisions": 0.0
+  },
+  {
+    "scenario": "narrow_doorway_congestion",
+    "sr": 100.0,
+    "avg_steps": 78.0,
+    "avg_reward": 0.7001328665841405,
+    "avg_collisions": 0.0
+  },
+  {
+    "scenario": "symmetric_bottleneck_4robots",
+    "sr": 100.0,
+    "avg_steps": 19.0,
+    "avg_reward": 1.2631735562761586,
+    "avg_collisions": 0.0
+  },
+  {
+    "scenario": "movable_obstacle_choke_namo",
+    "sr": 100.0,
+    "avg_steps": 10.0,
+    "avg_reward": 3.121082944055403,
+    "avg_collisions": 0.0
+  },
+  {
+    "scenario": "warehouse_small",
+    "sr": 100.0,
+    "avg_steps": 17.0,
+    "avg_reward": 0.9420580227845397,
+    "avg_collisions": 0.0
+  },
+  {
+    "scenario": "custom_reconstructed_map",
+    "sr": 0.0,
+    "avg_steps": 200.0,
+    "avg_reward": -10.153906122275998,
+    "avg_collisions": 0.0
+  }
+]

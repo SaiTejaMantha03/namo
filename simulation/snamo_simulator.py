@@ -31,6 +31,7 @@ import math
 import time
 import argparse
 import yaml
+import random
 import numpy as np
 from pathlib import Path
 
@@ -176,12 +177,14 @@ COLORS = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 class SNAMOSimulator:
-    def __init__(self, config_path, gui=False, taboo_zones=None, dr_strategy="sr_social", pure_snamo=False):
+    def __init__(self, config_path, gui=False, taboo_zones=None, dr_strategy="sr_social", pure_snamo=False, push_fail_rate=0.0, verbose=True):
         self.config_path = config_path
         self.gui = gui
         self.taboo_zones = taboo_zones or []
         self.dr_strategy = dr_strategy
         self.pure_snamo = pure_snamo
+        self.push_fail_rate = push_fail_rate
+        self.verbose = verbose
         
         with open(config_path) as f:
             self.cfg = yaml.safe_load(f)
@@ -257,6 +260,7 @@ class SNAMOSimulator:
                 grid_size=self.gs,
                 taboo_zones=self.taboo_zones,
                 uncertainty=not self.pure_snamo,
+                verbose=self.verbose,
             )
             gx, gy = cell_center(gc[0], gc[1], self.cs)
             c = COLORS[i % len(COLORS)]
@@ -366,18 +370,28 @@ class SNAMOSimulator:
             if self.push_obs_pending[rid] and rid in self.drive_target:
                 pos, _ = p.getBasePositionAndOrientation(rid)
                 tx, ty = self.drive_target[rid]
-                if math.hypot(pos[0] - tx, pos[1] - ty) <= 0.65:
-                    clear_c = self.push_clear_cell[rid]
-                    if clear_c is not None:
-                        bx = int(tx // self.cs)
-                        by = int(ty // self.cs)
-                        bid = self._find_box_bid_at((bx, by))
-                        if bid is not None:
-                            target_pos = cell_center(clear_c[0], clear_c[1], self.cs)
-                            p.resetBasePositionAndOrientation(bid, [target_pos[0], target_pos[1], 0.18], [0, 0, 0, 1])
-                            p.resetBaseVelocity(bid, [0, 0, 0], [0, 0, 0])
-                    self.snamo_planners[rid].observe(success=True)
-                    self.broadcaster.broadcast_outcome(rid, success=True)
+                if math.hypot(pos[0] - tx, pos[1] - ty) <= 0.8 * self.cs:
+                    success = (random.random() >= self.push_fail_rate)
+                    bx = int(tx // self.cs)
+                    by = int(ty // self.cs)
+                    if success:
+                        clear_c = self.push_clear_cell[rid]
+                        if clear_c is not None:
+                            bid = self._find_box_bid_at((bx, by))
+                            if bid is not None:
+                                target_pos = cell_center(clear_c[0], clear_c[1], self.cs)
+                                p.resetBasePositionAndOrientation(bid, [target_pos[0], target_pos[1], 0.18], [0, 0, 0, 1])
+                                p.resetBaseVelocity(bid, [0, 0, 0], [0, 0, 0])
+                        self.snamo_planners[rid].observe(success=True)
+                        self.broadcaster.broadcast_outcome(rid, success=True)
+                        if self.verbose:
+                            print(f"[SNAMOSim] Robot {rid} successfully pushed box at {(bx, by)}.")
+                    else:
+                        self.snamo_planners[rid].observe(success=False)
+                        self.broadcaster.broadcast_outcome(rid, success=False)
+                        if self.verbose:
+                            print(f"[SNAMOSim] Robot {rid} FAILED to push box at {(bx, by)}.")
+                    
                     self.push_obs_pending[rid] = False
                     self.push_clear_cell[rid] = None
 
@@ -425,7 +439,8 @@ class SNAMOSimulator:
                                 evade_plan = a_star(
                                     robot_cells[rid], target,
                                     self.base_grid, self.gs,
-                                    other_robots=other_cells
+                                    other_robots=other_cells,
+                                    ignore_boxes=True,
                                 )
                                 self.coord_states[rid].plan = evade_plan if evade_plan else [robot_cells[rid]]
                     elif act == 3: # WAIT
@@ -447,6 +462,16 @@ class SNAMOSimulator:
                 curr_cell = robot_cells[rid]
                 goal_cell = self.robot_goals[rid]
                 next_cell = next_cells.get(rid, curr_cell)
+
+                if self.coord_states[rid].status == "EVADING":
+                    if box_cells_live and next_cell != curr_cell:
+                        bx, by = next_cell
+                        if 0 <= bx < self.gs and 0 <= by < self.gs:
+                            if current_grid[by, bx] == 2:
+                                self.push_obs_pending[rid] = True
+                                dir_x = next_cell[0] - curr_cell[0]
+                                dir_y = next_cell[1] - curr_cell[1]
+                                self.push_clear_cell[rid] = (next_cell[0] + dir_x, next_cell[1] + dir_y)
 
                 if box_cells_live and self.coord_states[rid].status != "EVADING":
                     other_cells = [robot_cells[r] for r in self.robot_ids if r != rid]
@@ -554,8 +579,8 @@ class SNAMOSimulator:
                 pass
             self.physics_client = None
 
-def run_simulation(config_path: str, gui: bool = False, taboo_zones: list = None, dr_strategy: str = "sr_social", pure_snamo: bool = False) -> dict:
-    sim = SNAMOSimulator(config_path, gui=gui, taboo_zones=taboo_zones, dr_strategy=dr_strategy, pure_snamo=pure_snamo)
+def run_simulation(config_path: str, gui: bool = False, taboo_zones: list = None, dr_strategy: str = "sr_social", pure_snamo: bool = False, push_fail_rate: float = 0.0, verbose: bool = True) -> dict:
+    sim = SNAMOSimulator(config_path, gui=gui, taboo_zones=taboo_zones, dr_strategy=dr_strategy, pure_snamo=pure_snamo, push_fail_rate=push_fail_rate, verbose=verbose)
     sim.reset()
     
     if not sim.robots_cfg:
@@ -625,6 +650,7 @@ def main():
                     choices=["repulsive", "social", "sr_width", "sr_social"],
                     help="Deadlock resolution strategy (default: sr_social)")
     ap.add_argument("--pure-snamo", action="store_true", help="Run without uncertainty model (pure S-NAMO)")
+    ap.add_argument("--push-fail-rate", type=float, default=0.0, help="Probability that a push attempt fails")
     args = ap.parse_args()
 
     if args.config == "all":
@@ -673,12 +699,10 @@ def main():
         print(f"{'='*95}")
     else:
         try:
-            run_simulation(args.config, gui=args.gui, dr_strategy=args.dr_strategy, pure_snamo=args.pure_snamo)
+            run_simulation(args.config, gui=args.gui, dr_strategy=args.dr_strategy, pure_snamo=args.pure_snamo, push_fail_rate=args.push_fail_rate)
         except p.error:
             print("\n[SNAMOSim] GUI window closed. Terminating.")
 
 
-if __name__ == "__main__":
-    main()
 if __name__ == "__main__":
     main()
