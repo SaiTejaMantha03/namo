@@ -219,6 +219,7 @@ class SNAMOSimulator:
         p.loadURDF("plane.urdf")
 
         if self.gui:
+            p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
             p.resetDebugVisualizerCamera(
                 cameraDistance=self.gs * self.cs * 1.35,
                 cameraYaw=0, cameraPitch=-70,
@@ -288,6 +289,7 @@ class SNAMOSimulator:
             for i, rid in enumerate(self.robot_ids)
         }
         self.push_obs_pending = {r: False for r in self.robot_ids}
+        self.push_clear_cell = {r: None for r in self.robot_ids}
         self.last_snamo_action = {r: "NAVIGATE" for r in self.robot_ids}
         
         self.step_count = 0
@@ -297,6 +299,10 @@ class SNAMOSimulator:
         self.stall_counter = 0
         self.last_robot_positions = {}
         self.stalled = False
+        self.current_grid = self.base_grid.copy()
+
+        if self.gui:
+            p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
 
     def step(self, rl_actions=None):
         if getattr(self, "stalled", False):
@@ -334,6 +340,7 @@ class SNAMOSimulator:
             if 0 <= bx < self.gs and 0 <= by < self.gs:
                 current_grid[by, bx] = 2
 
+        self.current_grid = current_grid.copy()
         self.coordinator.grid = current_grid.copy()
         self.resolver.grid = current_grid.copy()
 
@@ -354,6 +361,26 @@ class SNAMOSimulator:
             if self.coord_states[rid].status != "DONE" and robot_cells[rid] == self.robot_goals[rid]:
                 self.coord_states[rid].status = "DONE"
 
+        # Resolve pending pushes on arrival
+        for rid in self.robot_ids:
+            if self.push_obs_pending[rid] and rid in self.drive_target:
+                pos, _ = p.getBasePositionAndOrientation(rid)
+                tx, ty = self.drive_target[rid]
+                if math.hypot(pos[0] - tx, pos[1] - ty) <= 0.65:
+                    clear_c = self.push_clear_cell[rid]
+                    if clear_c is not None:
+                        bx = int(tx // self.cs)
+                        by = int(ty // self.cs)
+                        bid = self._find_box_bid_at((bx, by))
+                        if bid is not None:
+                            target_pos = cell_center(clear_c[0], clear_c[1], self.cs)
+                            p.resetBasePositionAndOrientation(bid, [target_pos[0], target_pos[1], 0.18], [0, 0, 0, 1])
+                            p.resetBaseVelocity(bid, [0, 0, 0], [0, 0, 0])
+                    self.snamo_planners[rid].observe(success=True)
+                    self.broadcaster.broadcast_outcome(rid, success=True)
+                    self.push_obs_pending[rid] = False
+                    self.push_clear_cell[rid] = None
+
         any_arrived = False
         for rid in self.robot_ids:
             if self.coord_states[rid].status not in ("DONE", "WAITING", "POCKET_WAITING") and rid in self.drive_target:
@@ -364,11 +391,12 @@ class SNAMOSimulator:
                     break
 
         if any_arrived or self.step_count % 5 == 0:
-            next_cells = self.coordinator.step(self.coord_states, box_states_coord)
-
-            # Map RL actions directly to coordinator status and next_cells if provided
+            # Map RL actions directly to coordinator status and plans BEFORE coordinator step
             if rl_actions is not None:
                 for rid, act in rl_actions.items():
+                    if self.coord_states[rid].status == "DONE":
+                        continue
+
                     if act == 0: # NAVIGATE
                         self.coord_states[rid].status = "NAVIGATING"
                         self.coord_states[rid].evasion_target = None
@@ -377,6 +405,15 @@ class SNAMOSimulator:
                         self.coord_states[rid].evasion_target = None
                         self.last_snamo_action[rid] = "REMOVE"
                     elif act == 2: # YIELD
+                        # Keep pocket waiting state intact
+                        if self.coord_states[rid].status == "POCKET_WAITING":
+                            continue
+                        # Respect post-evade grace period to allow returning to path
+                        if getattr(self.coord_states[rid], "_post_evade_grace", 0) > 0:
+                            self.coord_states[rid].status = "NAVIGATING"
+                            self.coord_states[rid].evasion_target = None
+                            continue
+
                         self.coord_states[rid].status = "EVADING"
                         if self.coord_states[rid].evasion_target is None:
                             other_cells = [robot_cells[r] for r in self.robot_ids if r != rid]
@@ -395,6 +432,13 @@ class SNAMOSimulator:
                         self.coord_states[rid].status = "WAITING"
                         self.coord_states[rid].evasion_target = None
                         self.coord_states[rid].wait_ticks = 999999
+                        # Set waiting_for_robot so the evader can transition to POCKET_WAITING when it arrives
+                        for other_rid, other_act in rl_actions.items():
+                            if other_rid != rid and other_act == 2:
+                                self.coord_states[rid].waiting_for_robot = other_rid
+                                break
+
+            next_cells = self.coordinator.step(self.coord_states, box_states_coord)
 
             for rid in self.robot_ids:
                 if self.coord_states[rid].status in ("DONE", "WAITING", "POCKET_WAITING"):
@@ -425,15 +469,7 @@ class SNAMOSimulator:
 
                     if waypoints:
                         next_cell = waypoints[0]
-                        # EVADING robots can push through WAITING robots
-                        if self.coord_states[rid].status == "EVADING":
-                            nxt_occupied = any(
-                                robot_cells[r] == next_cell
-                                for r in self.robot_ids
-                                if r != rid and self.coord_states[r].status not in ("WAITING", "POCKET_WAITING")
-                            )
-                        else:
-                            nxt_occupied = any(robot_cells[r] == next_cell for r in self.robot_ids if r != rid)
+                        nxt_occupied = any(robot_cells[r] == next_cell for r in self.robot_ids if r != rid)
                         if nxt_occupied:
                             p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
                             continue
@@ -442,11 +478,29 @@ class SNAMOSimulator:
                             bx, by = next_cell
                             if 0 <= bx < self.gs and 0 <= by < self.gs:
                                 if current_grid[by, bx] == 2:
+                                    # PUSH: next cell contains the box
                                     self.push_obs_pending[rid] = True
-                                elif self.push_obs_pending[rid]:
+                                    dir_x = next_cell[0] - curr_cell[0]
+                                    dir_y = next_cell[1] - curr_cell[1]
+                                    self.push_clear_cell[rid] = (next_cell[0] + dir_x, next_cell[1] + dir_y)
+                                else:
+                                    # PULL check: next cell is free, check if there is a box behind current_cell
+                                    dir_x = next_cell[0] - curr_cell[0]
+                                    dir_y = next_cell[1] - curr_cell[1]
+                                    box_x = curr_cell[0] - dir_x
+                                    box_y = curr_cell[1] - dir_y
+                                    if 0 <= box_x < self.gs and 0 <= box_y < self.gs:
+                                        if current_grid[box_y, box_x] == 2:
+                                            # Found box to pull!
+                                            bid = self._find_box_bid_at((box_x, box_y))
+                                            if bid is not None:
+                                                # Snap box to curr_cell (dragging it)
+                                                target_pos = cell_center(curr_cell[0], curr_cell[1], self.cs)
+                                                p.resetBasePositionAndOrientation(bid, [target_pos[0], target_pos[1], 0.18], [0, 0, 0, 1])
+                                                p.resetBaseVelocity(bid, [0, 0, 0], [0, 0, 0])
+                                                # Trigger success observation
                                     self.snamo_planners[rid].observe(success=True)
                                     self.broadcaster.broadcast_outcome(rid, success=True)
-                                    self.push_obs_pending[rid] = False
 
                 self.drive_target[rid] = cell_center(next_cell[0], next_cell[1], self.cs)
 
@@ -477,6 +531,20 @@ class SNAMOSimulator:
                     self.collision_pairs_seen.add(key)
 
         self.step_count += 1
+
+    def _find_box_bid_at(self, cell):
+        target_center = cell_center(cell[0], cell[1], self.cs)
+        best_bid = None
+        min_dist = float('inf')
+        for bid in self.box_ids:
+            pos, _ = p.getBasePositionAndOrientation(bid)
+            dist = math.hypot(pos[0] - target_center[0], pos[1] - target_center[1])
+            if dist < min_dist:
+                min_dist = dist
+                best_bid = bid
+        if min_dist < self.cs * 0.8:
+            return best_bid
+        return None
 
     def close(self):
         if self.physics_client is not None:
@@ -610,5 +678,7 @@ def main():
             print("\n[SNAMOSim] GUI window closed. Terminating.")
 
 
+if __name__ == "__main__":
+    main()
 if __name__ == "__main__":
     main()

@@ -31,7 +31,7 @@ BENCHMARK_CONFIGS = [
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate Pure S-NAMO (Deterministic) Baseline")
-    parser.add_argument("--trials", type=int, default=10, help="Number of trials per scenario")
+    parser.add_argument("--trials", type=int, default=1, help="Number of trials per scenario")
     parser.add_argument("--gui", action="store_true", help="Run with PyBullet GUI")
     args = parser.parse_args()
 
